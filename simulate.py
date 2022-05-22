@@ -7,9 +7,11 @@ p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
 # add a floor
 planeId = p.loadURDF("plane.urdf")
+# add robot body
+robotId = p.loadURDF("body.urdf")
 
 # load box specified by box.sdf into the world
-p.loadSDF("boxes.sdf")
+p.loadSDF("world.sdf")
 
 # add gravitational force to world
 p.setGravity(0,0,-9.8)
