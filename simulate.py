@@ -5,8 +5,12 @@ import time
 import numpy as np
 import random
 
+from robot import Robot
+from world import World
+from simulation import Simulation
 import constants as c
 
+'''
 physicsClient = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
@@ -66,3 +70,13 @@ for i in range(c.TIMESTEPS):
 np.save("./data/backLegSensor.npy", backLegSensorValues)
 np.save("./data/frontLegSensor.npy", frontLegSensorValues)
 p.disconnect()
+'''
+
+simulation = Simulation()
+robot = Robot()
+world = World()
+
+simulation.Run(robot)
+
+
+
