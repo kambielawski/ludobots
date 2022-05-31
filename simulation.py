@@ -17,16 +17,17 @@ class Simulation:
 
     def Run(self, robot):
         self.robot = robot
-        self.backLegSensorValues = np.zeros(c.TIMESTEPS)
-        self.frontLegSensorValues = np.zeros(c.TIMESTEPS)
-        self.targetAngles_front = np.sin(np.linspace(0,2*np.pi, c.TIMESTEPS) * c.FREQUENCY_FRONT + c.PHASE_OFFSET_FRONT)*c.AMPLITUDE_FRONT
-        self.targetAngles_back = np.sin(np.linspace(0,2*np.pi, c.TIMESTEPS) * c.FREQUENCY_BACK + c.PHASE_OFFSET_BACK)*c.AMPLITUDE_BACK
+        # self.backLegSensorValues = np.zeros(c.TIMESTEPS)
+        # self.frontLegSensorValues = np.zeros(c.TIMESTEPS)
+        # self.targetAngles_front = np.sin(np.linspace(0,2*np.pi, c.TIMESTEPS) * c.FREQUENCY_FRONT + c.PHASE_OFFSET_FRONT)*c.AMPLITUDE_FRONT
+        # self.targetAngles_back = np.sin(np.linspace(0,2*np.pi, c.TIMESTEPS) * c.FREQUENCY_BACK + c.PHASE_OFFSET_BACK)*c.AMPLITUDE_BACK
         for i in range(c.TIMESTEPS):
             if i%100 == 0:
                 print(i)
 
-            self.robot.Sense(i)
             p.stepSimulation()
+            self.robot.Sense(i)
+            self.robot.Act(i)
             time.sleep(1/60)
 
 '''
