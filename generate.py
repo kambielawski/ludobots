@@ -25,7 +25,9 @@ def Get_Cubes():
 
     return cubes
 
-def Create_Robot(start_x, start_y, start_z):
+def Generate_Body(start_x, start_y, start_z):
+    # .urdf files are broadly used in the robotics community
+    # "Universal Robot Description File"
     pyrosim.Start_URDF("body.urdf")
 
     # the first link and the first joint have absolute positions
@@ -35,10 +37,23 @@ def Create_Robot(start_x, start_y, start_z):
     pyrosim.Send_Joint(name="Torso_FrontLeg", parent="Torso", child="FrontLeg", type="revolute", position=[start_x+0.5, start_y,start_z-0.5])
     pyrosim.Send_Cube(name="FrontLeg", pos=[0.5,0,-0.5], size=[1,1,1])
     pyrosim.Send_Cube(name="BackLeg", pos=[-0.5,0,-0.5], size=[1,1,1])
-    
 
     pyrosim.End()
-    
+
+def Generate_Brain():
+    # .nndf files are just used in Pyrosim
+    # "Neural Network Description File"
+    pyrosim.Start_NeuralNetwork("brain.nndf")
+
+    pyrosim.Send_Sensor_Neuron(name=0, linkName="Torso")
+    pyrosim.Send_Sensor_Neuron(name=1, linkName="BackLeg")
+    pyrosim.Send_Sensor_Neuron(name=2, linkName="FrontLeg")
+
+    pyrosim.Send_Motor_Neuron(name=3, jointName="Torso_BackLeg")
+    pyrosim.Send_Motor_Neuron(name=4, jointName="Torso_FrontLeg")
+
+    pyrosim.End()
+
 def Create_World():
     pyrosim.Start_SDF("world.sdf")
 
@@ -51,5 +66,6 @@ def Create_World():
     pyrosim.End()
 
 Create_World()
-Create_Robot(0,0,1.5)
+Generate_Body(0,0,1.5)
+Generate_Brain()
 

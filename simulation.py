@@ -25,10 +25,12 @@ class Simulation:
 
             p.stepSimulation()
             self.robot.Sense(i)
+            self.robot.Think()
             self.robot.Act(i)
             time.sleep(1/60)
 
     def Save_Values(self):
         for sensor in self.robot.sensors:
+            print(self.robot.sensors[sensor].values)
             np.save("./data/data_" + self.robot.sensors[sensor].name + "_sensor.npy", self.robot.sensors[sensor].values)
             print("Sensor data saved to ./data/data_" + self.robot.sensors[sensor].name + "_sensor.npy")
