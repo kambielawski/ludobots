@@ -7,3 +7,5 @@ data/
 *.swp
 *.urdf
 *.sdf
+*.nndf
+__pycache__/
