@@ -25,10 +25,10 @@ def Get_Cubes():
 
     return cubes
 
-def Generate_Body(start_x, start_y, start_z):
+def Generate_Body(robotId, start_x, start_y, start_z):
     # .urdf files are broadly used in the robotics community
     # "Universal Robot Description File"
-    pyrosim.Start_URDF("body.urdf")
+    pyrosim.Start_URDF("body_" + str(robotId) + ".urdf")
 
     # the first link and the first joint have absolute positions
     pyrosim.Send_Cube(name="Torso", pos=[start_x, start_y, start_z], size=[1,1,1])
@@ -66,6 +66,17 @@ def Create_World():
     pyrosim.End()
 
 Create_World()
-Generate_Body(0,0,1.5)
+Generate_Body(
+    robotId=0, 
+    start_x=0,
+    start_y=0,
+    start_z=1.5
+    )
+Generate_Body(
+    robotId=1, 
+    start_x=-2,
+    start_y=2,
+    start_z=1.5
+    )
 Generate_Brain()
 

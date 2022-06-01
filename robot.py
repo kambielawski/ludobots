@@ -5,8 +5,8 @@ from sensor import Sensor
 from motor import Motor
 
 class Robot:
-    def __init__(self):
-        self.robotId = p.loadURDF("body.urdf")
+    def __init__(self, urdfFileName):
+        self.robotId = p.loadURDF(urdfFileName)
         self.nn = NEURAL_NETWORK("brain.nndf")
         pyrosim.Prepare_To_Simulate(self.robotId)
 
@@ -31,7 +31,7 @@ class Robot:
 
     def Think(self):
         self.nn.Update()
-        self.nn.Print()
+        # self.nn.Print()
 
     def Act(self, i):
         for neuronName in self.nn.Get_Neuron_Names():

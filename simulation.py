@@ -17,16 +17,17 @@ class Simulation:
         p.disconnect()
 
     # Run simulation (sense -> act -> update sim) 
-    def Run(self, robot):
-        self.robot = robot
+    def Run(self, robots):
+        self.robots = robots
         for i in range(c.TIMESTEPS):
             if i%100 == 0:
                 print(i)
 
             p.stepSimulation()
-            self.robot.Sense(i)
-            self.robot.Think()
-            self.robot.Act(i)
+            for robot in self.robots:
+                robot.Sense(i)
+                robot.Think()
+                robot.Act(i)
             time.sleep(1/60)
 
     def Save_Values(self):
