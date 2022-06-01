@@ -10,9 +10,15 @@ class Motor:
         self.Prepare_To_Act()
 
     def Prepare_To_Act(self):
-        self.amplitude = c.AMPLITUDE_FRONT
-        self.frequency = c.FREQUENCY_FRONT
-        self.offset = c.PHASE_OFFSET_FRONT
+        print("name: ", self.jointName)
+        if self.jointName == "Torso_FrontLeg":
+            self.amplitude = c.AMPLITUDE_FRONT
+            self.frequency = c.FREQUENCY_FRONT
+            self.offset = c.PHASE_OFFSET_FRONT
+        if self.jointName == "Torso_BackLeg":
+            self.amplitude = c.AMPLITUDE_BACK
+            self.frequency = c.FREQUENCY_BACK
+            self.offset = c.PHASE_OFFSET_BACK
         self.motorValues = np.sin(np.linspace(0,2*np.pi, c.TIMESTEPS) * self.frequency + self.offset)*self.amplitude
 
     def Set_Value(self, robot, i):

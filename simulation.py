@@ -30,5 +30,5 @@ class Simulation:
 
     def Save_Values(self):
         for sensor in self.robot.sensors:
-            np.save("./data/data_" + self.robot.sensors[sensor].name + ".npy", self.robot.sensors[sensor].values)
-            print("Sensor data saved to ./data/data_" + self.robot.sensors[sensor].name + ".npy")
+            np.save("./data/data_" + self.robot.sensors[sensor].name + "_sensor.npy", self.robot.sensors[sensor].values)
+            print("Sensor data saved to ./data/data_" + self.robot.sensors[sensor].name + "_sensor.npy")
