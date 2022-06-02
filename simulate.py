@@ -12,10 +12,10 @@ import constants as c
 
 simulation = Simulation()
 robot_1 = Robot("body_0.urdf")
-robot_2 = Robot("body_1.urdf")
+# robot_2 = Robot("body_1.urdf")
 world = World()
 
-robots = [robot_1, robot_2]
+robots = [robot_1]
 
 simulation.Run(robots)
 

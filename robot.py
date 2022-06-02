@@ -30,6 +30,7 @@ class Robot:
             self.sensors[sensor].Get_Value(i)
 
     def Think(self):
+        # "think" by updating the neural network
         self.nn.Update()
         # self.nn.Print()
 
