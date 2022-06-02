@@ -28,7 +28,7 @@ class Simulation:
                 robot.Sense(i)
                 robot.Think()
                 robot.Act(i)
-            time.sleep(1/60)
+            # time.sleep(1/60)
 
     def Save_Values(self):
         for sensor in self.robot.sensors:
