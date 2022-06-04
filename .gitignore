@@ -9,3 +9,4 @@ data/
 *.sdf
 *.nndf
 __pycache__/
+fitness.txt
