@@ -6,18 +6,19 @@ from solution import Solution
 import constants as c
 
 class ParallelHillClimber:
-    def __init__(self):
+    def __init__(self, constants):
+        self.constants = constants
         os.system("rm brain*.nndf && rm fitness*.txt")
         self.parents = dict()
         self.nextAvailableId = 0
 
         # create initial population of Solutions
-        for i in range(c.POPULATION_SIZE):
+        for i in range(self.constants['population_size']):
             self.parents[i] = Solution(self.nextAvailableId)
             self.nextAvailableId += 1
 
     def Evolve(self):
-        for currGen in range(c.NUMBER_OF_GENERATIONS):
+        for currGen in range(self.constants['generations']):
             print("===============\nGENERATION " + str(currGen) + "\n===============\n")
             self.Evaluate(self.parents)
             self.Evolve_For_One_Generation()

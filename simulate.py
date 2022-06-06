@@ -21,7 +21,7 @@ else:
 
 simulation = Simulation(runMode, solnId)
 robot_1 = Robot("body_1.urdf", solnId)
-# robot_2 = Robot("body_1.urdf")
+# robot_2 = Robot("body_1.urdf", solnId)
 world = World()
 
 robots = [robot_1]
