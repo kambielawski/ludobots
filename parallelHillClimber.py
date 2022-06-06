@@ -10,8 +10,10 @@ class ParallelHillClimber:
         os.system("rm brain*.nndf && rm fitness*.txt")
         self.parents = dict()
         self.nextAvailableId = 0
+
+        # create initial population of Solutions
         for i in range(c.POPULATION_SIZE):
-            print(i)
+            print("id: " + str(i))
             self.parents[i] = Solution(self.nextAvailableId)
             self.nextAvailableId += 1
 
