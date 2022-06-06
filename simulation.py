@@ -7,8 +7,9 @@ import time
 import constants as c
 
 class Simulation:
-    def __init__(self, runMode):
+    def __init__(self, runMode, solutionId):
         self.runMode = runMode
+        self.solutionId = solutionId
         if runMode == "GUI":
             self.physicsClient = p.connect(p.GUI)
         if runMode == "DIRECT":

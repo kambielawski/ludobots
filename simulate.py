@@ -12,13 +12,15 @@ from simulation import Simulation
 import constants as c
 
 # runMode can be GUI or DIRECT
-if len(sys.argv) > 1:
+if len(sys.argv) > 2:
     runMode = sys.argv[1]
+    solnId = int(sys.argv[2])
 else:
     runMode = "DIRECT"
+    solnId = 0
 
-simulation = Simulation(runMode)
-robot_1 = Robot("body_0.urdf")
+simulation = Simulation(runMode, solnId)
+robot_1 = Robot("body_1.urdf", solnId)
 # robot_2 = Robot("body_1.urdf")
 world = World()
 

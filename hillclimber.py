@@ -9,7 +9,7 @@ class HillClimber:
         self.parent = Solution()
 
     def Evolve(self):
-        self.parent.Evaluate()
+        # self.parent.Evaluate()
         for currentGeneration in range(c.NUMBER_OF_GENERATIONS):
             self.Spawn()
             self.Mutate()
