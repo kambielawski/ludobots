@@ -13,12 +13,12 @@ class ParallelHillClimber:
 
         # create initial population of Solutions
         for i in range(c.POPULATION_SIZE):
-            print("id: " + str(i))
             self.parents[i] = Solution(self.nextAvailableId)
             self.nextAvailableId += 1
 
     def Evolve(self):
         for currGen in range(c.NUMBER_OF_GENERATIONS):
+            print("===============\nGENERATION " + str(currGen) + "\n===============\n")
             self.Evaluate(self.parents)
             self.Evolve_For_One_Generation()
 
@@ -26,7 +26,7 @@ class ParallelHillClimber:
         self.Spawn()
         self.Mutate()
         self.Evaluate(self.children)
-        self.Print_Fitness()
+        # self.Print_Fitness()
         self.Select()
             
 
@@ -61,11 +61,9 @@ class ParallelHillClimber:
             solutions[s].Start_Simulation()
         for s in solutions.keys():
             solutions[s].Wait_For_Simulation_To_End()
-            print(solutions[s].Get_Fitness())
 
     def Print_Fitness(self):
-        print()
         for i in self.parents.keys():
-            print("Parent fitness: ", self.parents[i].fitness, "; Child fitness: ", self.children[i].fitness)
+            print("Parent fitness: ", self.parents[i].fitness, "; Child fitness: ", self.children[i].fitness + "\n")
 
 

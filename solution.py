@@ -11,29 +11,6 @@ class Solution:
         self.id = solutionId
         self.weights = np.random.rand(3,2)*2 - 1
 
-    def Evaluate(self, runMode="DIRECT"):
-        self.runMode=runMode
-        self.Create_World()
-        self.Generate_Body(
-            robotId=0,
-            start_x=0,
-            start_y=0,
-            start_z=1.5
-        )
-        self.Generate_Brain()
-
-        # run simulation
-        os.system("python3 simulate.py " + runMode + " " + str(self.id) + " " + " &")
-
-        fitnessFileName = "fitness_" + str(self.id) + ".txt"
-
-        while not os.path.exists(fitnessFileName):
-            time.sleep(0.01)
-
-        fitnessFile = open(fitnessFileName, "r")
-        self.fitness = float(fitnessFile.read())
-        print(self.fitness)
-
     def Start_Simulation(self, runMode="DIRECT"):
         self.runMode=runMode
         self.Create_World()
@@ -55,7 +32,11 @@ class Solution:
             time.sleep(0.01)
 
         fitnessFile = open(fitnessFileName, "r")
-        print(fitnessFile)
+        while fitnessFile.read() == '':
+            fitnessFile.seek(0)
+            time.sleep(0.01)
+
+        fitnessFile.seek(0)
         self.fitness = float(fitnessFile.read())
         os.system("rm fitness_" + str(self.id) + ".txt")
 
