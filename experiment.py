@@ -3,13 +3,14 @@ import time
 import os
 
 from parallelHillClimber import ParallelHillClimber
+import constants as c
 
 class Experiment:
     def __init__(self, expId):
         self.expId = expId
         self.xyVals = []
-        # self.trials = [(5, i) for i in range(2,7)]
-        self.trials = [(50,i) for i in range(2,21)]
+        self.trials = [(5, i) for i in range(2,7)]
+        # self.trials = [(50,i) for i in range(2,21)]
         # self.trials = [(50, i) for i in range(2,50)]
         # self.trials = [(5,0)]
 
@@ -30,6 +31,6 @@ class Experiment:
     def Save_Values(self):
         np.save('./data/exp_' + str(self.expId), self.xyVals)
 
-exp = Experiment(1)
+exp = Experiment(2)
 exp.Run()
-os.system("python3 analyze.py ./data/exp_1.npy")
+os.system("python3 analyze.py ./data/exp_2.npy")

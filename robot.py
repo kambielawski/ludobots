@@ -5,6 +5,8 @@ from sensor import Sensor
 from motor import Motor
 import os
 
+import constants as c
+
 class Robot:
     def __init__(self, urdfFileName, solutionId):
         self.robotId = p.loadURDF(urdfFileName)
@@ -16,7 +18,7 @@ class Robot:
         self.Prepare_To_Sense()
 
         # clean up NN file (it has already been read into a data structure)
-        os.system("rm brain_" + str(self.solutionId) + ".nndf")
+        # os.system("rm brain_" + str(self.solutionId) + ".nndf")
          
 
     # create Sensor object for each link & store in dictionary
@@ -43,7 +45,7 @@ class Robot:
         for neuronName in self.nn.Get_Neuron_Names():
             if self.nn.Is_Motor_Neuron(neuronName):
                 jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
-                desiredAngle = self.nn.Get_Value_Of(neuronName)
+                desiredAngle = self.nn.Get_Value_Of(neuronName) * c.MOTOR_JOINT_RANGE
                 self.motors[jointName].Set_Value(self, desiredAngle)
 
     def Get_Fitness(self):

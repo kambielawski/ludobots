@@ -20,11 +20,11 @@ else:
     solnId = 0
 
 simulation = Simulation(runMode, solnId)
-robot_1 = Robot("body_1.urdf", solnId)
+robot_0 = Robot("body_0.urdf", solnId)
 # robot_2 = Robot("body_1.urdf", solnId)
 world = World()
 
-robots = [robot_1]
+robots = [robot_0]
 
 
 simulation.Run(robots)
