@@ -104,7 +104,7 @@ class Solution:
             for s in range(c.NUM_SENSOR_NEURONS):
                 pyrosim.Send_Synapse(
                     sourceNeuronName=s,
-                    targetNeuronName=m+c.NUM_MOTOR_NEURONS,
+                    targetNeuronName=m+c.NUM_SENSOR_NEURONS,
                     weight=self.weights[m][s]
                 )
         
