@@ -25,7 +25,7 @@ class Solution:
 
         # execute simulation with runMode and solution ID and brainfile if it exists
         run_command = "python3 simulate.py " + runMode + " " + str(self.id)
-        if True:
+        if not c.DEBUG:
             run_command += " >log.txt 2>&1" 
         run_command += " &"
 
@@ -45,7 +45,6 @@ class Solution:
 
         fitnessFile.seek(0)
         self.fitness = float(fitnessFile.read())
-        os.system("rm fitness_" + str(self.id) + ".txt")
 
     def Mutate(self):
         randRow = random.randint(0,c.NUM_MOTOR_NEURONS-1)
@@ -66,7 +65,7 @@ class Solution:
             pyrosim.Send_Cube(name="Box", pos=cube.pos, size=cube.dims)
     
     def Create_World(self):
-        pyrosim.Start_SDF("world.sdf")
+        pyrosim.Start_SDF("world_" + str(self.id) + ".sdf")
         self.Generate_Environment()
         pyrosim.End()
 
