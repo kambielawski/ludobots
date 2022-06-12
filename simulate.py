@@ -15,16 +15,17 @@ import constants as c
 if len(sys.argv) > 2:
     runMode = sys.argv[1]
     solnId = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        brainFile = sys.argv[3]
+    else:
+        brainFile = None
 else:
     runMode = "DIRECT"
     solnId = 0
 
 simulation = Simulation(runMode, solnId)
-robot_0 = Robot("body_0.urdf", solnId)
-# robot_2 = Robot("body_1.urdf", solnId)
 world = World()
-
-robots = [robot_0]
+robots = [Robot(solnId, "body_0.urdf", brainFile)]
 
 
 simulation.Run(robots)

@@ -8,10 +8,14 @@ import os
 import constants as c
 
 class Robot:
-    def __init__(self, urdfFileName, solutionId):
+    def __init__(self, solutionId, urdfFileName, brainFileName=None):
         self.robotId = p.loadURDF(urdfFileName)
         self.solutionId = solutionId
-        self.nn = NEURAL_NETWORK("brain_" + str(self.solutionId) + ".nndf")
+        # optionally a brain file can be passed in
+        if brainFileName:
+            self.nn = NEURAL_NETWORK(brainFileName)
+        else:
+            self.nn = NEURAL_NETWORK("brain_" + str(self.solutionId) + ".nndf")
         pyrosim.Prepare_To_Simulate(self.robotId)
 
         self.Prepare_To_Act()
