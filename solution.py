@@ -23,10 +23,12 @@ class Solution:
         )
         self.Generate_Brain()
 
+        # execute simulation with runMode and solution ID and brainfile if it exists
         run_command = "python3 simulate.py " + runMode + " " + str(self.id)
         if True:
             run_command += " >log.txt 2>&1" 
         run_command += " &"
+
         # run simulation
         os.system(run_command)
 
@@ -143,3 +145,6 @@ class Solution:
 
     def Set_ID(self, newId):
         self.id = newId
+
+    def Get_ID(self):
+        return self.id

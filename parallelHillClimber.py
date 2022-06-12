@@ -8,7 +8,6 @@ import constants as c
 class ParallelHillClimber:
     def __init__(self, constants):
         self.constants = constants
-        os.system("rm brain*.nndf && rm fitness*.txt")
         self.parents = dict()
         self.nextAvailableId = 0
 
@@ -16,6 +15,9 @@ class ParallelHillClimber:
         for i in range(self.constants['population_size']):
             self.parents[i] = Solution(self.nextAvailableId)
             self.nextAvailableId += 1
+
+    def __del__(self):
+        os.system("rm brain*.nndf && rm fitness*.txt")
 
     def Evolve(self):
         for currGen in range(self.constants['generations']):
@@ -27,19 +29,34 @@ class ParallelHillClimber:
         self.Spawn()
         self.Mutate()
         self.Evaluate(self.children)
-        self.Print_Fitness()
+        # self.Print_Fitness()
         self.Select()
+        self.Print_Best_Fitness()
+        self.Save_Best()
             
 
     def Show_Best(self):
+        best_solution = self.Get_Best_Solution()
+        print("Fitness: ", best_solution.Get_Fitness())
+        best_solution.Start_Simulation(runMode="GUI")
+        best_solution.Wait_For_Simulation_To_End()
+
+    def Save_Best(self):
+        best_solution = self.Get_Best_Solution()
+        best_id = best_solution.Get_ID()
+        os.system("mv brain_" + str(best_id) + ".nndf best_brain.nndf")
+        os.system("rm brain*.nndf")
+        os.system("cp best_brain.nndf brain_" + str(best_id) + ".nndf")
+
+
+    def Get_Best_Solution(self):
         best_fitness=np.inf
         best_parent=-1
         for i in self.parents.keys():
             if self.parents[i].fitness < best_fitness:
                 best_parent = i
                 best_fitness = self.parents[i].fitness
-        self.parents[best_parent].Start_Simulation(runMode="GUI")
-        print("Best fitness: ", best_fitness)
+        return self.parents[best_parent]
 
     def Spawn(self):
         self.children = dict()
@@ -67,4 +84,6 @@ class ParallelHillClimber:
         for i in self.parents.keys():
             print("Parent fitness: ", str(self.parents[i].fitness), "; Child fitness: ", str(self.children[i].fitness) + "\n")
 
+    def Print_Best_Fitness(self):
+        print("Best fitness: ", self.Get_Best_Solution().Get_Fitness())
 
