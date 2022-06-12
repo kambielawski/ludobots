@@ -24,7 +24,7 @@ else:
     solnId = 0
 
 simulation = Simulation(runMode, solnId)
-world = World()
+world = World(solnId)
 robots = [Robot(solnId, "body_0.urdf", brainFile)]
 
 

@@ -17,7 +17,7 @@ class ParallelHillClimber:
             self.nextAvailableId += 1
 
     def __del__(self):
-        os.system("rm brain*.nndf && rm fitness*.txt")
+        os.system("rm world_*.sdf && rm brain_*.nndf && rm fitness_*.txt")
 
     def Evolve(self):
         for currGen in range(self.constants['generations']):
@@ -33,6 +33,8 @@ class ParallelHillClimber:
         self.Select()
         self.Print_Best_Fitness()
         self.Save_Best()
+        # cleanup 
+        os.system("rm world_*.sdf && rm brain_*.nndf && rm fitness_*.txt")
             
 
     def Show_Best(self):
@@ -45,9 +47,6 @@ class ParallelHillClimber:
         best_solution = self.Get_Best_Solution()
         best_id = best_solution.Get_ID()
         os.system("mv brain_" + str(best_id) + ".nndf best_brain.nndf")
-        os.system("rm brain*.nndf")
-        os.system("cp best_brain.nndf brain_" + str(best_id) + ".nndf")
-
 
     def Get_Best_Solution(self):
         best_fitness=np.inf
