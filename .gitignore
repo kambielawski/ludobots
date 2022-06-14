@@ -1,0 +1,15 @@
+./env/*
+env/
+./pyrosim/*
+pyrosim/
+./data/*
+data/
+*.swp
+*.swo
+*.urdf
+*.sdf
+*.nndf
+__pycache__/
+fitness*.txt
+log.txt
+
