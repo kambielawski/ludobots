@@ -22,6 +22,7 @@ if len(sys.argv) > 2:
 else:
     runMode = "DIRECT"
     solnId = 0
+    brainFile = None
 
 simulation = Simulation(runMode, solnId)
 world = World(solnId)

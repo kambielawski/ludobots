@@ -11,13 +11,19 @@ class Robot:
     def __init__(self, solutionId, urdfFileName, brainFileName=None):
         self.robotId = p.loadURDF(urdfFileName)
         self.solutionId = solutionId
+        self.brainFileName = brainFileName
+
         # optionally a brain file can be passed in
         if brainFileName:
             self.nn = NEURAL_NETWORK(brainFileName)
+        elif not os.path.exists((brainFileName := "brain_" + str(self.solutionId) + ".nndf")):
+            print("\nERROR: A brain file must be specified at the commandline or brain_<ID>.nndf must exist\n")
+            exit(1)
         else:
-            self.nn = NEURAL_NETWORK("brain_" + str(self.solutionId) + ".nndf")
-        pyrosim.Prepare_To_Simulate(self.robotId)
+            self.brainFileName = "brain_" + str(self.solutionId) + ".nndf"
+            self.nn = NEURAL_NETWORK(self.BrainFileName)
 
+        pyrosim.Prepare_To_Simulate(self.robotId)
         self.Prepare_To_Act()
         self.Prepare_To_Sense()
 
@@ -31,8 +37,10 @@ class Robot:
         for linkName in pyrosim.linkNamesToIndices:
             self.sensors[linkName] = Sensor(linkName)
 
+    # create Motor object for each joint 
     def Prepare_To_Act(self):
         self.motors = dict()
+        print(pyrosim.jointNamesToIndices)
         for jointName in pyrosim.jointNamesToIndices:
             self.motors[jointName] = Motor(jointName)
 
