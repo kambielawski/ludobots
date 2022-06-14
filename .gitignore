@@ -5,8 +5,11 @@ pyrosim/
 ./data/*
 data/
 *.swp
+*.swo
 *.urdf
 *.sdf
 *.nndf
 __pycache__/
-fitness.txt
+fitness*.txt
+log.txt
+
