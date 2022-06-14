@@ -8,28 +8,32 @@ import os
 import constants as c
 
 class Robot:
-    def __init__(self, solutionId, urdfFileName, brainFileName=None):
-        self.robotId = p.loadURDF(urdfFileName)
+    def __init__(self, solutionId, urdfFileName=None, nndfFileName=None):
         self.solutionId = solutionId
-        self.brainFileName = brainFileName
+        self.nndfFileName = nndfFileName
+        self.urdfFileName = urdfFileName
+
+        # optionally a body file can be passed in
+        if urdfFileName:
+            self.robotId = p.loadURDF(urdfFileName)
+        # default to a quadruped
+        else:
+            self.robotId = p.loadURDF("body_quadruped.urdf")
 
         # optionally a brain file can be passed in
-        if brainFileName:
-            self.nn = NEURAL_NETWORK(brainFileName)
-        elif not os.path.exists((brainFileName := "brain_" + str(self.solutionId) + ".nndf")):
-            print("\nERROR: A brain file must be specified at the commandline or brain_<ID>.nndf must exist\n")
-            exit(1)
+        if nndfFileName:
+            self.nn = NEURAL_NETWORK(nndfFileName)
+        elif not os.path.exists((nndfFileName := "brain_" + str(self.solutionId) + ".nndf")):
+            # print("\nERROR: A brain file must be specified at the commandline or brain_<ID>.nndf must exist\n")
+            # exit(1)
+            self.nn = NEURAL_NETWORK("best_brain.nndf")
         else:
-            self.brainFileName = "brain_" + str(self.solutionId) + ".nndf"
-            self.nn = NEURAL_NETWORK(self.BrainFileName)
+            self.nndfFileName = "brain_" + str(self.solutionId) + ".nndf"
+            self.nn = NEURAL_NETWORK(self.nndfFileName)
 
         pyrosim.Prepare_To_Simulate(self.robotId)
         self.Prepare_To_Act()
         self.Prepare_To_Sense()
-
-        # clean up NN file (it has already been read into a data structure)
-        # os.system("rm brain_" + str(self.solutionId) + ".nndf")
-         
 
     # create Sensor object for each link & store in dictionary
     def Prepare_To_Sense(self):
@@ -40,7 +44,6 @@ class Robot:
     # create Motor object for each joint 
     def Prepare_To_Act(self):
         self.motors = dict()
-        print(pyrosim.jointNamesToIndices)
         for jointName in pyrosim.jointNamesToIndices:
             self.motors[jointName] = Motor(jointName)
 

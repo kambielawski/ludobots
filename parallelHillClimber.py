@@ -29,8 +29,8 @@ class ParallelHillClimber:
         self.Spawn()
         self.Mutate()
         self.Evaluate(self.children)
-        # self.Print_Population_Fitness()
         self.Select()
+        # self.Print_Population_Fitness()
         self.Print_Best_Fitness()
         self.Save_Best()
         # cleanup 
@@ -81,7 +81,7 @@ class ParallelHillClimber:
 
     def Print_Population_Fitness(self):
         for i in self.parents.keys():
-            print("Parent fitness: ", str(self.parents[i].fitness), "; Child fitness: ", str(self.children[i].fitness) + "\n")
+            print("Parent fitness: ", str(self.parents[i].fitness), "; Child fitness: ", str(self.children[i].fitness))
 
     def Print_Best_Fitness(self):
         print("Best fitness: ", self.Get_Best_Solution().Get_Fitness())
