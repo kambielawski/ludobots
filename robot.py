@@ -68,9 +68,10 @@ class Robot:
         # self.positionOfLinkZero = self.linkZeroState[0]
         basePositionAndOrientation = p.getBasePositionAndOrientation(self.robotId)
         basePosition = basePositionAndOrientation[0]
-        xPosition = basePosition[0]
+        # xPosition = basePosition[0]
+        yPosition = basePosition[1]
         fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-        fitnessFile.write(str(xPosition))
+        fitnessFile.write(str(yPosition))
         os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
             
 

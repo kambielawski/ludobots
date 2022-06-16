@@ -49,10 +49,10 @@ class ParallelHillClimber:
         os.system("mv brain_" + str(best_id) + ".nndf best_brain.nndf")
 
     def Get_Best_Solution(self):
-        best_fitness=np.inf
+        best_fitness=-np.inf
         best_parent=-1
         for i in self.parents.keys():
-            if self.parents[i].fitness < best_fitness:
+            if self.parents[i].fitness > best_fitness:
                 best_parent = i
                 best_fitness = self.parents[i].fitness
         return self.parents[best_parent]
@@ -70,7 +70,7 @@ class ParallelHillClimber:
 
     def Select(self):
         for i in self.children.keys():
-            if self.children[i].fitness < self.parents[i].fitness:
+            if self.children[i].fitness > self.parents[i].fitness:
                 self.parents[i] = self.children[i]
     
     def Evaluate(self, solutions):

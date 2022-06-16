@@ -6,20 +6,23 @@ import time
 
 from box import Box
 from robots.quadruped import Quadruped
+from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
     def __init__(self, solutionId):
         self.id = solutionId
-        self.weights = np.random.rand(c.NUM_MOTOR_NEURONS,c.NUM_SENSOR_NEURONS)*2 - 1
+        self.robot = Hexapod(self.id)
+        self.weights = self.robot.Generate_Weights()
+        # self.weights = np.random.rand(c.NUM_MOTOR_NEURONS,c.NUM_SENSOR_NEURONS)*2 - 1
 
     def Start_Simulation(self, runMode="DIRECT"):
         self.runMode=runMode
         self.Create_World()
-        self.Generate_Robot()
+        self.robot.Generate_Robot(self.weights, 0,0,1)
 
         # execute simulation with runMode and solution ID and brainfile if it exists
-        run_command = "python3 simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf"
+        run_command = "python3 simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File()
         if not c.DEBUG:
             run_command += " >log.txt 2>&1" 
         run_command += " &"
@@ -42,8 +45,8 @@ class Solution:
         self.fitness = float(fitnessFile.read())
 
     def Mutate(self):
-        randRow = random.randint(0,c.NUM_MOTOR_NEURONS-1)
-        randCol = random.randint(0,c.NUM_SENSOR_NEURONS-1)
+        randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
+        randCol = random.randint(0,self.robot.NUM_SENSOR_NEURONS-1)
 
         self.robot.weights[randRow][randCol] = random.random() * 2 - 1
 
@@ -66,14 +69,11 @@ class Solution:
         self.Generate_Environment()
         pyrosim.End()
 
-    def Generate_Robot(self):
-        self.robot = Quadruped(self.id, self.weights,0,0,1)
-        # self.robot.Generate_Fully_Connected_Synapses()
-
     def Get_Fitness(self):
         return self.fitness
 
     def Set_ID(self, newId):
+        self.robot.Set_Id(newId)
         self.id = newId
 
     def Get_ID(self):

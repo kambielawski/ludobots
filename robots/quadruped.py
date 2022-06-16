@@ -3,30 +3,39 @@ import sys
 sys.path.append('../pyrosim')
 import pyrosim.pyrosim as pyrosim
 
-import constants as c
-
 class Quadruped:
-    def __init__(self, solnId, weights, start_x, start_y, start_z):
+    def __init__(self, solnId):
         self.solnId = solnId
-        self.start_x = start_x
-        self.start_y = start_y
-        self.start_z = start_z 
-        # self.weights = np.random.rand(c.NUM_MOTOR_NEURONS, c.NUM_SENSOR_NEURONS) * 2 - 1
+        self.bodyFile = "body_quadruped.urdf"
+
+        self.NUM_MOTOR_NEURONS = 9
+        self.NUM_SENSOR_NEURONS = 4
+
+        # self.weights = weights
+
+    def Generate_Robot(self, weights, start_x, start_y, start_z):
         self.weights = weights
-        self.Generate_Body(start_x, start_y, start_z) 
-        self.Generate_NN() 
+        self.Generate_Body(start_x, start_y, start_z)
+        self.Generate_NN()
+
+    def Generate_Weights(self):
+        self.weights = np.random.rand(self.NUM_MOTOR_NEURONS, self.NUM_SENSOR_NEURONS) * 2 - 1
+        return self.weights
 
     def Generate_Fully_Connected_Synapses(self):
-        for m in range(c.NUM_MOTOR_NEURONS):
-            for s in range(c.NUM_SENSOR_NEURONS):
+        for m in range(self.NUM_MOTOR_NEURONS):
+            for s in range(self.NUM_SENSOR_NEURONS):
                 pyrosim.Send_Synapse(
                     sourceNeuronName=s,
-                    targetNeuronName=m+c.NUM_SENSOR_NEURONS,
+                    targetNeuronName=m+self.NUM_SENSOR_NEURONS,
                     weight=self.weights[m][s]
                 )
 
+    def Get_Body_File(self):
+        return self.bodyFile
+
     def Generate_Body(self, start_x, start_y, start_z):
-        pyrosim.Start_URDF("body_quadruped.urdf")
+        pyrosim.Start_URDF(self.bodyFile)
 
         # root link
         pyrosim.Send_Cube(name="Torso", pos=[start_x, start_y, start_z], size=[1,1,1])
@@ -116,13 +125,6 @@ class Quadruped:
         # pyrosim.Start_NeuralNetwork("brain_" + str(self.id) + ".nndf")
         pyrosim.Start_NeuralNetwork("brain_" + str(self.solnId) + ".nndf")
 
-        '''
-        pyrosim.Send_Sensor_Neuron(name=0, linkName="Torso")
-        pyrosim.Send_Sensor_Neuron(name=1, linkName="BackLeg")
-        pyrosim.Send_Sensor_Neuron(name=2, linkName="FrontLeg")
-        pyrosim.Send_Sensor_Neuron(name=3, linkName="LeftLeg")
-        pyrosim.Send_Sensor_Neuron(name=4, linkName="RightLeg")
-        '''
         pyrosim.Send_Sensor_Neuron(name=0, linkName="RightLower")
         pyrosim.Send_Sensor_Neuron(name=1, linkName="LeftLower")
         pyrosim.Send_Sensor_Neuron(name=2, linkName="FrontLower")
@@ -141,3 +143,5 @@ class Quadruped:
 
         pyrosim.End()
         
+    def Set_Id(self, newId):
+        self.solnId = newId
