@@ -12,7 +12,7 @@ import constants as c
 class Solution:
     def __init__(self, solutionId):
         self.id = solutionId
-        self.robot = Hexapod(self.id)
+        self.robot = Quadruped(self.id)
         self.weights = self.robot.Generate_Weights()
         # self.weights = np.random.rand(c.NUM_MOTOR_NEURONS,c.NUM_SENSOR_NEURONS)*2 - 1
 
