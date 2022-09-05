@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import os
+from sys import platform
 
 from solution import Solution
 import constants as c
@@ -17,7 +18,10 @@ class ParallelHillClimber:
             self.nextAvailableId += 1
 
     def __del__(self):
-        os.system("rm world_*.sdf && rm brain_*.nndf && rm fitness_*.txt")
+        if platform == 'win32':
+            os.system("del world_*.sdf && del brain_*.nndf && del fitness_*.txt && del tmp_*.txt")
+        else:
+            os.system("rm world_*.sdf && rm brain_*.nndf && rm fitness_*.txt && rm tmp_*.txt")
 
     def Evolve(self):
         for currGen in range(self.constants['generations']):
@@ -34,7 +38,10 @@ class ParallelHillClimber:
         self.Print_Best_Fitness()
         self.Save_Best()
         # cleanup 
-        os.system("rm world_*.sdf && rm brain_*.nndf && rm fitness_*.txt")
+        if platform == 'win32':
+            os.system("del world_*.sdf && del brain_*.nndf && del fitness_*.txt")
+        else:
+            os.system("rm world_*.sdf && rm brain_*.nndf && rm fitness_*.txt")
             
 
     def Show_Best(self):
@@ -46,7 +53,10 @@ class ParallelHillClimber:
     def Save_Best(self):
         best_solution = self.Get_Best_Solution()
         best_id = best_solution.Get_ID()
-        os.system("mv brain_" + str(best_id) + ".nndf best_brain.nndf")
+        if platform == 'win32':
+            os.system("move brain_" + str(best_id) + ".nndf best_brain.nndf")
+        else:
+            os.system("mv brain_" + str(best_id) + ".nndf best_brain.nndf")
 
     def Get_Best_Solution(self):
         best_fitness=-np.inf

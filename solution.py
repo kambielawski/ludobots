@@ -1,4 +1,5 @@
 import os
+from sys import platform
 import numpy as np
 import pyrosim.pyrosim as pyrosim
 import random
@@ -22,10 +23,13 @@ class Solution:
         self.robot.Generate_Robot(self.weights, 0,0,1)
 
         # execute simulation with runMode and solution ID and brainfile if it exists
-        run_command = "python3 simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File()
-        if not c.DEBUG:
+        run_command = "python simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File()
+        if c.DEBUG:
             run_command += " >log.txt 2>&1" 
-        run_command += " &"
+        if platform == 'win32':
+            run_command = 'START /B ' + run_command
+        else:
+            run_command += " &"
 
         # run simulation
         os.system(run_command)
