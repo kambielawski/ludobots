@@ -9,6 +9,7 @@ class Sensor:
 
     def Get_Value(self, i):
         self.values[i] = pyrosim.Get_Touch_Sensor_Value_For_Link(self.name)
+        return self.values[i]
 
     def Prepare_To_Sense(self):
         self.values = np.zeros(c.TIMESTEPS)
