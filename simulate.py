@@ -18,6 +18,7 @@ bodyFile = None
 brainFile = None
 runMode = "DIRECT"
 solnId = 0
+windowSize = c.DEFAULT_EMPOWERMENT_WINDOW_SIZE
 
 # runMode can be GUI or DIRECT
 if argc > 1:
@@ -27,11 +28,13 @@ if argc > 1:
         if argc > 3:
             brainFile = sys.argv[3]
             if argc > 4:
-                bodyFile = sys.argv[4] 
+                bodyFile = sys.argv[4]
+                if argc > 5:
+                    windowSize = int(sys.argv[5])
 
 simulation = Simulation(runMode, solnId)
 world = World(solnId)
-robots = [Robot(solnId, bodyFile, brainFile)]
+robots = [Robot(solnId, bodyFile, brainFile, windowSize)]
 
 
 simulation.Run(robots)
