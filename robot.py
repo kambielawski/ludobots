@@ -96,9 +96,7 @@ class Robot:
         self.motorVals = [m+c for m,c in zip(self.motorVals, counts)]
         pass
     
-    def Empowerment_Window(self, timestep):
-        # print(np.array(self.motorVals).shape, np.array(self.sensorVals).shape)
-        # convert motor and sensor states into integers
+    def Empowerment_Window(self, timestep):        # convert motor and sensor states into integers
         actionz = [int(''.join(str(b) for b in A), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
         sensorz = [int(''.join(str(b) for b in S), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
         
