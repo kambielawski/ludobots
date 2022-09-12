@@ -134,9 +134,11 @@ class Robot:
         xPosition = basePosition[0]
         return xPosition
 
+    def Get_Empowerment(self):
+        return self.empowerment / self.empowermentTimesteps
+
     def Get_Fitness(self):
-        displacement, emp = self.Simulation_Empowerment_Fitness()
-        fitness = displacement + 10*emp
+        fitness = self.Y_Axis_Fitness()
         fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
         fitnessFile.write(str(fitness))
         if platform == 'win32':
