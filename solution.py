@@ -15,6 +15,8 @@ class Solution:
         self.id = solutionId
         self.robot = Quadruped(self.id)
         self.weights = self.robot.Generate_Weights()
+        self.age = 1
+        self.empowerment = 0
         # self.weights = np.random.rand(c.NUM_MOTOR_NEURONS,c.NUM_SENSOR_NEURONS)*2 - 1
 
     def Start_Simulation(self, runMode="DIRECT"):
@@ -46,7 +48,9 @@ class Solution:
             time.sleep(0.01)
 
         fitnessFile.seek(0)
-        self.fitness = float(fitnessFile.read())
+        fitnessFileContent = [n.strip('\"\ \n') for n in fitnessFile.readlines()[0].split(' ')]
+        self.fitness = float(fitnessFileContent[0])
+        self.empowerment = float(fitnessFileContent[1])
 
     def Mutate(self):
         randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
@@ -73,8 +77,20 @@ class Solution:
         self.Generate_Environment()
         pyrosim.End()
 
+    def Increment_Age(self):
+        self.age += 1
+
+    def Get_Robot_Empowerment(self):
+        return self.Get_Empowerment()
+
+    def Get_Age(self):
+        return self.age
+
     def Get_Fitness(self):
         return self.fitness
+
+    def Get_Empowerment(self):
+        return self.empowerment
 
     def Set_ID(self, newId):
         self.robot.Set_Id(newId)
