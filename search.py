@@ -2,18 +2,30 @@ import os
 
 # from hillclimber import HillClimber
 from parallelHillClimber import ParallelHillClimber
+from ageFitnessPareto import AgeFitnessPareto
 import constants as c
 
-def Get_Constants():
+def Get_Constants_AFPO():
+    return {
+        'generations': 1,
+        'population_size': 5
+    }
+
+def Get_Constants_HillClimber():
     return {
         'generations': c.NUMBER_OF_GENERATIONS,
         'population_size': c.POPULATION_SIZE
     }
 
-# hc = HillClimber()
-hc = ParallelHillClimber(Get_Constants())
-hc.Evolve()
-hc.Show_Best()
+# Age-Fitness Pareto Optimization
+afpo = AgeFitnessPareto(Get_Constants_AFPO())
+afpo.Evolve()
+afpo.Show_Best()
+
+# # HILLCLIMBER
+# hc = ParallelHillClimber(Get_Constants_HillClimber())
+# hc.Evolve()
+# hc.Show_Best()
 
 
 
