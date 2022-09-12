@@ -20,5 +20,5 @@ if not os.path.exists(body_file):
     exit(1)
 
 # for windowSize in range(10,500,10):
-os.system("python simulate.py DIRECT 0 " + brain_file + " " + body_file)# " " + str(windowSize) +
+os.system("python simulate.py GUI 0 " + brain_file + " " + body_file)# " " + str(windowSize) +
 
