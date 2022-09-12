@@ -49,7 +49,6 @@ class Robot:
         self.Prepare_To_Sense()
 
     def __del__(self):
-        print(np.array(self.sensorVals).shape, np.array(self.motorVals).shape)
         pass
 
     # create Sensor object for each link & store in dictionary
@@ -98,7 +97,7 @@ class Robot:
         pass
     
     def Empowerment_Window(self, timestep):
-        print(np.array(self.motorVals).shape, np.array(self.sensorVals).shape)
+        # print(np.array(self.motorVals).shape, np.array(self.sensorVals).shape)
         # convert motor and sensor states into integers
         actionz = [int(''.join(str(b) for b in A), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
         sensorz = [int(''.join(str(b) for b in S), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
@@ -114,18 +113,13 @@ class Robot:
     def Empowerment_Fitness(self):
         yPosition = self.Y_Axis_Fitness()
         emp = self.empowerment / self.empowermentTimesteps
-        print('empowerment: ', emp)
         return yPosition, emp
 
     def Simulation_Empowerment_Fitness(self):
         yPos = self.Y_Axis_Fitness()
-        stateShape = np.array(self.motorVals).shape
         motorDist = Dist(np.array(self.motorVals).flatten())
         sensorDist = Dist(np.array(self.sensorVals).flatten())
-
-        mi = pyinform.mutual_info(sensorDist, motorDist, local=True)
-        # print(np.array(mi).reshape(stateShape)[-1])
-        print(mi)
+        mi = pyinform.mutual_info(sensorDist, motorDist, local=False)
         return yPos, mi
 
     def Y_Axis_Fitness(self):
@@ -149,7 +143,6 @@ class Robot:
         fitnessFile.write(str(fitness))
         if platform == 'win32':
             os.system("echo " + str(fitness) + " > fitness_" + str(self.solutionId) + ".txt")
-            # os.system("copy tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
         else:
             os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
         
