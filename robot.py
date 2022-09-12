@@ -113,12 +113,11 @@ class Robot:
         emp = self.empowerment / self.empowermentTimesteps
         return yPosition, emp
 
-    def Simulation_Empowerment_Fitness(self):
-        yPos = self.Y_Axis_Fitness()
+    def Simulation_Empowerment(self):
         motorDist = Dist(np.array(self.motorVals).flatten())
         sensorDist = Dist(np.array(self.sensorVals).flatten())
         mi = pyinform.mutual_info(sensorDist, motorDist, local=False)
-        return yPos, mi
+        return mi
 
     def Y_Axis_Fitness(self):
         basePositionAndOrientation = p.getBasePositionAndOrientation(self.robotId)
@@ -135,14 +134,18 @@ class Robot:
         return xPosition
 
     def Get_Empowerment(self):
-        return self.empowerment / self.empowermentTimesteps
+        return self.Simulation_Empowerment()
 
+    '''
+    Writes both the fitness and the empowerment to a file named fitness_<id>.txt
+    '''
     def Get_Fitness(self):
         fitness = self.Y_Axis_Fitness()
+        empowerment = self.Get_Empowerment()
         fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-        fitnessFile.write(str(fitness))
+        fitnessFile.write(str(fitness)+ " " + str(self.Get_Empowerment()))
         if platform == 'win32':
-            os.system("echo " + str(fitness) + " > fitness_" + str(self.solutionId) + ".txt")
+            os.system("echo " + "\"" + str(fitness) + " " + str(empowerment) + "\"" +  " > fitness_" + str(self.solutionId) + ".txt")
         else:
             os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
         
