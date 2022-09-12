@@ -1,9 +1,6 @@
 import pyrosim.pyrosim as pyrosim
 import pybullet as p
-import pybullet_data
-import time
 import numpy as np
-import random
 import sys
 
 from robot import Robot
