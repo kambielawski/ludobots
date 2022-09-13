@@ -7,8 +7,8 @@ import constants as c
 
 def Get_Constants_AFPO():
     return {
-        'generations': 1,
-        'population_size': 5
+        'generations': 5,
+        'target_population_size': 10
     }
 
 def Get_Constants_HillClimber():
