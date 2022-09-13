@@ -17,6 +17,7 @@ class Solution:
         self.weights = self.robot.Generate_Weights()
         self.age = 1
         self.empowerment = 0
+        self.been_simulated = False
         # self.weights = np.random.rand(c.NUM_MOTOR_NEURONS,c.NUM_SENSOR_NEURONS)*2 - 1
 
     def Start_Simulation(self, runMode="DIRECT"):
@@ -51,14 +52,13 @@ class Solution:
         fitnessFileContent = [n.strip('\"\ \n') for n in fitnessFile.readlines()[0].split(' ')]
         self.fitness = float(fitnessFileContent[0])
         self.empowerment = float(fitnessFileContent[1])
+        self.been_simulated = True
 
     def Mutate(self):
         randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
         randCol = random.randint(0,self.robot.NUM_SENSOR_NEURONS-1)
 
         self.robot.weights[randRow][randCol] = random.random() * 2 - 1
-
-        # self.weights[randRow][randCol] = random.random()*2-1
 
     def Generate_Environment(self):
         cubes = []
@@ -80,9 +80,6 @@ class Solution:
     def Increment_Age(self):
         self.age += 1
 
-    def Get_Robot_Empowerment(self):
-        return self.Get_Empowerment()
-
     def Get_Age(self):
         return self.age
 
@@ -91,6 +88,12 @@ class Solution:
 
     def Get_Empowerment(self):
         return self.empowerment
+
+    def Has_Been_Simulated(self):
+        return self.been_simulated
+
+    def Reset_Simulated(self):
+        self.been_simulated = False
 
     def Set_ID(self, newId):
         self.robot.Set_Id(newId)
