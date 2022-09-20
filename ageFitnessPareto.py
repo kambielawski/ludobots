@@ -4,7 +4,9 @@ import os
 from sys import platform
 
 from solution import Solution
-import constants as c
+
+OS_MV = 'move' if platform == 'win32' else 'mv'
+OS_RM = 'del' if platform == 'win32' else 'rm'
 
 class AgeFitnessPareto():
     def __init__(self, constants):
@@ -19,24 +21,29 @@ class AgeFitnessPareto():
             self.nextAvailableId += 1
 
     def __del__(self):
-        if platform == 'win32':
-            os.system("del world_*.sdf && del brain_*.nndf && del fitness_*.txt && del tmp_*.txt")
-        else:
-            os.system("rm world_*.sdf && rm brain_*.nndf && rm fitness_*.txt && rm tmp_*.txt")
+        self.Clean_Directory()
     
+    '''
+    Main Evolve loop for a single run
+    '''
     def Evolve(self):
         self.Run_Solutions()
         for currentGen in range(self.nGenerations):
             print('===== Generation ' + str(currentGen) + ' =====')
             self.Evolve_One_Generation()
+            if currentGen == self.nGenerations - 1:
+                self.Save_Best()
+            self.Clean_Directory()
 
+    '''
+    Single generation process
+    '''
     def Evolve_One_Generation(self):
         self.Increment_Ages()
         self.Extend_Population()
         self.Run_Solutions()
         self.Reduce_Population()
         pf = self.Pareto_Front()
-        # print([(s.Get_ID(), s.Get_Age(), s.Get_Fitness(), s.Get_Empowerment()) for s in self.population.values()])
         print(pf)
         print([(self.population[s].Get_ID(), self.population[s].Get_Age(), 
                 self.population[s].Get_Fitness(), self.population[s].Get_Empowerment()) for s in pf])
@@ -77,13 +84,15 @@ class AgeFitnessPareto():
     Remove dominated individuals until target population size is reached
     '''
     def Reduce_Population(self):
+        pf_size = len(self.Pareto_Front())
+        if pf_size >= self.targetPopSize:
+            self.targetPopSize = pf_size
         # Remove individuals until target population is reached
         while len(self.population) > self.targetPopSize:
             i1 = np.random.choice(list(self.population.keys()))
             i2 = np.random.choice(list(self.population.keys()))
             while i2 == i1:
                 i2 = np.random.choice(list(self.population.keys()))
-
             if self.Dominates(i1, i2): # i1 dominates
                 self.population.pop(i2)
             elif self.Dominates(i2, i1): # i2 dominates
@@ -120,13 +129,32 @@ class AgeFitnessPareto():
     Returns True if solution i dominates solution j (else False)
     '''
     def Dominates(self, i, j):
-        if self.population[j].Get_Age() < self.population[i].Get_Age():
+        if self.population[j].Get_Age() == self.population[i].Get_Age() and self.population[j].Get_Fitness() == self.population[i].Get_Fitness() and self.population[j].Get_Empowerment() == self.population[i].Get_Empowerment():
+            return i > j
+        elif self.population[i].Get_Age() <= self.population[j].Get_Age() and self.population[i].Get_Fitness() >= self.population[j].Get_Fitness() and self.population[i].Get_Empowerment() >= self.population[j].Get_Empowerment():
+            return True
+        else:
             return False
-        if self.population[j].Get_Fitness() > self.population[i].Get_Fitness():
-            return False
-        if self.population[j].Get_Empowerment() > self.population[i].Get_Empowerment():
-            return False
-        return True
 
-    def Show_Best(self):
-        pass
+    def Clean_Directory(self):
+        pf = self.Pareto_Front()
+
+        # Save Pareto-front brains
+        for id in pf:
+            if os.path.exists('brain_' + str(id) + '.nndf'):
+                os.system(OS_MV + ' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf'.format(id=id))
+        # Remove the rest
+        os.system(OS_RM + ' world_*.sdf && ' + OS_RM + ' brain_*.nndf && ' + OS_RM + ' fitness_*.txt')
+        # Remove old Pareto-front brains
+        pf_files = os.listdir('./best_robots/pareto_front')
+        for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
+            if pf_id[0] not in pf:
+                os.system(OS_RM + ' best_robots/pareto_front/{filestr}'.format(filestr=pf_id[1]))
+
+    def Save_Best(self):
+        pf = self.Pareto_Front()
+        
+        # Move over pareto front bests, then delete pareto_front dir
+        for id in pf:
+            os.system(OS_MV + ' best_robots/pareto_front/pf_brain_{id}.nndf best_robots/quadruped'.format(id=id))
+        os.system(OS_RM + ' best_robots/pareto_front/*')
