@@ -3,6 +3,7 @@ env/
 .env/
 ./pyrosim/*
 pyrosim/
+plots/
 ./data/*
 data/
 *.swp
