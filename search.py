@@ -7,8 +7,8 @@ import constants as c
 
 def Get_Constants_AFPO():
     return {
-        'generations': 5,
-        'target_population_size': 10
+        'generations': 25,
+        'target_population_size': 25
     }
 
 def Get_Constants_HillClimber():
@@ -20,7 +20,7 @@ def Get_Constants_HillClimber():
 # Age-Fitness Pareto Optimization
 afpo = AgeFitnessPareto(Get_Constants_AFPO())
 afpo.Evolve()
-afpo.Show_Best()
+# afpo.Show_Best()
 
 # # HILLCLIMBER
 # hc = ParallelHillClimber(Get_Constants_HillClimber())

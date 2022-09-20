@@ -26,7 +26,7 @@ class Solution:
         self.robot.Generate_Robot(self.weights, 0,0,1)
 
         # execute simulation with runMode and solution ID and brainfile if it exists
-        run_command = "python simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File()
+        run_command = "python3 simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File()
         if c.DEBUG:
             run_command += " >log.txt 2>&1" 
         if platform == 'win32':
@@ -50,9 +50,12 @@ class Solution:
 
         fitnessFile.seek(0)
         fitnessFileContent = [n.strip('\"\ \n') for n in fitnessFile.readlines()[0].split(' ')]
+        fitnessFile.close()
         self.fitness = float(fitnessFileContent[0])
         self.empowerment = float(fitnessFileContent[1])
         self.been_simulated = True
+        # rm = 'del' if platform == 'win32' else 'rm'
+        # os.system(rm + ' ' + fitnessFileName)
 
     def Mutate(self):
         randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)

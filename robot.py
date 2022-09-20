@@ -15,6 +15,7 @@ import constants as c
 class Robot:
     def __init__(self, solutionId, urdfFileName=None, nndfFileName=None, empowermentWindowSize=c.DEFAULT_EMPOWERMENT_WINDOW_SIZE):
         self.solutionId = solutionId
+        self.robotId = None
         self.nndfFileName = nndfFileName
         self.urdfFileName = urdfFileName
         self.motorVals = []
@@ -26,12 +27,16 @@ class Robot:
         self.empowerment = 0
         self.empowermentTimesteps = 0
 
-        # optionally a body file can be passed in
-        if urdfFileName:
-            self.robotId = p.loadURDF(urdfFileName)
-        # default to a quadruped
-        else:
-            self.robotId = p.loadURDF("body_quadruped.urdf")
+        while not self.robotId:
+            try:
+                # optionally a body file can be passed in
+                if urdfFileName:
+                    self.robotId = p.loadURDF(urdfFileName)
+                # default to a quadruped
+                else:
+                    self.robotId = p.loadURDF("body_quadruped.urdf")
+            except:
+                continue
 
         # optionally a brain file can be passed in
         if nndfFileName:
@@ -142,11 +147,15 @@ class Robot:
     def Get_Fitness(self):
         fitness = self.Y_Axis_Fitness()
         empowerment = self.Get_Empowerment()
-        fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-        fitnessFile.write(str(fitness)+ " " + str(self.Get_Empowerment()))
-        if platform == 'win32':
-            os.system("echo " + "\"" + str(fitness) + " " + str(empowerment) + "\"" +  " > fitness_" + str(self.solutionId) + ".txt")
-        else:
-            os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
+        # fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
+        # fitnessFile.write(str(fitness)+ " " + str(self.Get_Empowerment()))
+
+        # platform agnostic
+        os.system("echo " + "\"" + str(fitness) + " " + str(empowerment) + "\"" +  " > fitness_" + str(self.solutionId) + ".txt")
+        
+        # if platform == 'win32':
+        #     os.system("echo " + "\"" + str(fitness) + " " + str(empowerment) + "\"" +  " > fitness_" + str(self.solutionId) + ".txt")
+        # else:
+        #     os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
         
 
