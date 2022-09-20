@@ -4,6 +4,7 @@ import os
 from sys import platform
 
 from solution import Solution
+from plotter import Plotter
 
 OS_MV = 'move' if platform == 'win32' else 'mv'
 OS_RM = 'del' if platform == 'win32' else 'rm'
@@ -14,6 +15,7 @@ class AgeFitnessPareto():
         self.nextAvailableId = 0
         self.nGenerations = constants['generations']
         self.targetPopSize = constants['target_population_size']
+        self.plotter = Plotter(constants)
 
         # Create initial population randomly
         for i in range(self.targetPopSize):
@@ -30,23 +32,23 @@ class AgeFitnessPareto():
         self.Run_Solutions()
         for currentGen in range(self.nGenerations):
             print('===== Generation ' + str(currentGen) + ' =====')
-            self.Evolve_One_Generation()
+            self.Evolve_One_Generation(currentGen)
             if currentGen == self.nGenerations - 1:
                 self.Save_Best()
+                self.Plot_Gen_Animation()
             self.Clean_Directory()
 
     '''
     Single generation process
     '''
-    def Evolve_One_Generation(self):
+    def Evolve_One_Generation(self, genNumber):
         self.Increment_Ages()
         self.Extend_Population()
         self.Run_Solutions()
         self.Reduce_Population()
         pf = self.Pareto_Front()
+        self.Run_Gen_Statistics(genNumber, pf)
         print(pf)
-        print([(self.population[s].Get_ID(), self.population[s].Get_Age(), 
-                self.population[s].Get_Fitness(), self.population[s].Get_Empowerment()) for s in pf])
     
     '''
     Breed parents, mutate, and add a random individual
@@ -125,16 +127,39 @@ class AgeFitnessPareto():
                 paretoFront.append(i)
         return paretoFront
 
-    '''
-    Returns True if solution i dominates solution j (else False)
-    '''
     def Dominates(self, i, j):
+        '''
+        Returns True if solution i dominates solution j (else False)
+        '''
         if self.population[j].Get_Age() == self.population[i].Get_Age() and self.population[j].Get_Fitness() == self.population[i].Get_Fitness() and self.population[j].Get_Empowerment() == self.population[i].Get_Empowerment():
             return i > j
         elif self.population[i].Get_Age() <= self.population[j].Get_Age() and self.population[i].Get_Fitness() >= self.population[j].Get_Fitness() and self.population[i].Get_Empowerment() >= self.population[j].Get_Empowerment():
             return True
         else:
             return False
+
+    def Run_Gen_Statistics(self, genNumber, pf):
+        '''
+        Sends data for bookkeeping in Plotter class
+
+        genNumber is an int representing which generation the data is from
+        pf is a dict of the Pareto Front solutions for the generation
+        '''
+        pfData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), 
+                   self.population[s].Get_Fitness(), self.population[s].Get_Empowerment()) for s in pf]
+        popData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), 
+                    self.population[s].Get_Fitness(), self.population[s].Get_Empowerment()) for s in self.population]
+        self.plotter.Population_Data(genNumber, popData)
+        self.plotter.Pareto_Front_Data(genNumber, pfData)
+
+    def Plot_Gen_Animation(self):
+        '''
+        Runs Plotter animation
+        '''
+        self.plotter.Plot_Age_Fitness()
+        self.plotter.Plot_Gen_Fitness()
+        self.plotter.Plot_Gen_Fitness_PF()
+        self.plotter.Plot_Age_Fitness_PF()
 
     def Clean_Directory(self):
         pf = self.Pareto_Front()
