@@ -29,10 +29,14 @@ class AgeFitnessPareto():
     Main Evolve loop for a single run
     '''
     def Evolve(self):
-        self.Run_Solutions()
         for currentGen in range(self.nGenerations):
             print('===== Generation ' + str(currentGen) + ' =====')
-            self.Evolve_One_Generation(currentGen)
+            if currentGen == 0:
+                self.Run_Solutions()
+                pf = self.Pareto_Front()
+                self.Run_Gen_Statistics(currentGen, pf)
+            else:
+                self.Evolve_One_Generation(currentGen)
             if currentGen == self.nGenerations - 1:
                 self.Save_Best()
                 self.Plot_Gen_Animation()
@@ -56,7 +60,7 @@ class AgeFitnessPareto():
     def Extend_Population(self):
         # 1. Breed
         # - do tournament selection |pop| times 
-        for i in range(self.targetPopSize):
+        for _ in range(self.targetPopSize):
             parent = self.Tournament_Select()
             child = copy.deepcopy(self.population[parent])
             # - create mutated children from the tournament winners
