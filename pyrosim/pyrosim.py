@@ -1,3 +1,5 @@
+import sys
+sys.path.append('C:\\Users\\Kam\\Documents\\dev\\ludobots\\.env\\Lib\\site-packages')
 import pybullet as p
 
 from pyrosim.nndf import NNDF
