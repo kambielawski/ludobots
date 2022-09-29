@@ -11,13 +11,14 @@ from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
-    def __init__(self, solutionId):
+    def __init__(self, solutionId, lineage):
         self.id = solutionId
         self.robot = Quadruped(self.id)
         self.weights = self.robot.Generate_Weights()
         self.age = 1
         self.empowerment = 0
         self.been_simulated = False
+        self.lineage = lineage
         # self.weights = np.random.rand(c.NUM_MOTOR_NEURONS,c.NUM_SENSOR_NEURONS)*2 - 1
 
     def Start_Simulation(self, runMode="DIRECT"):
@@ -104,3 +105,6 @@ class Solution:
 
     def Get_ID(self):
         return self.id
+
+    def Get_Lineage(self):
+        return self.lineage
