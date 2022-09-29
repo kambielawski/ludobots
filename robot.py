@@ -147,15 +147,17 @@ class Robot:
     def Get_Fitness(self):
         fitness = self.Y_Axis_Fitness()
         empowerment = self.Get_Empowerment()
-        # fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-        # fitnessFile.write(str(fitness)+ " " + str(self.Get_Empowerment()))
+        fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
+        fitnessFile.write(str(fitness)+ " " + str(empowerment))
+
+        # UNIX
+        exit_code = os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
+        if exit_code != 0:
+             raise OSError('File I/O error moving fitness to file.')
 
         # platform agnostic
-        os.system("echo " + "\"" + str(fitness) + " " + str(empowerment) + "\"" +  " > fitness_" + str(self.solutionId) + ".txt")
+
+        # os.system("echo " + "\"" + str(fitness) + " " + str(empowerment) + "\"" +  " > fitness_" + str(self.solutionId) + ".txt")
         
-        # if platform == 'win32':
-        #     os.system("echo " + "\"" + str(fitness) + " " + str(empowerment) + "\"" +  " > fitness_" + str(self.solutionId) + ".txt")
-        # else:
-        #     os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
         
 
