@@ -1,12 +1,15 @@
 import numpy as np
 import sys
+import os
 sys.path.append('../pyrosim')
 import pyrosim.pyrosim as pyrosim
 
 class Quadruped:
     def __init__(self, solnId):
         self.solnId = solnId
-        self.bodyFile = "body_quadruped.urdf"
+        self.sourceBodyFile = "body_quadruped.urdf"
+        self.bodyFile = "body_quadruped_" + str(solnId) + ".urdf"
+        os.system('cp ' + self.sourceBodyFile + ' ' + self.bodyFile)
 
         self.NUM_MOTOR_NEURONS = 9
         self.NUM_SENSOR_NEURONS = 4
