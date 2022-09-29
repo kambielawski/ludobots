@@ -4,7 +4,7 @@ import os
 from sys import platform
 
 from solution import Solution
-from plotter import Plotter
+from plotting.plotter import Plotter
 
 OS_MV = 'move' if platform == 'win32' else 'mv'
 OS_RM = 'del' if platform == 'win32' else 'rm'
@@ -19,7 +19,7 @@ class AgeFitnessPareto():
 
         # Create initial population randomly
         for i in range(self.targetPopSize):
-            self.population[i] = Solution(self.nextAvailableId)
+            self.population[i] = Solution(self.nextAvailableId, (0, self.nextAvailableId))
             self.nextAvailableId += 1
 
     def __del__(self):
@@ -47,7 +47,7 @@ class AgeFitnessPareto():
     '''
     def Evolve_One_Generation(self, genNumber):
         self.Increment_Ages()
-        self.Extend_Population()
+        self.Extend_Population(genNumber)
         self.Run_Solutions()
         self.Reduce_Population()
         pf = self.Pareto_Front()
@@ -57,7 +57,7 @@ class AgeFitnessPareto():
     '''
     Breed parents, mutate, and add a random individual
     '''
-    def Extend_Population(self):
+    def Extend_Population(self, genNumber):
         # 1. Breed
         # - do tournament selection |pop| times 
         for _ in range(self.targetPopSize):
@@ -71,7 +71,7 @@ class AgeFitnessPareto():
             self.nextAvailableId += 1
 
         # 2. Add a random individual
-        self.population[self.nextAvailableId] = Solution(self.nextAvailableId)
+        self.population[self.nextAvailableId] = Solution(self.nextAvailableId, (genNumber, self.nextAvailableId))
         self.nextAvailableId += 1
 
     def Tournament_Select(self):
@@ -149,10 +149,10 @@ class AgeFitnessPareto():
         genNumber is an int representing which generation the data is from
         pf is a dict of the Pareto Front solutions for the generation
         '''
-        pfData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), 
-                   self.population[s].Get_Fitness(), self.population[s].Get_Empowerment()) for s in pf]
-        popData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), 
-                    self.population[s].Get_Fitness(), self.population[s].Get_Empowerment()) for s in self.population]
+        pfData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), self.population[s].Get_Fitness(), 
+                   self.population[s].Get_Empowerment(), self.population[s].Get_Lineage()) for s in pf]
+        popData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), self.population[s].Get_Fitness(), 
+                    self.population[s].Get_Empowerment(), self.population[s].Get_Lineage()) for s in self.population]
         self.plotter.Population_Data(genNumber, popData)
         self.plotter.Pareto_Front_Data(genNumber, pfData)
 
@@ -164,6 +164,11 @@ class AgeFitnessPareto():
         self.plotter.Plot_Gen_Fitness()
         self.plotter.Plot_Gen_Fitness_PF()
         self.plotter.Plot_Age_Fitness_PF()
+        self.plotter.Plot_Pareto_Front_Size()
+        
+        # Write data 
+        self.plotter.Write_Pareto_Front_File()
+        self.plotter.Write_Generation_Data_To_File()
 
     def Clean_Directory(self):
         pf = self.Pareto_Front()
@@ -173,7 +178,7 @@ class AgeFitnessPareto():
             if os.path.exists('brain_' + str(id) + '.nndf'):
                 os.system(OS_MV + ' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf'.format(id=id))
         # Remove the rest
-        os.system(OS_RM + ' world_*.sdf && ' + OS_RM + ' brain_*.nndf && ' + OS_RM + ' fitness_*.txt')
+        os.system(OS_RM + ' world_*.sdf && ' + OS_RM + ' brain_*.nndf && ' + OS_RM + ' body_quadruped_*.urdf') # OS_RM + ' fitness_*.txt && ' +)
         # Remove old Pareto-front brains
         pf_files = os.listdir('./best_robots/pareto_front')
         for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
