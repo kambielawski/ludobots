@@ -20,7 +20,33 @@ class Visualizer:
         Use population data over time to track lineages
         '''
         lineages = {} # Indexed by tuple (generation, root parent ID)
-        
+
+        # Setup lineages data structure
+        for g, generation in enumerate(self.populationOverTime):
+            for individual in generation:
+                _, _, _, emp, lineage = individual
+                if lineage in lineages:
+                    # Only add to lineage list if fitness is higher for that gen
+                    better_exists = False
+                    for g_curr, e_curr in lineages[lineage]:
+                        if g == g_curr:
+                            if emp > e_curr:
+                                lineages[lineage].remove((g_curr, e_curr))
+                            else:
+                                better_exists = True
+                    if better_exists == False:
+                        lineages[lineage].append((g, emp))
+                else:
+                    lineages[lineage] = [(g, emp)]
+
+        # Plot each lineage as a line
+        for lineage in lineages: 
+            plt.step(*zip(*lineages[lineage]))
+        plt.title('Lineages (N=25, G=120)')
+        plt.xlabel('Generation')
+        plt.ylabel('Empowerment')
+        plt.savefig('./plots/rainbow_waterfall_emp_fitness.png')
+
 
     def Pareto_Front_Size_Plot(self, pfSizeFileName):
         f = open(pfSizeFileName, 'r')
