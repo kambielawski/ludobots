@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
@@ -7,6 +8,7 @@ class Plotter:
         self.populationOverTime = {}
         self.paretoFrontOverTime = {}
         self.paretoFrontSizeOverTime = []
+        self.fignum = 0
 
     def Population_Data(self, genNumber, population):
         self.populationOverTime[genNumber] = population
@@ -31,35 +33,45 @@ class Plotter:
             f.write('\n')
 
     def Plot_Pareto_Front_Size(self):
+        plt.figure(self.fignum)
+        self.fignum += 1
+
         plt.scatter(range(1,len(self.paretoFrontSizeOverTime)+1), self.paretoFrontSizeOverTime)
         plt.axhline(y=self.constants['target_population_size'], color='red', linestyle='dotted')
         plt.xlabel('Generation Number')
         plt.ylabel('Pareto front size')
         plt.title('Pareto Front Size over time')
-        plt.savefig('./plots/pf_size_over_time.png')
+        plt.savefig('./plotting/plots/pf_size_over_time.png')
 
     def Plot_Gen_Fitness(self):
-        plt.figure(1)
+        plt.figure(self.fignum)
+        self.fignum += 1
+
         gen_fitness = [(g, i[2]) for g in self.populationOverTime for i in self.populationOverTime[g]]
         plt.scatter(*zip(*gen_fitness))
         plt.xlabel('Generation Number')
         plt.ylabel('Fitness (displacement)')
         plt.title('Generation vs. Fitness (G={g}, N={n})'.format(
                     g=self.constants['generations'], n=self.constants['target_population_size']))
-        plt.savefig('./plots/gen_fitness.png')
+        plt.savefig('./plotting/plots/gen_fitness.png')
 
     def Plot_Age_Fitness(self):
-        plt.figure(2)
+        plt.figure(self.fignum)
+        self.fignum += 1
+        
         age_fitness = [(i[1], i[2]) for g in self.populationOverTime for i in self.populationOverTime[g]]
         plt.scatter(*zip(*age_fitness))
         plt.xlabel('Age')
         plt.ylabel('Fitness (displacement)')
         plt.title('Age vs. Fitness (G={g}, N={n})'.format(
                     g=self.constants['generations'], n=self.constants['target_population_size']))
-        plt.savefig('./plots/age_fitness.png')
+        print(os.getcwd())
+        plt.savefig('./plotting/plots/age_fitness.png')
 
     def Plot_Gen_Fitness_PF(self):
-        plt.figure(3)
+        plt.figure(self.fignum)
+        self.fignum += 1
+
         gen_fitness = [(g, i[2]) for g in self.populationOverTime for i in self.populationOverTime[g]]
         pf_points = [(g, i[2]) for g in self.paretoFrontOverTime for i in self.paretoFrontOverTime[g]]
         # for g in self.paretoFrontOverTime:
@@ -72,10 +84,12 @@ class Plotter:
         plt.title('Generation vs. Fitness, Pareto Front (G={g}, N={n})'.format(
                     g=self.constants['generations'], n=self.constants['target_population_size']))
         plt.legend()
-        plt.savefig('./plots/gen_fitness_pf.png')
+        plt.savefig('./plotting/plots/gen_fitness_pf.png')
 
     def Plot_Age_Fitness_PF(self):
-        plt.figure(4)
+        plt.figure(self.fignum)
+        self.fignum += 1
+        
         age_fitness = [(i[1], i[2]) for g in self.populationOverTime for i in self.populationOverTime[g]]
         pf_points = [(i[1], i[2]) for g in self.paretoFrontOverTime for i in self.paretoFrontOverTime[g]]
         plt.scatter(*zip(*age_fitness), label="Individuals")
@@ -84,4 +98,4 @@ class Plotter:
         plt.ylabel('Fitness (displacement)')
         plt.title('Age vs. Fitness, Pareto Front (G={g}, N={n})'.format(g=self.constants['generations'], n=self.constants['target_population_size']))
         plt.legend()
-        plt.savefig('./plots/age_fitness_pf.png')
+        plt.savefig('./plotting/plots/age_fitness_pf.png')
