@@ -15,6 +15,8 @@ class AgeFitnessPareto():
         self.nextAvailableId = 0
         self.nGenerations = constants['generations']
         self.targetPopSize = constants['target_population_size']
+        self.batching = constants['batching']
+        self.batch_size = constants['batch_size']
         self.plotter = Plotter(constants)
 
         # Create initial population randomly
@@ -109,12 +111,30 @@ class AgeFitnessPareto():
             self.population[solnId].Increment_Age()
 
     def Run_Solutions(self):
-        for solnId in self.population:
-            if not self.population[solnId].Has_Been_Simulated():
-                self.population[solnId].Start_Simulation()
-        for solnId in self.population:
-            if not self.population[solnId].Has_Been_Simulated():
-                self.population[solnId].Wait_For_Simulation_To_End()
+        if self.batching:
+            # Create batches
+            batches = [[]]
+            b_i = 0
+            for solnId in self.population:
+                if not self.population[solnId].Has_Been_Simulated():
+                    batches[b_i].append(solnId)
+                    if len(batches[b_i]) >= self.batch_size:
+                        batches.append([])
+                        b_i += 1
+            # Simulate batches one at a time
+            for i in range(len(batches)):
+                for solnId in batches[i]:
+                    self.population[solnId].Start_Simulation()
+                for solnId in batches[i]:
+                    self.population[solnId].Wait_For_Simulation_To_End()
+
+        else:
+            for solnId in self.population:
+                if not self.population[solnId].Has_Been_Simulated():
+                    self.population[solnId].Start_Simulation()
+            for solnId in self.population:
+                if not self.population[solnId].Has_Been_Simulated():
+                    self.population[solnId].Wait_For_Simulation_To_End()
     
     '''
     Returns IDs of the solutions that are Pareto optimal
@@ -178,7 +198,10 @@ class AgeFitnessPareto():
             if os.path.exists('brain_' + str(id) + '.nndf'):
                 os.system(OS_MV + ' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf'.format(id=id))
         # Remove the rest
-        os.system(OS_RM + ' world_*.sdf && ' + OS_RM + ' brain_*.nndf && ' + OS_RM + ' body_quadruped_*.urdf') # OS_RM + ' fitness_*.txt && ' +)
+        os.system(OS_RM + ' world_*.sdf && ' 
+                + OS_RM + ' brain_*.nndf && ' 
+                + OS_RM + ' body_quadruped_*.urdf && ' 
+                + OS_RM + ' fitness_*.txt')
         # Remove old Pareto-front brains
         pf_files = os.listdir('./best_robots/pareto_front')
         for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
