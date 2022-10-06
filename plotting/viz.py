@@ -15,7 +15,42 @@ class Visualizer:
         # Turn tuple strings into literal tuples
         self.populationOverTime = list(map(lambda gen: list(map(lambda tup: literal_eval(tup), gen)), genTupleStrings))
 
-    def Rainbow_Waterfall_Plot(self):
+        return self.populationOverTime
+
+    # TODO: Separate empowerment & fitness plots
+    def Rainbow_Waterfall_Plot_Fitness(self):
+        '''
+        Use population data over time to track lineages
+        '''
+        lineages = {} # Indexed by tuple (generation, root parent ID)
+
+        # Setup lineages data structure
+        for g, generation in enumerate(self.populationOverTime):
+            for individual in generation:
+                _, _, fitness, emp, lineage = individual
+                if lineage in lineages:
+                    # Only add to lineage list if fitness is higher for that gen
+                    better_exists = False
+                    for g_curr, f_curr in lineages[lineage]:
+                        if g == g_curr:
+                            if fitness > f_curr:
+                                lineages[lineage].remove((g_curr, f_curr))
+                            else:
+                                better_exists = True
+                    if better_exists == False:
+                        lineages[lineage].append((g, fitness))
+                else:
+                    lineages[lineage] = [(g, fitness)]
+
+        # Plot each lineage as a line
+        for lineage in lineages: 
+            plt.step(*zip(*lineages[lineage]))
+        plt.title('Lineages (N=200, G=800)')
+        plt.xlabel('Generation')
+        plt.ylabel('Fitness')
+        plt.savefig('./plots/rainbow_waterfall_fitness.png')
+
+    def Rainbow_Waterfall_Plot_Empowerment(self):
         '''
         Use population data over time to track lineages
         '''
@@ -28,10 +63,10 @@ class Visualizer:
                 if lineage in lineages:
                     # Only add to lineage list if fitness is higher for that gen
                     better_exists = False
-                    for g_curr, e_curr in lineages[lineage]:
+                    for g_curr, emp_curr in lineages[lineage]:
                         if g == g_curr:
-                            if emp > e_curr:
-                                lineages[lineage].remove((g_curr, e_curr))
+                            if emp > emp_curr:
+                                lineages[lineage].remove((g_curr, emp_curr))
                             else:
                                 better_exists = True
                     if better_exists == False:
@@ -42,10 +77,10 @@ class Visualizer:
         # Plot each lineage as a line
         for lineage in lineages: 
             plt.step(*zip(*lineages[lineage]))
-        plt.title('Lineages (N=25, G=120)')
+        plt.title('Lineages (N=200, G=800)')
         plt.xlabel('Generation')
         plt.ylabel('Empowerment')
-        plt.savefig('./plots/rainbow_waterfall_emp_fitness.png')
+        plt.savefig('./plots/rainbow_waterfall_empowerment.png')
 
 
     def Pareto_Front_Size_Plot(self, pfSizeFileName):

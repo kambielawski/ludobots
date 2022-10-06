@@ -1,6 +1,7 @@
 ./env/*
 env/
 .env/
+plotting/saved_plots
 ./pyrosim/*
 pyrosim/
 plots/
