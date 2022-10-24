@@ -15,22 +15,17 @@ parser.add_argument("--window", help="Empowerment window size", type=int)
 
 args = parser.parse_args()
 
-bodyFile = args.body_file
-brainFile = args.brain_file
-runMode = args.display
-solnId = args.solution_id
-objective = args.objective
 windowSize = c.TIMESTEPS if args.window else 0
 
 # Setup simulation, world, and robot
-simulation = Simulation(runMode, solnId)
-world = World(solnId)
-robots = [Robot(solnId, bodyFile, brainFile, windowSize)]
+simulation = Simulation(args.display, args.solution_id)
+world = World(args.solution_id)
+robots = [Robot(args.solution_id, args.body_file, args.brain_file, windowSize)]
 
 # Run pybullet simulation
 simulation.Run(robots)
 # Write robot fitness to file 
-simulation.Get_Fitness(objective)
+simulation.Get_Fitness(args.objective)
 
 
 
