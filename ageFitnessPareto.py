@@ -17,11 +17,12 @@ class AgeFitnessPareto():
         self.targetPopSize = constants['target_population_size']
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
+        self.objective = constants['objective']
         self.plotter = Plotter(constants)
 
         # Create initial population randomly
         for i in range(self.targetPopSize):
-            self.population[i] = Solution(self.nextAvailableId, (0, self.nextAvailableId))
+            self.population[i] = Solution(self.nextAvailableId, (0, self.nextAvailableId), objective=self.objective)
             self.nextAvailableId += 1
 
     def __del__(self):
@@ -73,7 +74,7 @@ class AgeFitnessPareto():
             self.nextAvailableId += 1
 
         # 2. Add a random individual
-        self.population[self.nextAvailableId] = Solution(self.nextAvailableId, (genNumber, self.nextAvailableId))
+        self.population[self.nextAvailableId] = Solution(self.nextAvailableId, (genNumber, self.nextAvailableId), objective=self.objective)
         self.nextAvailableId += 1
 
     def Tournament_Select(self):
@@ -83,7 +84,7 @@ class AgeFitnessPareto():
             p2 = np.random.choice(list(self.population.keys()))
         
         # Tournament winner based only on fitness? Primary objective? 
-        if self.population[p1].Get_Fitness() > self.population[p2].Get_Fitness():
+        if self.population[p1].Get_Primary_Objective() > self.population[p2].Get_Primary_Objective():
             return p1
         else:
             return p2
@@ -151,16 +152,36 @@ class AgeFitnessPareto():
                 paretoFront.append(i)
         return paretoFront
 
+    # TODO: generalize this function for all objective schemes
     def Dominates(self, i, j):
         '''
         Returns True if solution i dominates solution j (else False)
         '''
-        if self.population[j].Get_Age() == self.population[i].Get_Age() and self.population[j].Get_Fitness() == self.population[i].Get_Fitness() and self.population[j].Get_Empowerment() == self.population[i].Get_Empowerment():
-            return i > j
-        elif self.population[i].Get_Age() <= self.population[j].Get_Age() and self.population[i].Get_Fitness() >= self.population[j].Get_Fitness() and self.population[i].Get_Empowerment() >= self.population[j].Get_Empowerment():
-            return True
-        else:
-            return False
+        # Empowerment / fitness
+        if self.objective == 'emp_fitness':
+            if self.population[j].Get_Age() == self.population[i].Get_Age() and self.population[j].Get_Fitness() == self.population[i].Get_Fitness() and self.population[j].Get_Empowerment() == self.population[i].Get_Empowerment():
+                return i > j
+            elif self.population[i].Get_Age() <= self.population[j].Get_Age() and self.population[i].Get_Fitness() >= self.population[j].Get_Fitness() and self.population[i].Get_Empowerment() >= self.population[j].Get_Empowerment():
+                return True
+            else:
+                return False
+        # Tri-fitness
+        elif self.objective == 'tri_fitness':
+            i_firstHalfFitness, i_secondHalfFitness = self.population[i].Get_Fitness()
+            j_firstHalfFitness, j_secondHalfFitness = self.population[j].Get_Fitness()
+            if self.population[j].Get_Age() == self.population[i].Get_Age() and j_firstHalfFitness == i_firstHalfFitness and j_secondHalfFitness == i_secondHalfFitness:
+                return i > j
+            elif self.population[i].Get_Age() <= self.population[j].Get_Age() and i_firstHalfFitness >= j_firstHalfFitness and i_secondHalfFitness >= j_secondHalfFitness:
+                return True
+            else:
+                return False
+        elif self.objective == 'fitness':
+            if self.population[j].Get_Age() == self.population[i].Get_Age() and self.population[j].Get_Fitness() == self.population[i].Get_Fitness():
+                return i > j
+            elif self.population[i].Get_Age() <= self.population[j].Get_Age() and self.population[i].Get_Fitness() >= self.population[j].Get_Fitness():
+                return True
+            else:
+                return False
 
     def Run_Gen_Statistics(self, genNumber, pf):
         '''
@@ -180,15 +201,15 @@ class AgeFitnessPareto():
         '''
         Runs Plotter animation
         '''
-        self.plotter.Plot_Age_Fitness()
-        self.plotter.Plot_Gen_Fitness()
-        self.plotter.Plot_Gen_Fitness_PF()
-        self.plotter.Plot_Age_Fitness_PF()
-        self.plotter.Plot_Pareto_Front_Size()
-        
         # Write data 
-        self.plotter.Write_Pareto_Front_File()
-        self.plotter.Write_Generation_Data_To_File()
+        self.plotter.Write_Pareto_Front_File() # pf_size.txt
+        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective) # gen_data.txt
+
+        # self.plotter.Plot_Age_Fitness()
+        # self.plotter.Plot_Gen_Fitness()
+        # self.plotter.Plot_Gen_Fitness_PF()
+        # self.plotter.Plot_Age_Fitness_PF()
+        self.plotter.Plot_Pareto_Front_Size()
 
     def Clean_Directory(self):
         pf = self.Pareto_Front()

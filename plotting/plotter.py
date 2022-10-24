@@ -1,10 +1,12 @@
 import os
+import csv
+from ast import literal_eval
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 class Plotter:
-    def __init__(self, constants):
-        self.constants = constants
+    def __init__(self, constants=None):
+        self.constants = {} if constants==None else constants
         self.populationOverTime = {}
         self.paretoFrontOverTime = {}
         self.paretoFrontSizeOverTime = []
@@ -22,15 +24,111 @@ class Plotter:
         for n in self.paretoFrontSizeOverTime:
             f.write(str(n) + '\n')
 
-    def Write_Generation_Data_To_File(self):
+    def Write_Generation_Data_To_File(self, popsize, gens, obj):
         '''
         Writes generation data to a file (one generation per line)
         '''
         f = open('./data/gen_data.txt', 'w')
+        f.write(f'n={popsize},g={gens},obj={obj}\n')
         for g in self.populationOverTime:
             for individual in self.populationOverTime[g]:
                 f.write(str(individual) + '|')
             f.write('\n')
+
+    def Print_Top_Fitness(self):
+        if self.objective == 'tri_fitness':
+            keyfunc = lambda x:x[2][1]
+        elif self.objective == 'emp_fitness':
+            keyfunc = lambda x:x[2]
+        else:
+            raise ValueError("Invalid objective")
+        sortedRobots = sorted(self.populationOverTime[-1], key=keyfunc, reverse=True)
+        print(sortedRobots[:10])
+
+    '''
+    Parses generation data into self.populationOverTime data structure
+    from a given text file
+    '''
+    def Parse_Gen_Data(self, genDataFileName):
+        f = open(genDataFileName, 'r')
+
+        # parse first line to grab run information
+        n, g, objective = [a.split('=')[1].strip('\n') for a in f.readline().split(',')]
+        self.popSize = int(n)
+        self.totalGens = int(g)
+        self.objective = objective
+
+        # parse & process remaining generation data
+        lines = f.readlines()
+        genTupleStrings = [line.split('|') for line in lines]
+        # Filter out empty strings
+        genTupleStrings = list(map(lambda gen: list(filter(lambda tup: tup != '\n', gen)), genTupleStrings))
+        # Turn tuple strings into literal tuples
+        self.populationOverTime = list(map(lambda gen: list(map(lambda tup: literal_eval(tup), gen)), genTupleStrings))
+
+        return self.populationOverTime
+
+    # TODO: Separate empowerment & fitness plots
+    def Rainbow_Waterfall_Plot(self, yaxis='fitness'):
+        '''
+        Use population data over time to track lineages
+        '''
+        if self.objective == 'tri_fitness' and yaxis == 'empowerment':
+            raise ValueError("Can't plot empowerment under tri-fitness conditions")
+
+        lineages = {} # Indexed by tuple (generation, root parent ID)
+
+        # Setup lineages data structure
+        for g, generation in enumerate(self.populationOverTime):
+            for individual in generation:
+                _, _, fitness, empowerment, lineage = individual
+
+                # Select metric we're looking at
+                if self.objective == 'tri_fitness':
+                    metric = fitness[1]
+                elif self.objective == 'emp_fitness':
+                    if yaxis == 'fitness':
+                        metric = fitness
+                    elif yaxis == 'empowerment':
+                        metric = empowerment
+
+                if not metric:
+                    raise ValueError("Invalid objective or yaxis value")
+            
+                if lineage in lineages:
+                    # Only add to lineage list if fitness is higher for that gen
+                    better_exists = False
+                    for g_curr, m in lineages[lineage]:
+                        if g == g_curr:
+                            if empowerment > metric:
+                                lineages[lineage].remove((g_curr, m))
+                            else:
+                                better_exists = True
+
+                    # Add the current individual to the current max lineage
+                    if better_exists == False:
+                        lineages[lineage].append((g, metric))
+                else:
+                    lineages[lineage] = [(g, metric)]
+
+        # Plot each lineage as a line
+        for lineage in lineages: 
+            plt.step(*zip(*lineages[lineage]))
+        plt.title('Lineages (N={}, G={})'.format(self.popSize, self.totalGens))
+        plt.xlabel('Generation')
+        plt.ylabel('{}'.format((yaxis)))
+        plt.savefig('./plots/rainbow_waterfall_{metric}_n{popsize}g{gens}_{objective}.png'
+                    .format(metric=yaxis, popsize=self.popSize, gens=self.totalGens, objective=self.objective))
+
+    def Plot_Pareto_Front_Size_From_File(self, pfSizeFileName):
+        f = open(pfSizeFileName, 'r')
+        nums = [int(line) for line in f.readlines()]
+        x = range(1, len(nums) + 1)
+        
+        plt.scatter(x, nums)
+        plt.xlabel('Generation')
+        plt.ylabel('Pareto Front Size')
+        plt.savefig('pfsize.png')
 
     def Plot_Pareto_Front_Size(self):
         plt.figure(self.fignum)

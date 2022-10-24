@@ -11,7 +11,7 @@ from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
-    def __init__(self, solutionId, lineage):
+    def __init__(self, solutionId, lineage, objective):
         self.id = solutionId
         self.robot = Quadruped(self.id)
         self.weights = self.robot.Generate_Weights()
@@ -19,7 +19,7 @@ class Solution:
         self.empowerment = 0
         self.been_simulated = False
         self.lineage = lineage
-        # self.weights = np.random.rand(c.NUM_MOTOR_NEURONS,c.NUM_SENSOR_NEURONS)*2 - 1
+        self.objective = objective
 
     def Start_Simulation(self, runMode="DIRECT"):
         self.runMode=runMode
@@ -27,7 +27,7 @@ class Solution:
         self.robot.Generate_Robot(self.weights, 0,0,1)
 
         # execute simulation with runMode and solution ID and brainfile if it exists
-        run_command = "python3 simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File()
+        run_command = "python3 simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File() + " " + self.objective
         if c.DEBUG:
             run_command += " >log.txt 2>&1" 
         if platform == 'win32':
@@ -41,22 +41,28 @@ class Solution:
     def Wait_For_Simulation_To_End(self):
         fitnessFileName = "fitness_" + str(self.id) + ".txt"
 
+        # Wait for fitness file to be readable
         while not os.path.exists(fitnessFileName):
             time.sleep(0.01)
-
         fitnessFile = open(fitnessFileName, "r")
         while fitnessFile.read() == '':
             fitnessFile.seek(0)
             time.sleep(0.01)
 
+        # Read file contents
         fitnessFile.seek(0)
         fitnessFileContent = [n.strip('\"\ \n') for n in fitnessFile.readlines()[0].split(' ')]
         fitnessFile.close()
-        self.fitness = float(fitnessFileContent[0])
-        self.empowerment = float(fitnessFileContent[1])
-        self.been_simulated = True
-        # rm = 'del' if platform == 'win32' else 'rm'
-        # os.system(rm + ' ' + fitnessFileName)
+
+        # Read values into objective variables
+        if self.objective == 'tri_fitness':
+            self.firstHalfFitness = float(fitnessFileContent[0])
+            self.secondHalfFitness = float(fitnessFileContent[1])
+        elif self.objective == 'emp_fitness':
+            self.fitness = float(fitnessFileContent[0])
+            self.empowerment = float(fitnessFileContent[1])
+        
+        self.been_simulated = True # Set simulated flag
 
     def Mutate(self):
         randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
@@ -87,8 +93,17 @@ class Solution:
     def Get_Age(self):
         return self.age
 
+    def Get_Primary_Objective(self):
+        if self.objective == 'tri_fitness':
+            return self.secondHalfFitness
+        elif self.objective == 'emp_fitness':
+            return self.fitness
+
     def Get_Fitness(self):
-        return self.fitness
+        if self.objective == 'tri_fitness':
+            return (self.firstHalfFitness, self.secondHalfFitness)
+        elif self.objective == 'emp_fitness':
+            return self.fitness
 
     def Get_Empowerment(self):
         return self.empowerment
