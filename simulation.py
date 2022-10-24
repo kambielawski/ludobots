@@ -33,8 +33,8 @@ class Simulation:
             if self.runMode == "GUI":
                 time.sleep(1/360)
 
-    def Get_Fitness(self):
-        return self.robots[0].Get_Fitness()
+    def Get_Fitness(self, objective):
+        return self.robots[0].Get_Fitness(objective)
 
     def Save_Values(self):
         for sensor in self.robot.sensors:

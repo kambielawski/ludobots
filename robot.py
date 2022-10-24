@@ -69,6 +69,11 @@ class Robot:
             self.motors[jointName] = Motor(jointName)
 
     def Sense(self, timestep):
+        # If tri-fitness, record fitness at simulation half
+        if timestep == c.TIMESTEPS // 2:
+            self.firstHalfFitness = self.Y_Axis_Fitness()
+        
+        # Sense
         sensorVector = []
         for sensor in self.sensors:
             sensorVector.append(self.sensors[sensor].Get_Value(timestep))
@@ -91,6 +96,7 @@ class Robot:
                 jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
                 # Neuron value will return a float in [-1,1] (tanh activation)
                 desiredAngle = self.nn.Get_Value_Of(neuronName) * c.MOTOR_JOINT_RANGE
+                # actionVector.append(desiredAngle)
                 actionVector.append(1 if desiredAngle > 0 else 0)
                 self.motors[jointName].Set_Value(self, desiredAngle)
         # actionVector.append(0)
@@ -102,25 +108,28 @@ class Robot:
         pass
     
     def Empowerment_Window(self, timestep):        # convert motor and sensor states into integers
-        actionz = [int(''.join(str(b) for b in A), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
-        sensorz = [int(''.join(str(b) for b in S), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
+        # actionz = [int(''.join(str(b) for b in A), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
+        # sensorz = [int(''.join(str(b) for b in S), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
         
+        # Coarse grained actions, raw sensor states (both 2D arrays, flattened)
+        actionz = np.array(self.motorVals[(timestep - (2*self.empowermentWindowSize)):(timestep - self.empowermentWindowSize)]).flatten()
+        sensorz = np.array(self.sensorVals[(timestep-self.empowermentWindowSize):timestep]).flatten()
         # timeseries calculation of mutual information
-        mi = pyinform.mutual_info(actionz, sensorz)
+        # mi = ee.mi(actionz, sensorz)
+        mi = pyinform.mutual_info(actionz, sensorz, local=False)
 
         return mi
     
     # returns average empowerment over all windows
     # N timesteps; k window size
     # returns average empowerment over ~N-k windows
-    def Empowerment_Fitness(self):
-        yPosition = self.Y_Axis_Fitness()
+    def Empowerment_Window_Average(self):
         emp = self.empowerment / self.empowermentTimesteps
-        return yPosition, emp
+        return emp
 
     def Simulation_Empowerment(self):
-        motorDist = Dist(np.array(self.motorVals).flatten())
-        sensorDist = Dist(np.array(self.sensorVals).flatten())
+        motorDist = Dist(np.array(self.motorVals[:(c.TIMESTEPS // 2)]).flatten())
+        sensorDist = Dist(np.array(self.sensorVals[(c.TIMESTEPS // 2):]).flatten())
         mi = pyinform.mutual_info(sensorDist, motorDist, local=False)
         return mi
 
@@ -139,16 +148,23 @@ class Robot:
         return xPosition
 
     def Get_Empowerment(self):
+        # return self.Empowerment_Window_Average()
         return self.Simulation_Empowerment()
 
     '''
     Writes both the fitness and the empowerment to a file named fitness_<id>.txt
     '''
-    def Get_Fitness(self):
-        fitness = self.Y_Axis_Fitness()
-        empowerment = self.Get_Empowerment()
-        fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-        fitnessFile.write(str(fitness)+ " " + str(empowerment))
+    def Get_Fitness(self, objective='tri_fitness'):
+        if objective == 'emp_fitness':
+            fitness = self.Y_Axis_Fitness()
+            empowerment = self.Get_Empowerment()
+            fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
+            fitnessFile.write(str(fitness)+ " " + str(empowerment))
+        elif objective == 'tri_fitness':
+            fitness1 = self.firstHalfFitness
+            fitness2 = self.Y_Axis_Fitness()
+            fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
+            fitnessFile.write(str(fitness1)+ " " + str(fitness2))
 
         # UNIX
         exit_code = os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")

@@ -15,9 +15,11 @@ bodyFile = None
 brainFile = None
 runMode = "DIRECT"
 solnId = 0
+objective = c.DEFAULT_OBJECTIVE
 windowSize = c.DEFAULT_EMPOWERMENT_WINDOW_SIZE
 
 # runMode can be GUI or DIRECT
+# TODO: learn arg parser & implement
 if argc > 1:
     runMode = sys.argv[1]
     if argc > 2:
@@ -27,15 +29,18 @@ if argc > 1:
             if argc > 4:
                 bodyFile = sys.argv[4]
                 if argc > 5:
-                    windowSize = int(sys.argv[5])
+                    objective = sys.argv[5]
+                    if argc > 6:
+                        windowSize = int(sys.argv[6])
 
 simulation = Simulation(runMode, solnId)
 world = World(solnId)
 robots = [Robot(solnId, bodyFile, brainFile, windowSize)]
 
-
+# Run pybullet simulation
 simulation.Run(robots)
-simulation.Get_Fitness()
+# Write robot fitness to file 
+simulation.Get_Fitness(objective)
 
 
 

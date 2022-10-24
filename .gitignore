@@ -15,4 +15,4 @@ data/
 __pycache__/
 fitness*.txt
 log.txt
-
+experiments/
