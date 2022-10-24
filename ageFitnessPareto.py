@@ -21,9 +21,8 @@ class AgeFitnessPareto():
         self.plotter = Plotter(constants)
 
         # Create initial population randomly
-        for i in range(self.targetPopSize):
-            self.population[i] = Solution(self.nextAvailableId, (0, self.nextAvailableId), objective=self.objective)
-            self.nextAvailableId += 1
+        self.population = {i: Solution(i, (0, i), objective=self.objective) for i in range(self.targetPopSize)}
+        self.nextAvailableId = self.targetPopSize + 1
 
     def __del__(self):
         self.Clean_Directory()
@@ -77,6 +76,9 @@ class AgeFitnessPareto():
         self.population[self.nextAvailableId] = Solution(self.nextAvailableId, (genNumber, self.nextAvailableId), objective=self.objective)
         self.nextAvailableId += 1
 
+    '''
+    Tournament selection to decide which individuals reproduce
+    '''
     def Tournament_Select(self):
         p1 = np.random.choice(list(self.population.keys()))
         p2 = np.random.choice(list(self.population.keys()))
@@ -152,7 +154,6 @@ class AgeFitnessPareto():
                 paretoFront.append(i)
         return paretoFront
 
-    # TODO: generalize this function for all objective schemes
     def Dominates(self, i, j):
         '''
         Returns True if solution i dominates solution j (else False)
@@ -217,7 +218,7 @@ class AgeFitnessPareto():
         # Save Pareto-front brains
         for id in pf:
             if os.path.exists('brain_' + str(id) + '.nndf'):
-                os.system(OS_MV + ' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf'.format(id=id))
+                os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         # Remove the rest
         os.system(OS_RM + ' world_*.sdf && ' 
                 + OS_RM + ' brain_*.nndf && ' 
