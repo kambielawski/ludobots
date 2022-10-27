@@ -107,13 +107,14 @@ class Robot:
         self.motorVals = [m+c for m,c in zip(self.motorVals, counts)]
         pass
     
-    def Empowerment_Window(self, timestep):        # convert motor and sensor states into integers
-        # actionz = [int(''.join(str(b) for b in A), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
-        # sensorz = [int(''.join(str(b) for b in S), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
+    def Empowerment_Window(self, timestep):        
+        # convert motor and sensor states into integers
+        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
+        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
         
         # Coarse grained actions, raw sensor states (both 2D arrays, flattened)
-        actionz = np.array(self.motorVals[(timestep - (2*self.empowermentWindowSize)):(timestep - self.empowermentWindowSize)]).flatten()
-        sensorz = np.array(self.sensorVals[(timestep-self.empowermentWindowSize):timestep]).flatten()
+        # actionz = np.array(self.motorVals[(timestep - (2*self.empowermentWindowSize)):(timestep - self.empowermentWindowSize)]).flatten()
+        # sensorz = np.array(self.sensorVals[(timestep-self.empowermentWindowSize):timestep]).flatten()
         # timeseries calculation of mutual information
         # mi = ee.mi(actionz, sensorz)
         mi = pyinform.mutual_info(actionz, sensorz, local=False)
@@ -128,9 +129,9 @@ class Robot:
         return emp
 
     def Simulation_Empowerment(self):
-        motorDist = Dist(np.array(self.motorVals[:(c.TIMESTEPS // 2)]).flatten())
-        sensorDist = Dist(np.array(self.sensorVals[(c.TIMESTEPS // 2):]).flatten())
-        mi = pyinform.mutual_info(sensorDist, motorDist, local=False)
+        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(c.TIMESTEPS //2)]]
+        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(c.TIMESTEPS // 2):]]
+        mi = pyinform.mutual_info(actionz, sensorz, local=False)
         return mi
 
     def Y_Axis_Fitness(self):
