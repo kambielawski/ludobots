@@ -20,7 +20,8 @@ windowSize = c.TIMESTEPS if args.window else 0
 # Setup simulation, world, and robot
 simulation = Simulation(args.display, args.solution_id)
 world = World(args.solution_id)
-robots = [Robot(args.solution_id, args.body_file, args.brain_file, windowSize)]
+# robots = [Robot(args.solution_id, args.body_file, args.brain_file, windowSize)]
+robots = [Robot(args.solution_id, "robots/body_quadruped.urdf", args.brain_file, windowSize)]
 
 # Run pybullet simulation
 simulation.Run(robots)

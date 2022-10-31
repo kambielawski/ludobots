@@ -11,15 +11,16 @@ from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
-    def __init__(self, solutionId, lineage, objective):
+    def __init__(self, solutionId, lineage, objective, dir='.'):
         self.id = solutionId
-        self.robot = Quadruped(self.id)
+        self.robot = Quadruped(self.id, dir=dir)
         self.weights = self.robot.Generate_Weights()
         self.age = 1
         self.empowerment = 0
         self.been_simulated = False
         self.lineage = lineage
         self.objective = objective
+        self.dir = dir
 
     def Start_Simulation(self, runMode="DIRECT"):
         self.runMode=runMode
@@ -27,7 +28,7 @@ class Solution:
         self.robot.Generate_Robot(self.weights, 0,0,1)
 
         # execute simulation with runMode and solution ID and brainfile if it exists
-        run_command = "python3 simulate.py " + runMode + " " + str(self.id) + " brain_" + str(self.id) + ".nndf " + self.robot.Get_Body_File() + " " + self.objective
+        run_command = f"python3 simulate.py {runMode} {str(self.id)} {self.dir}/brain_{self.id}.nndf {self.robot.Get_Body_File()} {self.objective}"
         if c.DEBUG:
             run_command += " >log.txt 2>&1" 
         if platform == 'win32':
@@ -39,7 +40,7 @@ class Solution:
         os.system(run_command)
 
     def Wait_For_Simulation_To_End(self):
-        fitnessFileName = "fitness_" + str(self.id) + ".txt"
+        fitnessFileName = f"{self.dir}/fitness_{self.id}.txt"
 
         # Wait for fitness file to be readable
         while not os.path.exists(fitnessFileName):
@@ -83,7 +84,7 @@ class Solution:
             pyrosim.Send_Cube(name="Box", pos=cube.pos, size=cube.dims)
     
     def Create_World(self):
-        pyrosim.Start_SDF("world_" + str(self.id) + ".sdf")
+        pyrosim.Start_SDF(f"{self.dir}/world_{self.id}.sdf")
         self.Generate_Environment()
         pyrosim.End()
 

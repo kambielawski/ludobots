@@ -34,7 +34,7 @@ class Robot:
                     self.robotId = p.loadURDF(urdfFileName)
                 # default to a quadruped
                 else:
-                    self.robotId = p.loadURDF("body_quadruped.urdf")
+                    self.robotId = p.loadURDF("robots/body_quadruped.urdf")
             except:
                 continue
 

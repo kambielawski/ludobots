@@ -5,10 +5,10 @@ sys.path.append('../pyrosim')
 import pyrosim.pyrosim as pyrosim
 
 class Quadruped:
-    def __init__(self, solnId):
+    def __init__(self, solnId, dir='.'):
         self.solnId = solnId
-        self.sourceBodyFile = "body_quadruped.urdf"
-        self.bodyFile = "body_quadruped_" + str(solnId) + ".urdf"
+        self.sourceBodyFile = "robots/body_quadruped.urdf"
+        self.bodyFile = f"{dir}/body_quadruped_" + str(solnId) + ".urdf"
         os.system('cp ' + self.sourceBodyFile + ' ' + self.bodyFile)
 
         self.NUM_MOTOR_NEURONS = 9
