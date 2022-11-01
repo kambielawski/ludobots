@@ -13,8 +13,9 @@ from sys import platform
 import constants as c
 
 class Robot:
-    def __init__(self, solutionId, urdfFileName=None, nndfFileName=None, empowermentWindowSize=c.DEFAULT_EMPOWERMENT_WINDOW_SIZE):
+    def __init__(self, solutionId, urdfFileName=None, nndfFileName=None, empowermentWindowSize=c.DEFAULT_EMPOWERMENT_WINDOW_SIZE, dir='.'):
         self.solutionId = solutionId
+        self.dir = dir
         self.robotId = None
         self.nndfFileName = nndfFileName
         self.urdfFileName = urdfFileName
@@ -159,16 +160,17 @@ class Robot:
         if objective == 'emp_fitness':
             fitness = self.Y_Axis_Fitness()
             empowerment = self.Get_Empowerment()
-            fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-            fitnessFile.write(str(fitness)+ " " + str(empowerment))
+            fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
+            fitness_file.write(str(fitness)+ " " + str(empowerment))
         elif objective == 'tri_fitness':
             fitness1 = self.firstHalfFitness
             fitness2 = self.Y_Axis_Fitness()
-            fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-            fitnessFile.write(str(fitness1)+ " " + str(fitness2))
+            fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
+            fitness_file.write(str(fitness1)+ " " + str(fitness2))
 
         # UNIX
-        exit_code = os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
+        # exit_code = os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
+        exit_code = os.system('mv ' + f'{self.dir}/tmp_{self.solutionId}.txt {self.dir}/fitness_{self.solutionId}.txt')
         if exit_code != 0:
              raise OSError('File I/O error moving fitness to file.')
 

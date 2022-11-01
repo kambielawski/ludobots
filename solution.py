@@ -28,7 +28,7 @@ class Solution:
         self.robot.Generate_Robot(self.weights, 0,0,1)
 
         # execute simulation with runMode and solution ID and brainfile if it exists
-        run_command = f"python3 simulate.py {runMode} {str(self.id)} {self.dir}/brain_{self.id}.nndf {self.robot.Get_Body_File()} {self.objective}"
+        run_command = f"python3 simulate.py {runMode} {str(self.id)} {self.dir}/brain_{self.id}.nndf {self.robot.Get_Body_File()} {self.objective} --directory {self.dir}"
         if c.DEBUG:
             run_command += " >log.txt 2>&1" 
         if platform == 'win32':
@@ -84,6 +84,7 @@ class Solution:
             pyrosim.Send_Cube(name="Box", pos=cube.pos, size=cube.dims)
     
     def Create_World(self):
+        os.system(f'cp {self.dir}/world.sdf {self.dir}/world_{self.id}.sdf')
         pyrosim.Start_SDF(f"{self.dir}/world_{self.id}.sdf")
         self.Generate_Environment()
         pyrosim.End()
