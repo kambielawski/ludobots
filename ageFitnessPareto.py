@@ -10,9 +10,8 @@ OS_MV = 'move' if platform == 'win32' else 'mv'
 OS_RM = 'del' if platform == 'win32' else 'rm'
 
 class AgeFitnessPareto():
-    def __init__(self, constants, dir='.'):
+    def __init__(self, constants, run_id=1, dir='.'):
         self.population = dict()
-        self.nextAvailableId = 0
         self.nGenerations = constants['generations']
         self.targetPopSize = constants['target_population_size']
         self.batching = constants['batching']
@@ -21,6 +20,7 @@ class AgeFitnessPareto():
         self.plotter = Plotter(constants)
         self.currentGen = 0
         self.dir = dir
+        self.run_id = run_id
 
     def __del__(self):
         self.Clean_Directory()
@@ -35,7 +35,7 @@ class AgeFitnessPareto():
             if self.currentGen == self.nGenerations - 1:
                 self.Save_Best()
                 self.Plot_Gen_Animation()
-            self.Clean_Directory()
+            # self.Clean_Directory()
 
     '''
     Single generation process
@@ -44,8 +44,9 @@ class AgeFitnessPareto():
         # 1. Reproduce
         if self.currentGen == 0:
             # Initialize random population
-            self.population = {i: Solution(i, (0, i), objective=self.objective) for i in range(self.targetPopSize)}
-            self.nextAvailableId = self.targetPopSize + 1
+            for _ in range(self.targetPopSize):
+                rand_id = self.Get_Available_Id()
+                self.population[rand_id] = Solution(rand_id, (0, rand_id), objective=self.objective, dir=self.dir)
         else:
             self.Increment_Ages()
             self.Extend_Population(self.currentGen)
@@ -72,14 +73,14 @@ class AgeFitnessPareto():
             child = copy.deepcopy(self.population[parent])
             # - create mutated children from the tournament winners
             child.Mutate()
-            child.Set_ID(self.nextAvailableId)
+            rand_id = self.Get_Available_Id()
+            child.Set_ID(rand_id)
             child.Reset_Simulated()
-            self.population[self.nextAvailableId] = child
-            self.nextAvailableId += 1
+            self.population[rand_id] = child
 
         # 2. Add a random individual
-        self.population[self.nextAvailableId] = Solution(self.nextAvailableId, (genNumber, self.nextAvailableId), objective=self.objective)
-        self.nextAvailableId += 1
+        rand_id = self.Get_Available_Id()
+        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objective=self.objective)
 
     '''
     Tournament selection to decide which individuals reproduce
@@ -89,7 +90,7 @@ class AgeFitnessPareto():
         p2 = np.random.choice(list(self.population.keys()))
         while p2 == p1:
             p2 = np.random.choice(list(self.population.keys()))
-        
+
         # Tournament winner based only on fitness? Primary objective? 
         if self.population[p1].Get_Primary_Objective() > self.population[p2].Get_Primary_Objective():
             return p1
@@ -216,13 +217,16 @@ class AgeFitnessPareto():
         # self.plotter.Plot_Age_Fitness_PF()
         self.plotter.Plot_Pareto_Front_Size()
 
+    def Get_Available_Id(self):
+        return hash(np.random.random())
+
     def Clean_Directory(self):
         pf = self.Pareto_Front()
 
         # Save Pareto-front brains
         for id in pf:
-            if os.path.exists('brain_' + str(id) + '.nndf'):
-                os.system(OS_MV + ' ' + self.dir + f'/brain_{id}.nndf ' + self.dir + f'/best_robots/pareto_front/pf_brain_{id}.nndf')
+            if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
+                os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
                 # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         # Remove the rest
         os.system(OS_RM + ' ' + self.dir + '/world_*.sdf && ' 
