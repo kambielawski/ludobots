@@ -23,7 +23,7 @@ def Get_Constants_AFPO_Fit():
     }
 
 class Experiment:
-    def __init__(self, experiment_directory='', N_runs=10):
+    def __init__(self, experiment_directory='', N_runs=30):
         if experiment_directory: # Continue existing experiment
             self.pickle_file = f'{experiment_directory}/evo_runs.pickle'
         else: # Initialize a new experiment
