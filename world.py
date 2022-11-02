@@ -2,10 +2,15 @@ import os
 import pybullet as p 
 
 class World:
-    def __init__(self, solutionId):
+    def __init__(self, solutionId, dir='.'):
         self.planeId = p.loadURDF("plane.urdf")
-        worldFile = "world_" + str(solutionId) + ".sdf"
-        if os.path.exists(worldFile):
+        worldFile = f"{dir}/world_{solutionId}.sdf"
+        try:
             p.loadSDF(worldFile)
-        else:
-            p.loadSDF("world.sdf")
+        except:
+            p.loadSDF(f"{dir}/world.sdf")
+
+# if os.path.exists(worldFile):
+#     p.loadSDF(worldFile)
+# else:
+#     p.loadSDF(f"{dir}/world.sdf")

@@ -1,46 +1,33 @@
-import pyrosim.pyrosim as pyrosim
-import pybullet as p
-import numpy as np
-import sys
+import argparse
 
 from robot import Robot
 from world import World
 from simulation import Simulation
 import constants as c
 
-argc = len(sys.argv)
+parser = argparse.ArgumentParser()
+parser.add_argument("display", help="Display mode for pybullet. 'GUI' or 'DIRECT'", choices=['GUI', 'DIRECT'])
+parser.add_argument("solution_id", help="Solution ID for this simulation", type=int)
+parser.add_argument("brain_file", help="Path to .nndf file")
+parser.add_argument("body_file", help="Path to .urdf file")
+parser.add_argument("objective", help="Objective scheme for AFPO", choices=['emp_fitness', 'tri_fitness'])
+parser.add_argument("--directory", default='.', help="Experiment directory", type=str)
+parser.add_argument("--window", help="Empowerment window size", type=int)
 
-# default values
-bodyFile = None
-brainFile = None
-runMode = "DIRECT"
-solnId = 0
-objective = c.DEFAULT_OBJECTIVE
-windowSize = c.DEFAULT_EMPOWERMENT_WINDOW_SIZE
+args = parser.parse_args()
 
-# runMode can be GUI or DIRECT
-# TODO: learn arg parser & implement
-if argc > 1:
-    runMode = sys.argv[1]
-    if argc > 2:
-        solnId = int(sys.argv[2])
-        if argc > 3:
-            brainFile = sys.argv[3]
-            if argc > 4:
-                bodyFile = sys.argv[4]
-                if argc > 5:
-                    objective = sys.argv[5]
-                    if argc > 6:
-                        windowSize = int(sys.argv[6])
+windowSize = c.TIMESTEPS if args.window else 0
 
-simulation = Simulation(runMode, solnId)
-world = World(solnId)
-robots = [Robot(solnId, bodyFile, brainFile, windowSize)]
+# Setup simulation, world, and robot
+simulation = Simulation(args.display, args.solution_id)
+world = World(args.solution_id, dir=args.directory)
+# robots = [Robot(args.solution_id, args.body_file, args.brain_file, windowSize)]
+robots = [Robot(args.solution_id, "robots/body_quadruped.urdf", args.brain_file, windowSize, dir=args.directory)]
 
 # Run pybullet simulation
 simulation.Run(robots)
 # Write robot fitness to file 
-simulation.Get_Fitness(objective)
+simulation.Get_Fitness(args.objective)
 
 
 

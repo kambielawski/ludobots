@@ -10,20 +10,17 @@ OS_MV = 'move' if platform == 'win32' else 'mv'
 OS_RM = 'del' if platform == 'win32' else 'rm'
 
 class AgeFitnessPareto():
-    def __init__(self, constants):
+    def __init__(self, constants, run_id=1, dir='.'):
         self.population = dict()
-        self.nextAvailableId = 0
         self.nGenerations = constants['generations']
         self.targetPopSize = constants['target_population_size']
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
         self.objective = constants['objective']
         self.plotter = Plotter(constants)
-
-        # Create initial population randomly
-        for i in range(self.targetPopSize):
-            self.population[i] = Solution(self.nextAvailableId, (0, self.nextAvailableId), objective=self.objective)
-            self.nextAvailableId += 1
+        self.currentGen = 0
+        self.dir = dir
+        self.run_id = run_id
 
     def __del__(self):
         self.Clean_Directory()
@@ -32,31 +29,39 @@ class AgeFitnessPareto():
     Main Evolve loop for a single run
     '''
     def Evolve(self):
-        for currentGen in range(self.nGenerations):
-            print('===== Generation ' + str(currentGen) + ' =====')
-            if currentGen == 0:
-                self.Run_Solutions()
-                pf = self.Pareto_Front()
-                self.Run_Gen_Statistics(currentGen, pf)
-            else:
-                self.Evolve_One_Generation(currentGen)
-            if currentGen == self.nGenerations - 1:
+        while self.currentGen < self.nGenerations:
+            print('===== Generation ' + str(self.currentGen) + ' =====')
+            self.Evolve_One_Generation()
+            if self.currentGen == self.nGenerations - 1:
                 self.Save_Best()
                 self.Plot_Gen_Animation()
-            self.Clean_Directory()
+            # self.Clean_Directory()
 
     '''
     Single generation process
     '''
-    def Evolve_One_Generation(self, genNumber):
-        self.Increment_Ages()
-        self.Extend_Population(genNumber)
+    def Evolve_One_Generation(self):
+        # 1. Reproduce
+        if self.currentGen == 0:
+            # Initialize random population
+            for _ in range(self.targetPopSize):
+                rand_id = self.Get_Available_Id()
+                self.population[rand_id] = Solution(rand_id, (0, rand_id), objective=self.objective, dir=self.dir)
+        else:
+            self.Increment_Ages()
+            self.Extend_Population(self.currentGen)
+        
+        # 2. Simulate
         self.Run_Solutions()
+
+        # 3. Cull population
         self.Reduce_Population()
+
+        # 4. Analyze and run statistics
         pf = self.Pareto_Front()
-        self.Run_Gen_Statistics(genNumber, pf)
-        print(pf)
-    
+        self.Run_Gen_Statistics(self.currentGen, pf)
+        self.currentGen += 1
+
     '''
     Breed parents, mutate, and add a random individual
     '''
@@ -68,21 +73,24 @@ class AgeFitnessPareto():
             child = copy.deepcopy(self.population[parent])
             # - create mutated children from the tournament winners
             child.Mutate()
-            child.Set_ID(self.nextAvailableId)
+            rand_id = self.Get_Available_Id()
+            child.Set_ID(rand_id)
             child.Reset_Simulated()
-            self.population[self.nextAvailableId] = child
-            self.nextAvailableId += 1
+            self.population[rand_id] = child
 
         # 2. Add a random individual
-        self.population[self.nextAvailableId] = Solution(self.nextAvailableId, (genNumber, self.nextAvailableId), objective=self.objective)
-        self.nextAvailableId += 1
+        rand_id = self.Get_Available_Id()
+        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objective=self.objective)
 
+    '''
+    Tournament selection to decide which individuals reproduce
+    '''
     def Tournament_Select(self):
         p1 = np.random.choice(list(self.population.keys()))
         p2 = np.random.choice(list(self.population.keys()))
         while p2 == p1:
             p2 = np.random.choice(list(self.population.keys()))
-        
+
         # Tournament winner based only on fitness? Primary objective? 
         if self.population[p1].Get_Primary_Objective() > self.population[p2].Get_Primary_Objective():
             return p1
@@ -128,7 +136,6 @@ class AgeFitnessPareto():
                     self.population[solnId].Start_Simulation()
                 for solnId in batches[i]:
                     self.population[solnId].Wait_For_Simulation_To_End()
-
         else:
             for solnId in self.population:
                 if not self.population[solnId].Has_Been_Simulated():
@@ -152,7 +159,6 @@ class AgeFitnessPareto():
                 paretoFront.append(i)
         return paretoFront
 
-    # TODO: generalize this function for all objective schemes
     def Dominates(self, i, j):
         '''
         Returns True if solution i dominates solution j (else False)
@@ -211,28 +217,32 @@ class AgeFitnessPareto():
         # self.plotter.Plot_Age_Fitness_PF()
         self.plotter.Plot_Pareto_Front_Size()
 
+    def Get_Available_Id(self):
+        return hash(np.random.random())
+
     def Clean_Directory(self):
         pf = self.Pareto_Front()
 
         # Save Pareto-front brains
         for id in pf:
-            if os.path.exists('brain_' + str(id) + '.nndf'):
-                os.system(OS_MV + ' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf'.format(id=id))
+            if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
+                os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
+                # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         # Remove the rest
-        os.system(OS_RM + ' world_*.sdf && ' 
-                + OS_RM + ' brain_*.nndf && ' 
-                + OS_RM + ' body_quadruped_*.urdf && ' 
-                + OS_RM + ' fitness_*.txt')
+        os.system(OS_RM + ' ' + self.dir + '/world_*.sdf && ' 
+                + OS_RM + ' ' + self.dir + '/brain_*.nndf && ' 
+                + OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf && ' 
+                + OS_RM + ' ' + self.dir + '/fitness_*.txt')
         # Remove old Pareto-front brains
-        pf_files = os.listdir('./best_robots/pareto_front')
+        pf_files = os.listdir(self.dir + '/best_robots/pareto_front')
         for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
             if pf_id[0] not in pf:
-                os.system(OS_RM + ' best_robots/pareto_front/{filestr}'.format(filestr=pf_id[1]))
+                os.system(OS_RM + ' ' + self.dir + '/best_robots/pareto_front/{filestr}'.format(filestr=pf_id[1]))
 
     def Save_Best(self):
         pf = self.Pareto_Front()
         
         # Move over pareto front bests, then delete pareto_front dir
         for id in pf:
-            os.system(OS_MV + ' best_robots/pareto_front/pf_brain_{id}.nndf best_robots/quadruped'.format(id=id))
-        os.system(OS_RM + ' best_robots/pareto_front/*')
+            os.system(OS_MV + ' ' + self.dir + f'/best_robots/pareto_front/pf_brain_{id}.nndf ' + self.dir + '/best_robots/quadruped')
+        os.system(OS_RM + ' ' + self.dir + '/best_robots/pareto_front/*')

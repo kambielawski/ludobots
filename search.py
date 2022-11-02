@@ -7,8 +7,8 @@ import constants as c
 
 def Get_Constants_AFPO():
     return {
-        'generations': 800,
-        'target_population_size': 200,
+        'generations': 5,
+        'target_population_size': 10,
         'objective': 'emp_fitness', # 'emp_fitness' 
         'batching': True,
         'batch_size': 10
