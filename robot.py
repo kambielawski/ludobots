@@ -13,8 +13,9 @@ from sys import platform
 import constants as c
 
 class Robot:
-    def __init__(self, solutionId, urdfFileName=None, nndfFileName=None, empowermentWindowSize=c.DEFAULT_EMPOWERMENT_WINDOW_SIZE):
+    def __init__(self, solutionId, urdfFileName=None, nndfFileName=None, empowermentWindowSize=c.DEFAULT_EMPOWERMENT_WINDOW_SIZE, dir='.'):
         self.solutionId = solutionId
+        self.dir = dir
         self.robotId = None
         self.nndfFileName = nndfFileName
         self.urdfFileName = urdfFileName
@@ -34,7 +35,7 @@ class Robot:
                     self.robotId = p.loadURDF(urdfFileName)
                 # default to a quadruped
                 else:
-                    self.robotId = p.loadURDF("body_quadruped.urdf")
+                    self.robotId = p.loadURDF("robots/body_quadruped.urdf")
             except:
                 continue
 
@@ -107,13 +108,14 @@ class Robot:
         self.motorVals = [m+c for m,c in zip(self.motorVals, counts)]
         pass
     
-    def Empowerment_Window(self, timestep):        # convert motor and sensor states into integers
-        # actionz = [int(''.join(str(b) for b in A), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
-        # sensorz = [int(''.join(str(b) for b in S), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
+    def Empowerment_Window(self, timestep):        
+        # convert motor and sensor states into integers
+        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
+        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
         
         # Coarse grained actions, raw sensor states (both 2D arrays, flattened)
-        actionz = np.array(self.motorVals[(timestep - (2*self.empowermentWindowSize)):(timestep - self.empowermentWindowSize)]).flatten()
-        sensorz = np.array(self.sensorVals[(timestep-self.empowermentWindowSize):timestep]).flatten()
+        # actionz = np.array(self.motorVals[(timestep - (2*self.empowermentWindowSize)):(timestep - self.empowermentWindowSize)]).flatten()
+        # sensorz = np.array(self.sensorVals[(timestep-self.empowermentWindowSize):timestep]).flatten()
         # timeseries calculation of mutual information
         # mi = ee.mi(actionz, sensorz)
         mi = pyinform.mutual_info(actionz, sensorz, local=False)
@@ -128,9 +130,9 @@ class Robot:
         return emp
 
     def Simulation_Empowerment(self):
-        motorDist = Dist(np.array(self.motorVals[:(c.TIMESTEPS // 2)]).flatten())
-        sensorDist = Dist(np.array(self.sensorVals[(c.TIMESTEPS // 2):]).flatten())
-        mi = pyinform.mutual_info(sensorDist, motorDist, local=False)
+        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(c.TIMESTEPS //2)]]
+        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(c.TIMESTEPS // 2):]]
+        mi = pyinform.mutual_info(actionz, sensorz, local=False)
         return mi
 
     def Y_Axis_Fitness(self):
@@ -158,16 +160,17 @@ class Robot:
         if objective == 'emp_fitness':
             fitness = self.Y_Axis_Fitness()
             empowerment = self.Get_Empowerment()
-            fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-            fitnessFile.write(str(fitness)+ " " + str(empowerment))
+            fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
+            fitness_file.write(str(fitness)+ " " + str(empowerment))
         elif objective == 'tri_fitness':
             fitness1 = self.firstHalfFitness
             fitness2 = self.Y_Axis_Fitness()
-            fitnessFile = open("tmp_" + str(self.solutionId) + ".txt", "w")
-            fitnessFile.write(str(fitness1)+ " " + str(fitness2))
+            fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
+            fitness_file.write(str(fitness1)+ " " + str(fitness2))
 
         # UNIX
-        exit_code = os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
+        # exit_code = os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
+        exit_code = os.system('mv ' + f'{self.dir}/tmp_{self.solutionId}.txt {self.dir}/fitness_{self.solutionId}.txt')
         if exit_code != 0:
              raise OSError('File I/O error moving fitness to file.')
 

@@ -1,4 +1,3 @@
-import pyrosim.pyrosim as pyrosim
 import pybullet as p
 import pybullet_data
 import numpy as np
@@ -7,9 +6,10 @@ import time
 import constants as c
 
 class Simulation:
-    def __init__(self, runMode, solutionId):
+    def __init__(self, runMode, solutionId, dir='.'):
         self.runMode = runMode
         self.solutionId = solutionId
+        self.dir = dir
         if runMode == "GUI":
             self.physicsClient = p.connect(p.GUI)
         if runMode == "DIRECT":
@@ -39,6 +39,6 @@ class Simulation:
     def Save_Values(self):
         for sensor in self.robot.sensors:
             print(self.robot.sensors[sensor].values)
-            np.save("./data/data_" + self.robot.sensors[sensor].name + "_sensor.npy", self.robot.sensors[sensor].values)
-            print("Sensor data saved to ./data/data_" + self.robot.sensors[sensor].name + "_sensor.npy")
+            np.save(self.dir + "/data/data_" + self.robot.sensors[sensor].name + "_sensor.npy", self.robot.sensors[sensor].values)
+            print(f"Sensor data saved to {self.dir}/data/data_" + self.robot.sensors[sensor].name + "_sensor.npy")
 
