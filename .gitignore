@@ -2,8 +2,10 @@
 env/
 .env/
 plotting/saved_plots
-./pyrosim/*
+./pyrosim/**
+pyrosim
 pyrosim/
+pyrosim/__pycache__/*
 plots/
 ./data/*
 data/
@@ -12,6 +14,7 @@ data/
 *.urdf
 *.sdf
 *.nndf
+*.pyc
 __pycache__/
 fitness*.txt
 log.txt
