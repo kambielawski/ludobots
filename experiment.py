@@ -6,20 +6,20 @@ from ageFitnessPareto import AgeFitnessPareto
 
 def Get_Constants_AFPO_Emp():
     return {
-        'generations': 5,
-        'target_population_size': 10,
+        'generations': 999,
+        'target_population_size': 120,
         'objective': 'emp_fitness',
         'batching': True,
-        'batch_size': 10
+        'batch_size': 30
     }
 
 def Get_Constants_AFPO_Fit():
     return {
-        'generations': 5,
-        'target_population_size': 10,
+        'generations': 999,
+        'target_population_size': 120,
         'objective': 'tri_fitness', 
         'batching': True,
-        'batch_size': 10
+        'batch_size': 30
     }
 
 class Experiment:
@@ -68,6 +68,9 @@ class Experiment:
 
         # 4. Run t-test and print relevant information
         self.Print_Statistics()
+
+    def Run_T_Test(self):
+        return 1
 
     def Print_Statistics(self):
         print('Donezo with generation')
