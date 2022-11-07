@@ -2,7 +2,7 @@ import numpy as np
 
 DEBUG=False
 
-TIMESTEPS=1000
+TIMESTEPS=500
 MAX_FORCE=50 # Newton*meters
 GRAVITY_FORCE=-9.8 # m/s^2
 

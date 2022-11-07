@@ -16,5 +16,9 @@ if args.experiment_directory and not os.path.exists(f'{args.experiment_directory
 
 exp = Experiment(args.experiment_directory)
 
-# while True:
-exp.Run_One_Generation()
+g = 1
+while True:
+    print(f'\n\n========== \n Generation {g} \n ==========\n\n')
+    exp.Run_One_Generation()
+    t = exp.Run_T_Test()
+    # Check if t is cool, blow up the universe if it is 
