@@ -17,7 +17,7 @@ class AgeFitnessPareto():
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
         self.objective = constants['objective']
-        self.plotter = Plotter(constants)
+        self.plotter = Plotter(constants, dir=dir)
         self.currentGen = 0
         self.dir = dir
         self.run_id = run_id
@@ -50,7 +50,7 @@ class AgeFitnessPareto():
         else:
             self.Increment_Ages()
             self.Extend_Population(self.currentGen)
-        
+
         # 2. Simulate
         self.Run_Solutions()
 
@@ -80,7 +80,7 @@ class AgeFitnessPareto():
 
         # 2. Add a random individual
         rand_id = self.Get_Available_Id()
-        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objective=self.objective)
+        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objective=self.objective, dir=self.dir)
 
     '''
     Tournament selection to decide which individuals reproduce
@@ -203,13 +203,16 @@ class AgeFitnessPareto():
         self.plotter.Population_Data(genNumber, popData)
         self.plotter.Pareto_Front_Data(genNumber, pfData)
 
+    def Write_Gen_Statistics(self):
+        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective, self.run_id)
+
     def Plot_Gen_Animation(self):
         '''
         Runs Plotter animation
         '''
         # Write data 
         self.plotter.Write_Pareto_Front_File() # pf_size.txt
-        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective) # gen_data.txt
+        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective, self.run_id) # gen_data.txt
 
         # self.plotter.Plot_Age_Fitness()
         # self.plotter.Plot_Gen_Fitness()
@@ -229,10 +232,10 @@ class AgeFitnessPareto():
                 os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
                 # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         # Remove the rest
-        os.system(OS_RM + ' ' + self.dir + '/world_*.sdf && ' 
-                + OS_RM + ' ' + self.dir + '/brain_*.nndf && ' 
+        os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf && ' 
                 + OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf && ' 
-                + OS_RM + ' ' + self.dir + '/fitness_*.txt')
+                + OS_RM + ' ' + self.dir + '/fitness_*.txt && '
+                + OS_RM + ' ' + self.dir + '/world_*.sdf')
         # Remove old Pareto-front brains
         pf_files = os.listdir(self.dir + '/best_robots/pareto_front')
         for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
@@ -244,5 +247,5 @@ class AgeFitnessPareto():
         
         # Move over pareto front bests, then delete pareto_front dir
         for id in pf:
-            os.system(OS_MV + ' ' + self.dir + f'/best_robots/pareto_front/pf_brain_{id}.nndf ' + self.dir + '/best_robots/quadruped')
-        os.system(OS_RM + ' ' + self.dir + '/best_robots/pareto_front/*')
+            os.system(f'{OS_MV} {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf ' + self.dir + '/best_robots/quadruped')
+        os.system(f'{OS_RM} {self.dir}/best_robots/pareto_front/*')

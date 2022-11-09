@@ -1,6 +1,7 @@
 import time
 import pickle
 import os
+import threading
 
 from ageFitnessPareto import AgeFitnessPareto
 
@@ -10,7 +11,7 @@ def Get_Constants_AFPO_Emp():
         'target_population_size': 120,
         'objective': 'emp_fitness',
         'batching': True,
-        'batch_size': 30
+        'batch_size': 5
     }
 
 def Get_Constants_AFPO_Fit():
@@ -19,11 +20,12 @@ def Get_Constants_AFPO_Fit():
         'target_population_size': 120,
         'objective': 'tri_fitness', 
         'batching': True,
-        'batch_size': 30
+        'batch_size': 5
     }
 
 class Experiment:
     def __init__(self, experiment_directory='', N_runs=30):
+        print('EXP: experiment directory: ', experiment_directory)
         if experiment_directory: # Continue existing experiment
             self.pickle_file = f'{experiment_directory}/evo_runs.pickle'
         else: # Initialize a new experiment
@@ -31,8 +33,10 @@ class Experiment:
             timestr = time.strftime('%b%d_%I_%M')
             self.experiment_directory = f'experiments/exp_{timestr}' 
             os.system(f'mkdir {self.experiment_directory}')
+            os.system(f'mkdir {self.experiment_directory}/data')
+            os.system(f'mkdir {self.experiment_directory}/plots')
             os.system(f'mkdir {self.experiment_directory}/best_robots')
-            os.system(f'mkdir {self.experiment_directory}/quadruped')
+            os.system(f'mkdir {self.experiment_directory}/best_robots/quadruped')
             os.system(f'mkdir {self.experiment_directory}/best_robots/pareto_front')
             os.system(f'cp robots/body_quadruped.urdf {self.experiment_directory}')
             os.system(f'cp world.sdf {self.experiment_directory}')
@@ -52,7 +56,12 @@ class Experiment:
             with open(self.pickle_file, 'wb') as pklFileHandle:
                 pickle.dump(self.evo_runs, pklFileHandle)
     
+    def Thread_Func(self, treatment, run):
+        self.evo_runs[treatment][run].Evolve_One_Generation()
+
     def Run_One_Generation(self):
+        t_start = time.time()
+        self.threads = []
         # 1. Unpickle previous generation
         with open(self.pickle_file, 'rb') as pickle_file:
             self.evo_runs = pickle.load(pickle_file)
@@ -60,17 +69,30 @@ class Experiment:
         # 2. Compute a single generation for all runs
         for treatment in self.evo_runs:
             for run in self.evo_runs[treatment]:
-                self.evo_runs[treatment][run].Evolve_One_Generation()
+                t = threading.Thread(target=self.Thread_Func, args=[treatment, run])
+                t.start()
+                self.threads.append(t)
+
+        for t in self.threads:
+            t.join()
 
         # 3. Pickle runs
         with open(self.pickle_file, 'wb') as pklFileHandle:
             pickle.dump(self.evo_runs, pklFileHandle, protocol=pickle.HIGHEST_PROTOCOL)
 
+        t_end = time.time()
+        self.one_gen_time = t_end - t_start
+        self.Print_GenTime_To_File()
         # 4. Run t-test and print relevant information
         self.Print_Statistics()
 
     def Run_T_Test(self):
         return 1
+
+    def Print_GenTime_To_File(self):
+        f = open('gen_timing.txt', 'w')
+        f.write(str(self.one_gen_time))
+        f.close()
 
     def Print_Statistics(self):
         print('Donezo with generation')
