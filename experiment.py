@@ -11,7 +11,7 @@ def Get_Constants_AFPO_Emp():
         'target_population_size': 10,
         'objective': 'emp_fitness',
         'batching': True,
-        'batch_size': 2
+        'batch_size': 5
     }
 
 def Get_Constants_AFPO_Fit():
@@ -20,7 +20,7 @@ def Get_Constants_AFPO_Fit():
         'target_population_size': 10,
         'objective': 'tri_fitness', 
         'batching': True,
-        'batch_size': 2
+        'batch_size': 5
     }
 
 class Experiment:
@@ -76,6 +76,10 @@ class Experiment:
         for t in self.threads:
             t.join()
 
+        for treatment in self.evo_runs:
+            for run in self.evo_runs[treatment]:
+                self.evo_runs[treatment][run].Clean_Directory()
+    
         # 3. Pickle runs
         with open(self.pickle_file, 'wb') as pklFileHandle:
             pickle.dump(self.evo_runs, pklFileHandle, protocol=pickle.HIGHEST_PROTOCOL)

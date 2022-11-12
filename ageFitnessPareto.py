@@ -36,7 +36,7 @@ class AgeFitnessPareto():
             if self.currentGen == self.nGenerations - 1:
                 self.Save_Best()
                 self.Plot_Gen_Animation()
-            # self.Clean_Directory()
+            self.Clean_Directory()
 
     '''
     Single generation process
@@ -225,13 +225,6 @@ class AgeFitnessPareto():
         return hash(np.random.random())
 
     def Clean_Directory(self):
-        pf = self.Pareto_Front()
-
-        # Save Pareto-front brains
-        for id in pf:
-            if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
-                os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
-                # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         # Remove the rest
         os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf && ' 
                 + OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf && ' 
@@ -245,6 +238,12 @@ class AgeFitnessPareto():
 
     def Save_Best(self):
         pf = self.Pareto_Front()
+
+        # Save Pareto-front brains
+        for id in pf:
+            if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
+                os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
+                # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         
         # Move over pareto front bests, then delete pareto_front dir
         for id in pf:
