@@ -11,7 +11,7 @@ def Get_Constants_AFPO():
         'target_population_size': 10,
         'objective': 'emp_fitness', # 'emp_fitness' 
         'batching': True,
-        'batch_size': 10
+        'batch_size': 5
     }
 
 def Get_Constants_HillClimber():
