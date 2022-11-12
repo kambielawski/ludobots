@@ -23,7 +23,8 @@ class AgeFitnessPareto():
         self.run_id = run_id
 
     def __del__(self):
-        self.Clean_Directory()
+        pass
+        # self.Clean_Directory()
     
     '''
     Main Evolve loop for a single run

@@ -7,20 +7,20 @@ from ageFitnessPareto import AgeFitnessPareto
 
 def Get_Constants_AFPO_Emp():
     return {
-        'generations': 999,
-        'target_population_size': 120,
+        'generations': 5,
+        'target_population_size': 10,
         'objective': 'emp_fitness',
         'batching': True,
-        'batch_size': 5
+        'batch_size': 2
     }
 
 def Get_Constants_AFPO_Fit():
     return {
-        'generations': 999,
-        'target_population_size': 120,
+        'generations': 5,
+        'target_population_size': 10,
         'objective': 'tri_fitness', 
         'batching': True,
-        'batch_size': 5
+        'batch_size': 2
     }
 
 class Experiment:
@@ -90,8 +90,8 @@ class Experiment:
         return 1
 
     def Print_GenTime_To_File(self):
-        f = open('gen_timing.txt', 'w')
-        f.write(str(self.one_gen_time))
+        f = open('gen_timing.txt', 'a')
+        f.write(f'\ngeneration time: ' + str(self.one_gen_time))
         f.close()
 
     def Print_Statistics(self):

@@ -70,6 +70,9 @@ class Plotter:
 
         return self.populationOverTime
 
+    def Get_Population_Data(self):
+        return self.populationOverTime
+
     # TODO: Separate empowerment & fitness plots
     def Rainbow_Waterfall_Plot(self, yaxis='fitness'):
         '''
