@@ -156,23 +156,39 @@ class Robot:
     '''
     Writes both the fitness and the empowerment to a file named fitness_<id>.txt
     '''
+    def Print_Fitness(self, objective='tri_fitness'):
+        if objective == 'emp_fitness':
+            fitness = self.Y_Axis_Fitness()
+            empowerment = self.Get_Empowerment()
+            print(str(fitness)+ " " + str(empowerment))
+        elif objective == 'tri_fitness':
+            fitness1 = self.firstHalfFitness
+            fitness2 = self.Y_Axis_Fitness()
+            print(str(fitness1)+ " " + str(fitness2))
+
+    '''
+    Writes both the fitness and the empowerment to a file named fitness_<id>.txt
+    '''
     def Get_Fitness(self, objective='tri_fitness'):
         if objective == 'emp_fitness':
             fitness = self.Y_Axis_Fitness()
             empowerment = self.Get_Empowerment()
-            fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
-            fitness_file.write(str(fitness)+ " " + str(empowerment))
+            # fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
+            # fitness_file.write(str(fitness)+ " " + str(empowerment))
+            print(f'({str(fitness)} {str(empowerment)})')
         elif objective == 'tri_fitness':
             fitness1 = self.firstHalfFitness
             fitness2 = self.Y_Axis_Fitness()
-            fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
-            fitness_file.write(str(fitness1)+ " " + str(fitness2))
+            # fitness_file = open(f'{self.dir}/tmp_{self.solutionId}.txt', 'w')
+            # fitness_file.write(str(fitness1)+ " " + str(fitness2))
+            print(f'({str(fitness1)} {str(fitness2)})')
 
         # UNIX
         # exit_code = os.system("mv tmp_" + str(self.solutionId) + ".txt fitness_" + str(self.solutionId) + ".txt")
-        exit_code = os.system('mv ' + f'{self.dir}/tmp_{self.solutionId}.txt {self.dir}/fitness_{self.solutionId}.txt')
-        if exit_code != 0:
-             raise OSError('File I/O error moving fitness to file.')
+        
+        # exit_code = os.system('mv ' + f'{self.dir}/tmp_{self.solutionId}.txt {self.dir}/fitness_{self.solutionId}.txt')
+        # if exit_code != 0:
+        #      raise OSError('File I/O error moving fitness to file.')
 
         # platform agnostic
 
