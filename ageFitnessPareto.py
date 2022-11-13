@@ -1,7 +1,9 @@
 import numpy as np
 import copy
 import os
+import time
 from sys import platform
+from concurrent.futures import ThreadPoolExecutor
 
 from solution import Solution
 from plotting.plotter import Plotter
@@ -120,7 +122,20 @@ class AgeFitnessPareto():
         for solnId in self.population:
             self.population[solnId].Increment_Age()
 
+    def Run_One_Solution_Async(self, solnId):
+        return self.population[solnId].Run_Simulation()
+
     def Run_Solutions(self):
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for solnId in self.population:
+                if not self.population[solnId].Has_Been_Simulated():
+                    f = executor.submit(self.Run_One_Solution_Async, solnId)
+                    futures.append(f)
+            while not all([f.done() for f in futures]):
+                time.sleep(0.1)
+
+    def Run_Solutions_outdated(self):
         if self.batching:
             # Create batches
             batches = [[]]
