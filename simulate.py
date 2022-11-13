@@ -19,7 +19,7 @@ args = parser.parse_args()
 windowSize = c.TIMESTEPS if args.window else 0
 
 # Setup simulation, world, and robot
-simulation = Simulation(args.display, args.solution_id)
+simulation = Simulation(args.display, args.solution_id, dir=args.directory)
 world = World(args.solution_id, dir=args.directory)
 # robots = [Robot(args.solution_id, args.body_file, args.brain_file, windowSize)]
 robots = [Robot(args.solution_id, "robots/body_quadruped.urdf", args.brain_file, windowSize, dir=args.directory)]

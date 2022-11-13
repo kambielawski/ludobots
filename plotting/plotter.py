@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 class Plotter:
-    def __init__(self, constants=None):
+    def __init__(self, constants=None, dir='.'):
         self.constants = {} if constants==None else constants
         self.populationOverTime = {}
         self.paretoFrontOverTime = {}
         self.paretoFrontSizeOverTime = []
         self.fignum = 0
+        self.dir = dir
 
     def Population_Data(self, genNumber, population):
         self.populationOverTime[genNumber] = population
@@ -20,15 +21,16 @@ class Plotter:
         self.paretoFrontSizeOverTime.append(len(paretoFront))
 
     def Write_Pareto_Front_File(self):
-        f = open('./data/pf_size.txt', 'w')
+        f = open(f'{self.dir}/data/pf_size.txt', 'w')
         for n in self.paretoFrontSizeOverTime:
             f.write(str(n) + '\n')
 
-    def Write_Generation_Data_To_File(self, popsize, gens, obj):
+    def Write_Generation_Data_To_File(self, popsize, gens, obj, id=1):
         '''
         Writes generation data to a file (one generation per line)
         '''
-        f = open('./data/gen_data.txt', 'w')
+        print(f'Creating file {self.dir}/data/gen_data_{id}.txt')
+        f = open(f'{self.dir}/data/gen_data_{id}.txt', 'a')
         f.write(f'n={popsize},g={gens},obj={obj}\n')
         for g in self.populationOverTime:
             for individual in self.populationOverTime[g]:
@@ -66,6 +68,9 @@ class Plotter:
         # Turn tuple strings into literal tuples
         self.populationOverTime = list(map(lambda gen: list(map(lambda tup: literal_eval(tup), gen)), genTupleStrings))
 
+        return self.populationOverTime
+
+    def Get_Population_Data(self):
         return self.populationOverTime
 
     # TODO: Separate empowerment & fitness plots

@@ -1,7 +1,9 @@
 import numpy as np
 import copy
 import os
+import time
 from sys import platform
+from concurrent.futures import ThreadPoolExecutor
 
 from solution import Solution
 from plotting.plotter import Plotter
@@ -17,13 +19,14 @@ class AgeFitnessPareto():
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
         self.objective = constants['objective']
-        self.plotter = Plotter(constants)
+        self.plotter = Plotter(constants, dir=dir)
         self.currentGen = 0
         self.dir = dir
         self.run_id = run_id
 
     def __del__(self):
-        self.Clean_Directory()
+        pass
+        # self.Clean_Directory()
     
     '''
     Main Evolve loop for a single run
@@ -35,7 +38,7 @@ class AgeFitnessPareto():
             if self.currentGen == self.nGenerations - 1:
                 self.Save_Best()
                 self.Plot_Gen_Animation()
-            # self.Clean_Directory()
+            self.Clean_Directory()
 
     '''
     Single generation process
@@ -50,7 +53,7 @@ class AgeFitnessPareto():
         else:
             self.Increment_Ages()
             self.Extend_Population(self.currentGen)
-        
+
         # 2. Simulate
         self.Run_Solutions()
 
@@ -80,7 +83,7 @@ class AgeFitnessPareto():
 
         # 2. Add a random individual
         rand_id = self.Get_Available_Id()
-        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objective=self.objective)
+        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objective=self.objective, dir=self.dir)
 
     '''
     Tournament selection to decide which individuals reproduce
@@ -119,30 +122,18 @@ class AgeFitnessPareto():
         for solnId in self.population:
             self.population[solnId].Increment_Age()
 
+    def Run_One_Solution_Async(self, solnId):
+        return self.population[solnId].Run_Simulation()
+
     def Run_Solutions(self):
-        if self.batching:
-            # Create batches
-            batches = [[]]
-            b_i = 0
+        with ThreadPoolExecutor() as executor:
+            futures = []
             for solnId in self.population:
                 if not self.population[solnId].Has_Been_Simulated():
-                    batches[b_i].append(solnId)
-                    if len(batches[b_i]) >= self.batch_size:
-                        batches.append([])
-                        b_i += 1
-            # Simulate batches one at a time
-            for i in range(len(batches)):
-                for solnId in batches[i]:
-                    self.population[solnId].Start_Simulation()
-                for solnId in batches[i]:
-                    self.population[solnId].Wait_For_Simulation_To_End()
-        else:
-            for solnId in self.population:
-                if not self.population[solnId].Has_Been_Simulated():
-                    self.population[solnId].Start_Simulation()
-            for solnId in self.population:
-                if not self.population[solnId].Has_Been_Simulated():
-                    self.population[solnId].Wait_For_Simulation_To_End()
+                    f = executor.submit(self.Run_One_Solution_Async, solnId)
+                    futures.append(f)
+            while not all([f.done() for f in futures]):
+                time.sleep(0.1)
     
     '''
     Returns IDs of the solutions that are Pareto optimal
@@ -203,13 +194,16 @@ class AgeFitnessPareto():
         self.plotter.Population_Data(genNumber, popData)
         self.plotter.Pareto_Front_Data(genNumber, pfData)
 
+    def Write_Gen_Statistics(self):
+        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective, self.run_id)
+
     def Plot_Gen_Animation(self):
         '''
         Runs Plotter animation
         '''
         # Write data 
         self.plotter.Write_Pareto_Front_File() # pf_size.txt
-        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective) # gen_data.txt
+        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective, self.run_id) # gen_data.txt
 
         # self.plotter.Plot_Age_Fitness()
         # self.plotter.Plot_Gen_Fitness()
@@ -221,18 +215,11 @@ class AgeFitnessPareto():
         return hash(np.random.random())
 
     def Clean_Directory(self):
-        pf = self.Pareto_Front()
-
-        # Save Pareto-front brains
-        for id in pf:
-            if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
-                os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
-                # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         # Remove the rest
-        os.system(OS_RM + ' ' + self.dir + '/world_*.sdf && ' 
-                + OS_RM + ' ' + self.dir + '/brain_*.nndf && ' 
+        os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf && ' 
                 + OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf && ' 
-                + OS_RM + ' ' + self.dir + '/fitness_*.txt')
+                + OS_RM + ' ' + self.dir + '/fitness_*.txt && '
+                + OS_RM + ' ' + self.dir + '/world_*.sdf')
         # Remove old Pareto-front brains
         pf_files = os.listdir(self.dir + '/best_robots/pareto_front')
         for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
@@ -241,8 +228,14 @@ class AgeFitnessPareto():
 
     def Save_Best(self):
         pf = self.Pareto_Front()
+
+        # Save Pareto-front brains
+        for id in pf:
+            if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
+                os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
+                # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         
         # Move over pareto front bests, then delete pareto_front dir
         for id in pf:
-            os.system(OS_MV + ' ' + self.dir + f'/best_robots/pareto_front/pf_brain_{id}.nndf ' + self.dir + '/best_robots/quadruped')
-        os.system(OS_RM + ' ' + self.dir + '/best_robots/pareto_front/*')
+            os.system(f'{OS_MV} {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf ' + self.dir + '/best_robots/quadruped')
+        os.system(f'{OS_RM} {self.dir}/best_robots/pareto_front/*')
