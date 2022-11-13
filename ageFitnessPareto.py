@@ -134,31 +134,6 @@ class AgeFitnessPareto():
                     futures.append(f)
             while not all([f.done() for f in futures]):
                 time.sleep(0.1)
-
-    def Run_Solutions_outdated(self):
-        if self.batching:
-            # Create batches
-            batches = [[]]
-            b_i = 0
-            for solnId in self.population:
-                if not self.population[solnId].Has_Been_Simulated():
-                    batches[b_i].append(solnId)
-                    if len(batches[b_i]) >= self.batch_size:
-                        batches.append([])
-                        b_i += 1
-            # Simulate batches one at a time
-            for i in range(len(batches)):
-                for solnId in batches[i]:
-                    self.population[solnId].Start_Simulation()
-                for solnId in batches[i]:
-                    self.population[solnId].Wait_For_Simulation_To_End()
-        else:
-            for solnId in self.population:
-                if not self.population[solnId].Has_Been_Simulated():
-                    self.population[solnId].Start_Simulation()
-            for solnId in self.population:
-                if not self.population[solnId].Has_Been_Simulated():
-                    self.population[solnId].Wait_For_Simulation_To_End()
     
     '''
     Returns IDs of the solutions that are Pareto optimal

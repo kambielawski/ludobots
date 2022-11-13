@@ -56,68 +56,6 @@ class Solution:
 
         return re.search('\(.+\)', out_str)[0]
 
-
-    def Start_Simulation(self, runMode="DIRECT"):
-        self.runMode=runMode
-        self.Create_World()
-        self.robot.Generate_Robot(self.weights, 0,0,1)
-
-        # execute simulation with runMode and solution ID and brainfile if it exists
-        run_command = f"python3 simulate.py {runMode} {str(self.id)} {self.dir}/brain_{self.id}.nndf {self.robot.Get_Body_File()} {self.objective} --directory {self.dir}"
-        
-        self.sp = subprocess.Popen(['python3', 'simulate.py', 
-                                runMode, 
-                                str(self.id), 
-                                f'{self.dir}/brain_{self.id}.nndf', 
-                                self.robot.Get_Body_File(), 
-                                self.objective,
-                                '--directory', self.dir],
-                                stdout=subprocess.PIPE)
-
-        # if c.DEBUG:
-        #     run_command += " >log.txt 2>&1" 
-        # if platform == 'win32':
-        #     run_command = 'START /B ' + run_command
-        # else:
-        #     run_command += " &"
-
-        # run simulation
-        # os.system(run_command)
-
-    def Wait_For_Simulation_To_End(self):
-        # fitnessFileName = f"{self.dir}/fitness_{self.id}.txt"
-
-        # # Wait for fitness file to be readable
-        # while not os.path.exists(fitnessFileName):
-        #     time.sleep(0.01)
-        # fitnessFile = open(fitnessFileName, "r")
-        # while fitnessFile.read() == '':
-        #     fitnessFile.seek(0)
-        #     time.sleep(0.01)
-
-        # # Read file contents
-        # fitnessFile.seek(0)
-        # fitnessFileContent = [n.strip('\"\ \n') for n in fitnessFile.readlines()[0].split(' ')]
-        # fitnessFile.close()
-        out_str = self.sp.stdout.read().decode('utf-8')
-        print(re.search('\(.+\)', out_str)[0])
-        exit()
-        print(q)
-        stdout, stderr = self.sp.communicate()
-        self.sp.wait()
-        out_str = stdout.decode('utf-8')
-        
-
-        # Read values into objective variables
-        # if self.objective == 'tri_fitness':
-        #     self.firstHalfFitness = float(fitnessFileContent[0])
-        #     self.secondHalfFitness = float(fitnessFileContent[1])
-        # elif self.objective == 'emp_fitness':
-        #     self.fitness = float(fitnessFileContent[0])
-        #     self.empowerment = float(fitnessFileContent[1])
-        
-        self.been_simulated = True # Set simulated flag
-
     def Mutate(self):
         randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
         randCol = random.randint(0,self.robot.NUM_SENSOR_NEURONS-1)
