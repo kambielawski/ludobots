@@ -7,19 +7,19 @@ from ageFitnessPareto import AgeFitnessPareto
 
 def Get_Constants_AFPO_Emp():
     return {
-        'generations': 5,
-        'target_population_size': 10,
+        'generations': 999,
+        'target_population_size': 100,
         'objective': 'emp_fitness',
-        'batching': True,
+        'batching': False,
         'batch_size': 5
     }
 
 def Get_Constants_AFPO_Fit():
     return {
-        'generations': 5,
-        'target_population_size': 10,
+        'generations': 999,
+        'target_population_size': 100,
         'objective': 'tri_fitness', 
-        'batching': True,
+        'batching': False,
         'batch_size': 5
     }
 
@@ -69,16 +69,11 @@ class Experiment:
         # 2. Compute a single generation for all runs
         for treatment in self.evo_runs:
             for run in self.evo_runs[treatment]:
+                print(f'\n\n========== \n Generation {self.evo_runs[treatment][run].currentGen}, Run {run} \n ==========\n\n')
                 t = threading.Thread(target=self.Thread_Func, args=[treatment, run])
                 t.start()
-                self.threads.append(t)
-
-        for t in self.threads:
-            t.join()
-
-        for treatment in self.evo_runs:
-            for run in self.evo_runs[treatment]:
-                self.evo_runs[treatment][run].Clean_Directory()
+                t.join()
+                self.evo_runs[treatment][run].Clean_Directory() # Clean up experiment directory
     
         # 3. Pickle runs
         with open(self.pickle_file, 'wb') as pklFileHandle:
@@ -88,7 +83,6 @@ class Experiment:
         self.one_gen_time = t_end - t_start
         self.Print_GenTime_To_File()
         # 4. Run t-test and print relevant information
-        self.Print_Statistics()
 
     def Run_T_Test(self):
         return 1
@@ -97,6 +91,3 @@ class Experiment:
         f = open('gen_timing.txt', 'a')
         f.write(f'\ngeneration time: ' + str(self.one_gen_time))
         f.close()
-
-    def Print_Statistics(self):
-        print('Donezo with generation')

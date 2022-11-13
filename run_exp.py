@@ -14,7 +14,7 @@ if args.dir and not os.path.exists(args.dir):
 if args.dir and not os.path.exists(f'{args.dir}/evo_runs.pickle'):
     raise OSError('Experiment directory does not contain an evo_runs.pickle file')
 
-exp = Experiment(args.dir, N_runs=3)
+exp = Experiment(args.dir)
 
 g = 1
 while True:

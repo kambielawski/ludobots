@@ -33,6 +33,9 @@ class Simulation:
             if self.runMode == "GUI":
                 time.sleep(1/360)
 
+    def Print_Fitness(self, objective):
+        print(self.robots[0].Get_Fitness(objective))
+
     def Get_Fitness(self, objective):
         return self.robots[0].Get_Fitness(objective)
 
