@@ -31,7 +31,7 @@ class Simulation:
                 robot.Think()
                 robot.Act(i)
             if self.runMode == "GUI":
-                time.sleep(1/360)
+                time.sleep(1/10000)
 
     def Get_Fitness(self, objective):
         return self.robots[0].Get_Fitness(objective)
