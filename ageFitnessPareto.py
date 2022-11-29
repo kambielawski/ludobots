@@ -122,19 +122,44 @@ class AgeFitnessPareto():
         for solnId in self.population:
             self.population[solnId].Increment_Age()
 
-    def Run_One_Solution_Async(self, solnId):
-        return self.population[solnId].Run_Simulation()
-
     def Run_Solutions(self):
-        with ThreadPoolExecutor() as executor:
-            futures = []
-            for solnId in self.population:
-                if not self.population[solnId].Has_Been_Simulated():
-                    f = executor.submit(self.Run_One_Solution_Async, solnId)
-                    futures.append(f)
-            while not all([f.done() for f in futures]):
-                time.sleep(0.1)
-    
+        def Run_One_Solution_Async(solnId):
+            return self.population[solnId].Run_Simulation()
+
+        try:
+            with ThreadPoolExecutor() as executor:
+                futures = []
+                # Start threads
+                for solnId in self.population:
+                    if not self.population[solnId].Has_Been_Simulated():
+                        f = executor.submit(Run_One_Solution_Async, solnId)
+                        futures.append(f)
+                # Wait for all threads to be finished running
+                while not all([f.done() for f in futures]):
+                    time.sleep(0.1)
+        except Exception as err:
+            os.system(f'echo {err} >> {self.dir}/error_log.txt')
+
+    # def Run_Solutions(self):
+    #     def Run_One_Solution_Async(solnId):
+    #         return self.population[solnId].Run_Simulation()
+
+    #     try:
+    #         with ProcessPoolExecutor() as executor:
+    #             futures = []
+    #             # Start threads
+    #             for solnId in self.population:
+    #                 if not self.population[solnId].Has_Been_Simulated():
+    #                     f = executor.submit(Run_One_Solution_Async, solnId)
+    #                     futures.append(f)
+
+    #             # Map the function onto the solutions
+    #             while not all([f.done() for f in futures]):
+    #                 time.sleep(0.1)
+
+    #     except Exception as err:
+    #         os.system(f'echo "{err}" >> {self.dir}/error_log.txt')
+
     '''
     Returns IDs of the solutions that are Pareto optimal
     '''
@@ -216,15 +241,14 @@ class AgeFitnessPareto():
 
     def Clean_Directory(self):
         # Remove the rest
-        os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf && ' 
-                + OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf && ' 
-                + OS_RM + ' ' + self.dir + '/fitness_*.txt && '
-                + OS_RM + ' ' + self.dir + '/world_*.sdf')
+        os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf')
+        os.system(OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf') 
+        os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
         # Remove old Pareto-front brains
-        pf_files = os.listdir(self.dir + '/best_robots/pareto_front')
-        for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
-            if pf_id[0] not in pf:
-                os.system(OS_RM + ' ' + self.dir + '/best_robots/pareto_front/{filestr}'.format(filestr=pf_id[1]))
+        # pf_files = os.listdir(self.dir + '/best_robots/pareto_front')
+        # for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
+        #     if pf_id[0] not in pf:
+        #         os.system(OS_RM + ' ' + self.dir + '/best_robots/pareto_front/{filestr}'.format(filestr=pf_id[1]))
 
     def Save_Best(self):
         pf = self.Pareto_Front()
