@@ -12,7 +12,7 @@ from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
-    def __init__(self, solutionId, lineage, objective, dir='.'):
+    def __init__(self, solutionId, lineage, objectives, dir='.'):
         self.id = solutionId
         self.robot = Quadruped(self.id, dir=dir)
         self.weights = self.robot.Generate_Weights()
@@ -20,7 +20,7 @@ class Solution:
         self.empowerment = 0
         self.been_simulated = False
         self.lineage = lineage
-        self.objective = objective
+        self.objectives = objectives
         self.dir = dir
 
     def Run_Simulation(self, runMode="DIRECT"):
@@ -28,33 +28,29 @@ class Solution:
         self.Create_World()
         self.robot.Generate_Robot(self.weights, 0,0,1)
 
-        self.sp = subprocess.Popen(['python3', 'simulate.py', 
+        sp = subprocess.Popen(['python3', 'simulate.py', 
                                 runMode, 
                                 str(self.id), 
                                 f'{self.dir}/brain_{self.id}.nndf', 
                                 self.robot.Get_Body_File(), 
-                                self.objective,
                                 '--directory', self.dir],
                                 stdout=subprocess.PIPE)
 
         # Parse standard output from subprocess
-        stdout, stderr = self.sp.communicate()
-        self.sp.wait()
+        stdout, stderr = sp.communicate()
+        sp.wait()
         out_str = stdout.decode('utf-8')
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
+        self.selection_metrics = {
+            'displacement': fitness_metrics[0],
+            'empowerment': fitness_metrics[1],
+            'first_half_displacement': fitness_metrics[2],
+            'second_half_displacement': fitness_metrics[3]
+        }
 
-        if self.objective == 'tri_fitness':
-            self.firstHalfFitness = float(fitness_metrics[0])
-            self.secondHalfFitness = float(fitness_metrics[1])
-        elif self.objective == 'emp_fitness':
-            self.fitness = float(fitness_metrics[0])
-            self.empowerment = float(fitness_metrics[1])
-        
-        # Need to reset self.sp because Popen object is not picklable
-        self.sp = None
         self.been_simulated = True # Set simulated flag
 
-        return re.search('\(.+\)', out_str)[0]
+        return self.selection_metrics
 
     def Mutate(self):
         randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
@@ -80,6 +76,18 @@ class Solution:
         self.Generate_Environment()
         pyrosim.End()
 
+    def Dominates_Other(self, other):
+        assert self.objectives == other.objectives
+
+        dominates = [self.age <= other.Get_Age()]
+        # We have 1) Fitness, 2) First-half Fitness, 3) Second-half Fitness, 4) Empowerment
+        for objective in self.objectives:
+            # Always maximize these selection metrics
+            dominates.append(self.selection_metrics[objective] >= other.selection_metrics[objective])
+
+        print(dominates)
+        return all(dominates)
+
     def Increment_Age(self):
         self.age += 1
 
@@ -87,19 +95,14 @@ class Solution:
         return self.age
 
     def Get_Primary_Objective(self):
-        if self.objective == 'tri_fitness':
-            return self.secondHalfFitness
-        elif self.objective == 'emp_fitness':
-            return self.fitness
+        # First objective listed in self.objectives will be the "primary objective"
+        return self.selection_metrics[self.objectives[0]]
 
     def Get_Fitness(self):
-        if self.objective == 'tri_fitness':
-            return (self.firstHalfFitness, self.secondHalfFitness)
-        elif self.objective == 'emp_fitness':
-            return self.fitness
+        return self.selection_metrics['displacement']
 
     def Get_Empowerment(self):
-        return self.empowerment
+        return self.selection_metrics['empowerment']
 
     def Has_Been_Simulated(self):
         return self.been_simulated

@@ -36,6 +36,9 @@ class Simulation:
     def Get_Fitness(self, objective):
         return self.robots[0].Get_Fitness(objective)
 
+    def Print_Objectives(self):
+        self.robots[0].Print_Objectives()
+
     def Save_Values(self):
         for sensor in self.robot.sensors:
             print(self.robot.sensors[sensor].values)
