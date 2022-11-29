@@ -28,6 +28,7 @@ class Experiment:
         print('EXP: experiment directory: ', experiment_directory)
         if experiment_directory: # Continue existing experiment
             self.pickle_file = f'{experiment_directory}/evo_runs.pickle'
+            self.experiment_directory = experiment_directory
         else: # Initialize a new experiment
             # 1. Create a new experiment directory
             timestr = time.strftime('%b%d_%I_%M')
@@ -66,15 +67,15 @@ class Experiment:
         with open(self.pickle_file, 'rb') as pickle_file:
             self.evo_runs = pickle.load(pickle_file)
 
+        os.system(f'cp {self.experiment_directory}/evo_runs.pickle {self.experiment_directory}/evo_runs_saved.pickle')
+
         # 2. Compute a single generation for all runs
         for treatment in self.evo_runs:
             for run in self.evo_runs[treatment]:
                 print(f'\n\n========== \n Generation {self.evo_runs[treatment][run].currentGen}, Run {run} \n ==========\n\n')
-                t = threading.Thread(target=self.Thread_Func, args=[treatment, run])
-                t.start()
-                t.join()
+                self.evo_runs[treatment][run].Evolve_One_Generation()
                 self.evo_runs[treatment][run].Clean_Directory() # Clean up experiment directory
-    
+
         # 3. Pickle runs
         with open(self.pickle_file, 'wb') as pklFileHandle:
             pickle.dump(self.evo_runs, pklFileHandle, protocol=pickle.HIGHEST_PROTOCOL)
