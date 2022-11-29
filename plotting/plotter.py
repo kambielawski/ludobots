@@ -37,7 +37,7 @@ class Plotter:
                 f.write(str(individual) + '|')
             f.write('\n')
 
-    def Print_Top_Fitness(self):
+    def Get_Top_Fitness(self):
         if self.objective == 'tri_fitness':
             keyfunc = lambda x:x[2][1]
         elif self.objective == 'emp_fitness':
@@ -45,7 +45,22 @@ class Plotter:
         else:
             raise ValueError("Invalid objective")
         sortedRobots = sorted(self.populationOverTime[-1], key=keyfunc, reverse=True)
-        print(sortedRobots[:10])
+        return sortedRobots
+
+    # TODO: Make the objective check a part of self
+    def Get_Top_Fitness_Over_Generations(self, objective):
+        if objective == 'tri_fitness':
+            keyfunc = lambda x:x[2][1]
+        elif objective == 'emp_fitness':
+            keyfunc = lambda x:x[2]
+        else:
+            raise ValueError("Invalid objective")
+
+        best_fitness = []
+        for gen in self.populationOverTime:
+            best_fit = sorted(self.populationOverTime[gen], key=keyfunc, reverse=True)
+            best_fitness.append((gen, keyfunc(best_fit[0])))
+        return best_fitness
 
     '''
     Parses generation data into self.populationOverTime data structure
