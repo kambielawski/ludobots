@@ -37,7 +37,7 @@ class AgeFitnessPareto():
             self.Evolve_One_Generation()
             if self.currentGen == self.nGenerations - 1:
                 self.Save_Best()
-                self.Plot_Gen_Animation()
+                self.Write_Gen_Statistics()
             self.Clean_Directory()
 
     '''
@@ -177,20 +177,7 @@ class AgeFitnessPareto():
 
     def Write_Gen_Statistics(self):
         self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objectives, self.run_id)
-
-    def Plot_Gen_Animation(self):
-        '''
-        Runs Plotter animation
-        '''
-        # Write data 
-        self.plotter.Write_Pareto_Front_File() # pf_size.txt
-        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objectives, self.run_id) # gen_data.txt
-
-        # self.plotter.Plot_Age_Fitness()
-        # self.plotter.Plot_Gen_Fitness()
-        # self.plotter.Plot_Gen_Fitness_PF()
-        # self.plotter.Plot_Age_Fitness_PF()
-        self.plotter.Plot_Pareto_Front_Size()
+        self.plotter.Write_Pareto_Front_File()
 
     def Get_Available_Id(self):
         return hash(np.random.random())
