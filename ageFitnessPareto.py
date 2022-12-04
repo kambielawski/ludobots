@@ -6,7 +6,7 @@ from sys import platform
 from concurrent.futures import ThreadPoolExecutor
 
 from solution import Solution
-from plotting.plotter import Plotter
+from history import RunHistory
 
 OS_MV = 'move' if platform == 'win32' else 'mv'
 OS_RM = 'del' if platform == 'win32' else 'rm'
@@ -19,7 +19,7 @@ class AgeFitnessPareto():
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
         self.objectives = constants['objectives']
-        self.plotter = Plotter(constants, dir=dir)
+        self.history = RunHistory(constants, dir=dir)
         self.currentGen = 0
         self.dir = dir
         self.run_id = run_id
@@ -163,21 +163,30 @@ class AgeFitnessPareto():
 
     def Run_Gen_Statistics(self, genNumber, pf):
         '''
-        Sends data for bookkeeping in Plotter class
+        Sends data for bookkeeping in RunHistory class
 
         genNumber is an int representing which generation the data is from
         pf is a dict of the Pareto Front solutions for the generation
         '''
-        pfData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), self.population[s].Get_Fitness(), 
-                   self.population[s].Get_Empowerment(), self.population[s].Get_Lineage()) for s in pf]
-        popData = [(self.population[s].Get_ID(), self.population[s].Get_Age(), self.population[s].Get_Fitness(), 
-                    self.population[s].Get_Empowerment(), self.population[s].Get_Lineage()) for s in self.population]
-        self.plotter.Population_Data(genNumber, popData)
-        self.plotter.Pareto_Front_Data(genNumber, pfData)
+        pfData = [{
+            'id': self.population[s].Get_ID(),
+            'age': self.population[s].Get_Age(),
+            'metrics': self.population[s].selection_metrics,
+            'lineage': self.population[s].Get_Lineage()
+        } for s in pf]
+        popData = [{
+            'id': self.population[s].Get_ID(),
+            'age': self.population[s].Get_Age(),
+            'metrics': self.population[s].selection_metrics,
+            'lineage': self.population[s].Get_Lineage()
+        } for s in self.population]
+        
+        self.history.Population_Data(genNumber, popData)
+        self.history.Pareto_Front_Data(genNumber, pfData)
 
     def Write_Gen_Statistics(self):
-        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objectives, self.run_id)
-        self.plotter.Write_Pareto_Front_File()
+        self.history.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objectives, self.run_id)
+        self.history.Write_Pareto_Front_File()
 
     def Get_Available_Id(self):
         return hash(np.random.random())
