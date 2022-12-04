@@ -18,7 +18,7 @@ class AgeFitnessPareto():
         self.targetPopSize = constants['target_population_size']
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
-        self.objective = constants['objective']
+        self.objectives = constants['objectives']
         self.plotter = Plotter(constants, dir=dir)
         self.currentGen = 0
         self.dir = dir
@@ -37,7 +37,7 @@ class AgeFitnessPareto():
             self.Evolve_One_Generation()
             if self.currentGen == self.nGenerations - 1:
                 self.Save_Best()
-                self.Plot_Gen_Animation()
+                self.Write_Gen_Statistics()
             self.Clean_Directory()
 
     '''
@@ -49,7 +49,7 @@ class AgeFitnessPareto():
             # Initialize random population
             for _ in range(self.targetPopSize):
                 rand_id = self.Get_Available_Id()
-                self.population[rand_id] = Solution(rand_id, (0, rand_id), objective=self.objective, dir=self.dir)
+                self.population[rand_id] = Solution(rand_id, (0, rand_id), objectives=self.objectives, dir=self.dir)
         else:
             self.Increment_Ages()
             self.Extend_Population(self.currentGen)
@@ -83,7 +83,7 @@ class AgeFitnessPareto():
 
         # 2. Add a random individual
         rand_id = self.Get_Available_Id()
-        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objective=self.objective, dir=self.dir)
+        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objectives=self.objectives, dir=self.dir)
 
     '''
     Tournament selection to decide which individuals reproduce
@@ -140,26 +140,6 @@ class AgeFitnessPareto():
         except Exception as err:
             os.system(f'echo {err} >> {self.dir}/error_log.txt')
 
-    # def Run_Solutions(self):
-    #     def Run_One_Solution_Async(solnId):
-    #         return self.population[solnId].Run_Simulation()
-
-    #     try:
-    #         with ProcessPoolExecutor() as executor:
-    #             futures = []
-    #             # Start threads
-    #             for solnId in self.population:
-    #                 if not self.population[solnId].Has_Been_Simulated():
-    #                     f = executor.submit(Run_One_Solution_Async, solnId)
-    #                     futures.append(f)
-
-    #             # Map the function onto the solutions
-    #             while not all([f.done() for f in futures]):
-    #                 time.sleep(0.1)
-
-    #     except Exception as err:
-    #         os.system(f'echo "{err}" >> {self.dir}/error_log.txt')
-
     '''
     Returns IDs of the solutions that are Pareto optimal
     '''
@@ -179,31 +159,7 @@ class AgeFitnessPareto():
         '''
         Returns True if solution i dominates solution j (else False)
         '''
-        # Empowerment / fitness
-        if self.objective == 'emp_fitness':
-            if self.population[j].Get_Age() == self.population[i].Get_Age() and self.population[j].Get_Fitness() == self.population[i].Get_Fitness() and self.population[j].Get_Empowerment() == self.population[i].Get_Empowerment():
-                return i > j
-            elif self.population[i].Get_Age() <= self.population[j].Get_Age() and self.population[i].Get_Fitness() >= self.population[j].Get_Fitness() and self.population[i].Get_Empowerment() >= self.population[j].Get_Empowerment():
-                return True
-            else:
-                return False
-        # Tri-fitness
-        elif self.objective == 'tri_fitness':
-            i_firstHalfFitness, i_secondHalfFitness = self.population[i].Get_Fitness()
-            j_firstHalfFitness, j_secondHalfFitness = self.population[j].Get_Fitness()
-            if self.population[j].Get_Age() == self.population[i].Get_Age() and j_firstHalfFitness == i_firstHalfFitness and j_secondHalfFitness == i_secondHalfFitness:
-                return i > j
-            elif self.population[i].Get_Age() <= self.population[j].Get_Age() and i_firstHalfFitness >= j_firstHalfFitness and i_secondHalfFitness >= j_secondHalfFitness:
-                return True
-            else:
-                return False
-        elif self.objective == 'fitness':
-            if self.population[j].Get_Age() == self.population[i].Get_Age() and self.population[j].Get_Fitness() == self.population[i].Get_Fitness():
-                return i > j
-            elif self.population[i].Get_Age() <= self.population[j].Get_Age() and self.population[i].Get_Fitness() >= self.population[j].Get_Fitness():
-                return True
-            else:
-                return False
+        return self.population[i].Dominates_Other(self.population[j])
 
     def Run_Gen_Statistics(self, genNumber, pf):
         '''
@@ -220,21 +176,8 @@ class AgeFitnessPareto():
         self.plotter.Pareto_Front_Data(genNumber, pfData)
 
     def Write_Gen_Statistics(self):
-        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective, self.run_id)
-
-    def Plot_Gen_Animation(self):
-        '''
-        Runs Plotter animation
-        '''
-        # Write data 
-        self.plotter.Write_Pareto_Front_File() # pf_size.txt
-        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objective, self.run_id) # gen_data.txt
-
-        # self.plotter.Plot_Age_Fitness()
-        # self.plotter.Plot_Gen_Fitness()
-        # self.plotter.Plot_Gen_Fitness_PF()
-        # self.plotter.Plot_Age_Fitness_PF()
-        self.plotter.Plot_Pareto_Front_Size()
+        self.plotter.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objectives, self.run_id)
+        self.plotter.Write_Pareto_Front_File()
 
     def Get_Available_Id(self):
         return hash(np.random.random())

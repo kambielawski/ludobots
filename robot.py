@@ -153,6 +153,14 @@ class Robot:
         # return self.Empowerment_Window_Average()
         return self.Simulation_Empowerment()
 
+    def Print_Objectives(self):
+        displacement = self.Y_Axis_Fitness()
+        empowerment = self.Get_Empowerment()
+        first_half_displacement = self.firstHalfFitness
+        second_half_displacement = displacement - first_half_displacement
+        random = np.random.random()
+        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random)})')
+
     def Get_Fitness(self, objective='tri_fitness'):
         '''
         Writes both the fitness and the empowerment to stdout
