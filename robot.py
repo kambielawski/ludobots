@@ -158,7 +158,8 @@ class Robot:
         empowerment = self.Get_Empowerment()
         first_half_displacement = self.firstHalfFitness
         second_half_displacement = displacement - first_half_displacement
-        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)})')
+        random = np.random.random()
+        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random)})')
 
     def Get_Fitness(self, objective='tri_fitness'):
         '''

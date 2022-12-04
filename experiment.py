@@ -5,20 +5,22 @@ import threading
 
 from ageFitnessPareto import AgeFitnessPareto
 
-def Get_Constants_AFPO_Emp():
+def Get_Constants_AFPO_T1():
     return {
+        'name': 'tri_emp',
         'generations': 999,
         'target_population_size': 100,
-        'objective': 'emp_fitness',
+        'objectives': ['displacement', 'empowerment'],
         'batching': False,
         'batch_size': 5
     }
 
-def Get_Constants_AFPO_Fit():
+def Get_Constants_AFPO_T2():
     return {
+        'name': 'tri_random',
         'generations': 999,
         'target_population_size': 100,
-        'objective': 'tri_fitness', 
+        'objectives': ['displacement', 'random'], 
         'batching': False,
         'batch_size': 5
     }
@@ -43,16 +45,18 @@ class Experiment:
             os.system(f'cp world.sdf {self.experiment_directory}')
 
             # 2. Print experiment information to file
+            t1_info = Get_Constants_AFPO_T1()
+            t2_info = Get_Constants_AFPO_T2()
             info_file = open(f'{self.experiment_directory}/info.txt', 'w')
-            info_file.write(str(Get_Constants_AFPO_Emp()) + '\n')
-            info_file.write(str(Get_Constants_AFPO_Fit()))
+            info_file.write(str(t1_info) + '\n')
+            info_file.write(str(t2_info))
             info_file.close()
             
             # 3. Initialize N_runs AFPO objects and pickle them
-            treatment_1 = { i: AgeFitnessPareto(Get_Constants_AFPO_Emp(), run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
-            treatment_2 = { i: AgeFitnessPareto(Get_Constants_AFPO_Fit(), run_id=(N_runs+i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
-            self.evo_runs = { 'emp_fitness': treatment_1,
-                              'tri_fitness': treatment_2 }
+            treatment_1 = { i: AgeFitnessPareto(t1_info, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
+            treatment_2 = { i: AgeFitnessPareto(t1_info, run_id=(N_runs+i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
+            self.evo_runs = { t1_info['name']: treatment_1,
+                              t2_info['name']: treatment_2 }
             self.pickle_file = f'{self.experiment_directory}/evo_runs.pickle'
             with open(self.pickle_file, 'wb') as pklFileHandle:
                 pickle.dump(self.evo_runs, pklFileHandle)

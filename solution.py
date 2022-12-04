@@ -42,10 +42,11 @@ class Solution:
         out_str = stdout.decode('utf-8')
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
         self.selection_metrics = {
-            'displacement': fitness_metrics[0],
-            'empowerment': fitness_metrics[1],
-            'first_half_displacement': fitness_metrics[2],
-            'second_half_displacement': fitness_metrics[3]
+            'displacement': float(fitness_metrics[0]),
+            'empowerment': float(fitness_metrics[1]),
+            'first_half_displacement': float(fitness_metrics[2]),
+            'second_half_displacement': float(fitness_metrics[3]),
+            'random': float(fitness_metrics[4])
         }
 
         self.been_simulated = True # Set simulated flag
@@ -85,7 +86,6 @@ class Solution:
             # Always maximize these selection metrics
             dominates.append(self.selection_metrics[objective] >= other.selection_metrics[objective])
 
-        print(dominates)
         return all(dominates)
 
     def Increment_Age(self):
