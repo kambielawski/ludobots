@@ -40,7 +40,6 @@ class ExperimentPlotter:
         # The average top fitness for each generation, over all N evo runs
         grouped_by_generation = list(zip(*top_fitness))
         top_fitness_averages = [np.mean([x[1] for x in gen]) for gen in grouped_by_generation]
-        print(grouped_by_generation)
 
         confidence_intervals = [st.t.interval(0.95, len(gen)-1, loc=top_fitness_averages[i], scale=st.sem(gen)) for i, gen in enumerate(grouped_by_generation)]
         confidence_intervals = [(ci[1][1] - ci[0][1])/2 for ci in confidence_intervals]

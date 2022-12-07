@@ -7,13 +7,13 @@ sys.path.insert(0, parent_dir)
 from plotting.experiment_plotter import ExperimentPlotter
 
 experiments = {
-    'emp_v_random': './experiments/exp_Dec03_12_23',
-    'emp_v_fitness': './experiments/exp_Nov17_03_35'
+    'emp_v_random': './experiments/exp_Dec06_08_42',
+    # 'emp_v_fitness': './experiments/exp_Nov17_03_35'
 }
 
 plotter = ExperimentPlotter()
 for exp in experiments:
-    plotter.Load_Experiment(experiments[exp], exp)
+    plotter.Load_Experiment(experiments[exp] + '/evo_runs.pickle', exp)
 
 plotter.Plot_Combined_Top_Fitness([e for e in experiments])
 # plotter.Plot_Combined_Top_Empowerment([e for e in experiments])
