@@ -20,7 +20,7 @@ def getAverageTopFitness(runs):
     t1_top_fits = []
 
     for afpo in runs:
-        top_fit_series = runs[afpo].plotter.Get_Top_Fitness_Over_Generations()
+        top_fit_series = runs[afpo].history.Get_Top_Fitness_Over_Generations()
         t1_top_fits.append(top_fit_series)
 
     # The average top fitness for each generation, over all N evo runs
@@ -36,7 +36,7 @@ def getAverageTopEmpowerment(runs):
     t1_top_emp = []
 
     for afpo in runs:
-        top_emp_series = runs[afpo].plotter.Get_Top_Empowerment_Over_Generations()
+        top_emp_series = runs[afpo].history.Get_Top_Empowerment_Over_Generations()
         t1_top_emp.append(top_emp_series)
 
     # The average top fitness for each generation, over all N evo runs
@@ -86,5 +86,5 @@ def empowermentPlot(evo_runs):
 with open(f'{args.dir}/evo_runs.pickle', 'rb') as pickleFile:
     evo_runs = pickle.load(pickleFile)
 
-# paretoFrontLinePlot(evo_runs)
-empowermentPlot(evo_runs)
+paretoFrontLinePlot(evo_runs)
+# empowermentPlot(evo_runs)
