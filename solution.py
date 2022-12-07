@@ -12,12 +12,13 @@ from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
-    def __init__(self, solutionId, lineage, objectives, dir='.'):
+    def __init__(self, solutionId, lineage, objectives, dir='.', empowerment_window_size=c.TIMESTEPS):
         self.id = solutionId
         self.robot = Quadruped(self.id, dir=dir)
         self.weights = self.robot.Generate_Weights()
         self.age = 1
         self.empowerment = 0
+        self.empowerment_window_size = empowerment_window_size
         self.been_simulated = False
         self.lineage = lineage
         self.objectives = objectives
@@ -34,6 +35,7 @@ class Solution:
                                 f'{self.dir}/brain_{self.id}.nndf', 
                                 self.robot.Get_Body_File(), 
                                 '--directory', self.dir],
+                                # '--empowerment_window_size', str(self.empowerment_window_size)],
                                 stdout=subprocess.PIPE)
 
         # Parse standard output from subprocess

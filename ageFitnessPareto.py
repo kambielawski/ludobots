@@ -19,6 +19,7 @@ class AgeFitnessPareto():
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
         self.objectives = constants['objectives']
+        self.empowerment_window_size = constants['empowerment_window_size']
         self.history = RunHistory(constants, dir=dir)
         self.currentGen = 0
         self.dir = dir
@@ -49,7 +50,7 @@ class AgeFitnessPareto():
             # Initialize random population
             for _ in range(self.targetPopSize):
                 rand_id = self.Get_Available_Id()
-                self.population[rand_id] = Solution(rand_id, (0, rand_id), objectives=self.objectives, dir=self.dir)
+                self.population[rand_id] = Solution(rand_id, (0, rand_id), objectives=self.objectives, dir=self.dir, empowerment_window_size=self.empowerment_window_size)
         else:
             self.Increment_Ages()
             self.Extend_Population(self.currentGen)
@@ -83,7 +84,7 @@ class AgeFitnessPareto():
 
         # 2. Add a random individual
         rand_id = self.Get_Available_Id()
-        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objectives=self.objectives, dir=self.dir)
+        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objectives=self.objectives, dir=self.dir, empowerment_window_size=self.empowerment_window_size)
 
     '''
     Tournament selection to decide which individuals reproduce

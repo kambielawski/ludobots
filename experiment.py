@@ -2,6 +2,7 @@ import time
 import pickle
 import os
 import threading
+import constants as c
 
 from ageFitnessPareto import AgeFitnessPareto
 
@@ -11,6 +12,7 @@ def Get_Constants_AFPO_T1():
         'generations': 999,
         'target_population_size': 100,
         'objectives': ['displacement', 'empowerment'],
+        'empowerment_window_size': c.TIMESTEPS // 2,
         'batching': False,
         'batch_size': 5
     }
@@ -21,6 +23,7 @@ def Get_Constants_AFPO_T2():
         'generations': 999,
         'target_population_size': 100,
         'objectives': ['displacement', 'random'], 
+        'empowerment_window_size': c.TIMESTEPS // 2,
         'batching': False,
         'batch_size': 5
     }
@@ -54,7 +57,7 @@ class Experiment:
             
             # 3. Initialize N_runs AFPO objects and pickle them
             treatment_1 = { i: AgeFitnessPareto(t1_info, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
-            treatment_2 = { i: AgeFitnessPareto(t1_info, run_id=(N_runs+i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
+            treatment_2 = { i: AgeFitnessPareto(t2_info, run_id=(N_runs+i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
             self.evo_runs = { t1_info['name']: treatment_1,
                               t2_info['name']: treatment_2 }
             self.pickle_file = f'{self.experiment_directory}/evo_runs.pickle'
@@ -71,8 +74,12 @@ class Experiment:
         with open(self.pickle_file, 'rb') as pickle_file:
             self.evo_runs = pickle.load(pickle_file)
 
-        os.system(f'cp {self.experiment_directory}/evo_runs.pickle {self.experiment_directory}/evo_runs_saved.pickle')
+        for t in self.evo_runs:
+            for afpo in self.evo_runs[t]:
+                self.evo_runs[t][afpo].empowerment_window_size = 500
 
+        os.system(f'cp {self.experiment_directory}/evo_runs.pickle {self.experiment_directory}/evo_runs_saved.pickle')
+        
         # 2. Compute a single generation for all runs
         for treatment in self.evo_runs:
             for run in self.evo_runs[treatment]:
