@@ -157,10 +157,10 @@ class Robot:
 
     def Get_Empowerment(self):
         # return self.Empowerment_Window_Average()
-        return self.Simulation_Empowerment()
+        # return self.Simulation_Empowerment()
         # return self.Empowerment_Window()
         # return self.Empowerment_Window_Average()
-        # return self.Empowerment_Window_Max()
+        return self.Empowerment_Window_Max()
 
     def Print_Objectives(self):
         displacement = self.Y_Axis_Fitness()
