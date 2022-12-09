@@ -21,6 +21,7 @@ class Robot:
         self.urdfFileName = urdfFileName
         self.motorVals = []
         self.sensorVals = []
+        self.empowerment_values = []
         self.empowermentWindowSize = empowermentWindowSize
 
         # Empowerment computation setup
@@ -75,15 +76,11 @@ class Robot:
             self.firstHalfFitness = self.Y_Axis_Fitness()
         
         # Sense
+        # sensorVector = [sensor.Get_Value(timestep) for sensor in self.sensors]
         sensorVector = []
         for sensor in self.sensors:
             sensorVector.append(self.sensors[sensor].Get_Value(timestep))
         self.sensorVals.append(tuple([1 if s>0 else 0 for s in sensorVector]))
-        # calculate empowerment over last k timesteps
-        # if timestep >= 2 * self.empowermentWindowSize:
-        #     e = self.Empowerment_Window(timestep)
-        #     self.empowerment += e
-        #     self.empowermentTimesteps += 1
 
     def Think(self):
         # "think" by updating the neural network
@@ -102,17 +99,23 @@ class Robot:
                 self.motors[jointName].Set_Value(self, desiredAngle)
         # actionVector.append(0)
         self.motorVals.append(tuple(actionVector))
+        
+        # calculate empowerment over last k timesteps
+        if timestep >= 2 * self.empowermentWindowSize-1:
+            e = self.Empowerment_Window(timestep)
+            self.empowerment += e
+            self.empowermentTimesteps += 1
+            self.empowerment_values.append(e)
 
     def Bucket_Motor_Val(self, actionVector):
         counts, _ = np.histogram(actionVector, self.motorValBins)
         self.motorVals = [m+c for m,c in zip(self.motorVals, counts)]
         pass
     
-    def Empowerment_Window(self, timestep):        
+    def Empowerment_Window(self, timestep): 
         # convert motor and sensor states into integers
-        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[(timestep-(2*self.empowermentWindowSize)):(timestep-self.empowermentWindowSize)]]
-        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(timestep-self.empowermentWindowSize):timestep]]
-        
+        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[((timestep+1)-(2*self.empowermentWindowSize)):((timestep+1)-self.empowermentWindowSize)]]
+        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[((timestep+1)-self.empowermentWindowSize):timestep+1]]
         # Coarse grained actions, raw sensor states (both 2D arrays, flattened)
         # actionz = np.array(self.motorVals[(timestep - (2*self.empowermentWindowSize)):(timestep - self.empowermentWindowSize)]).flatten()
         # sensorz = np.array(self.sensorVals[(timestep-self.empowermentWindowSize):timestep]).flatten()
@@ -128,6 +131,9 @@ class Robot:
     def Empowerment_Window_Average(self):
         emp = self.empowerment / self.empowermentTimesteps
         return emp
+
+    def Empowerment_Window_Max(self):
+        return max(self.empowerment_values)
 
     def Simulation_Empowerment(self):
         actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(c.TIMESTEPS //2)]]
@@ -151,7 +157,10 @@ class Robot:
 
     def Get_Empowerment(self):
         # return self.Empowerment_Window_Average()
-        return self.Simulation_Empowerment()
+        # return self.Simulation_Empowerment()
+        # return self.Empowerment_Window()
+        # return self.Empowerment_Window_Average()
+        return self.Empowerment_Window_Max()
 
     def Print_Objectives(self):
         displacement = self.Y_Axis_Fitness()
