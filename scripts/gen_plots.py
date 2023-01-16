@@ -87,4 +87,4 @@ with open(f'{args.dir}/evo_runs.pickle', 'rb') as pickleFile:
     evo_runs = pickle.load(pickleFile)
 
 paretoFrontLinePlot(evo_runs)
-# empowermentPlot(evo_runs)
+empowermentPlot(evo_runs)
