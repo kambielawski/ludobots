@@ -43,7 +43,6 @@ class Solution:
         stdout, stderr = sp.communicate()
         sp.wait()
         out_str = stdout.decode('utf-8')
-        print(out_str)
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
         self.selection_metrics = {
             'displacement': float(fitness_metrics[0]),

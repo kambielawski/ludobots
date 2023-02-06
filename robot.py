@@ -62,7 +62,7 @@ class Robot:
             self.boxStartPos = p.getBasePositionAndOrientation(self.objectIds[0])[0]
         # If tri-fitness, record fitness at simulation half
         if timestep == c.TIMESTEPS // 2:
-            self.firstHalfFitness = self.Y_Axis_Fitness()
+            self.firstHalfFitness = self.Y_Axis_Displacement()
         
         # Sense
         sensorVector = []
