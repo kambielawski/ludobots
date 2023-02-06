@@ -13,16 +13,21 @@ from sys import platform
 import constants as c
 
 class Robot:
-    def __init__(self, solutionId, urdfFileName=None, nndfFileName=None, empowermentWindowSize=c.DEFAULT_EMPOWERMENT_WINDOW_SIZE, dir='.'):
+    def __init__(self, solutionId, options, dir='.'):
         self.solutionId = solutionId
+        self.empowermentWindowSize = options['empowerment_window_size']
+        self.motorScheme = options['motor_measure']
+        self.nndfFileName = options['brain_file']
+        self.urdfFileName = options['body_file']
         self.dir = dir
+
         self.robotId = None
-        self.nndfFileName = nndfFileName
-        self.urdfFileName = urdfFileName
+        self.objectIds = None
         self.motorVals = []
         self.sensorVals = []
         self.empowerment_values = []
-        self.empowermentWindowSize = empowermentWindowSize
+        self.jointAngularVelocities = []
+        self.boxStartPos = None
 
         # Empowerment computation setup
         self.motorValBins = np.array([(i / c.NUM_MOTOR_VAL_BUCKETS) - c.MOTOR_JOINT_RANGE for i in range(c.NUM_MOTOR_NEURONS)])
@@ -32,8 +37,8 @@ class Robot:
         while not self.robotId:
             try:
                 # optionally a body file can be passed in
-                if urdfFileName:
-                    self.robotId = p.loadURDF(urdfFileName)
+                if self.urdfFileName:
+                    self.robotId = p.loadURDF(self.urdfFileName)
                 # default to a quadruped
                 else:
                     self.robotId = p.loadURDF("robots/body_quadruped.urdf")
@@ -41,12 +46,13 @@ class Robot:
                 continue
 
         # optionally a brain file can be passed in
-        if nndfFileName:
-            self.nn = NEURAL_NETWORK(nndfFileName)
-        elif not os.path.exists((nndfFileName := "brain_" + str(self.solutionId) + ".nndf")):
+        if self.nndfFileName:
+            self.nn = NEURAL_NETWORK(self.nndfFileName)
+        elif not os.path.exists("brain_" + str(self.solutionId) + ".nndf"):
             # print("\nERROR: A brain file must be specified at the commandline or brain_<ID>.nndf must exist\n")
             # exit(1)
             self.nn = NEURAL_NETWORK("best_brain.nndf")
+            self.nndfFileName = "best_brain.nndf"
         else:
             self.nndfFileName = "brain_" + str(self.solutionId) + ".nndf"
             self.nn = NEURAL_NETWORK(self.nndfFileName)
@@ -71,6 +77,9 @@ class Robot:
             self.motors[jointName] = Motor(jointName)
 
     def Sense(self, timestep):
+        # If box-moving fitness function, get the original position of the box.
+        if timestep == 0 and self.objectIds:
+            self.boxStartPos = p.getBasePositionAndOrientation(self.objectIds[0])[0]
         # If tri-fitness, record fitness at simulation half
         if timestep == c.TIMESTEPS // 2:
             self.firstHalfFitness = self.Y_Axis_Fitness()
@@ -88,17 +97,8 @@ class Robot:
         # self.nn.Print()
 
     def Act(self, timestep):
-        actionVector = []
-        for neuronName in self.nn.Get_Neuron_Names():
-            if self.nn.Is_Motor_Neuron(neuronName):
-                jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
-                # Neuron value will return a float in [-1,1] (tanh activation)
-                desiredAngle = self.nn.Get_Value_Of(neuronName) * c.MOTOR_JOINT_RANGE
-                # actionVector.append(desiredAngle)
-                actionVector.append(1 if desiredAngle > 0 else 0)
-                self.motors[jointName].Set_Value(self, desiredAngle)
-        # actionVector.append(0)
-        self.motorVals.append(tuple(actionVector))
+        # Construct action vector
+        self.Compute_Action_Vector()
         
         # calculate empowerment over last k timesteps
         if timestep >= 2 * self.empowermentWindowSize-1:
@@ -106,6 +106,39 @@ class Robot:
             self.empowerment += e
             self.empowermentTimesteps += 1
             self.empowerment_values.append(e)
+
+    def Compute_Action_Vector(self):
+        # Two action schemes: "desiredAngle" and "velocity"
+        if self.motorScheme == 'DESIRED_ANGLE':
+            # 1) desiredAngle 
+            actionVector = []
+            for neuronName in self.nn.Get_Neuron_Names():
+                if self.nn.Is_Motor_Neuron(neuronName):
+                    jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
+                    # Neuron value will return a float in [-1,1] (tanh activation)
+                    desiredAngle = self.nn.Get_Value_Of(neuronName) * c.MOTOR_JOINT_RANGE
+                    actionVector.append(1 if desiredAngle > 0 else 0)
+                    self.motors[jointName].Set_Value(self, desiredAngle)
+            self.motorVals.append(tuple(actionVector))
+            return actionVector
+
+        elif self.motorScheme == 'VELOCITY':
+            # 2) Velocity 
+            actionVector = []
+            for neuronName in self.nn.Get_Neuron_Names(): # Update motors in simulation
+                if self.nn.Is_Motor_Neuron(neuronName):
+                    jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
+                    # Neuron value will return a float in [-1,1] (tanh activation)
+                    desiredAngle = self.nn.Get_Value_Of(neuronName) * c.MOTOR_JOINT_RANGE
+                    self.motors[jointName].Set_Value(self, desiredAngle)
+
+            # Get actual motor angular velocities
+            jointVelocityVals = [jointState[1] for jointState in p.getJointStates(self.robotId, jointIndices=range(p.getNumJoints(self.robotId)))]
+            actionVector = [1 if v > 0 else 0 for v in jointVelocityVals]
+            self.jointAngularVelocities.append(jointVelocityVals)
+            self.motorVals.append(tuple(actionVector))
+            return actionVector
+
 
     def Bucket_Motor_Val(self, actionVector):
         counts, _ = np.histogram(actionVector, self.motorValBins)
@@ -124,6 +157,13 @@ class Robot:
         mi = pyinform.mutual_info(actionz, sensorz, local=False)
 
         return mi
+
+    def Set_Object_Ids(self, objectIds):
+        self.objectIds = objectIds
+
+    def Get_Box_Displacement(self):
+        currentPos = p.getBasePositionAndOrientation(self.objectIds[0])[0]
+        return np.linalg.norm([self.boxStartPos[i] - currentPos[i] for i in range(len(currentPos))])
     
     # returns average empowerment over all windows
     # N timesteps; k window size
@@ -165,10 +205,11 @@ class Robot:
     def Print_Objectives(self):
         displacement = self.Y_Axis_Fitness()
         empowerment = self.Get_Empowerment()
+        box_displacement = None if self.objectIds == None else self.Get_Box_Displacement()
         first_half_displacement = self.firstHalfFitness
         second_half_displacement = displacement - first_half_displacement
         random = np.random.random()
-        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random)})')
+        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random)} {str(box_displacement)})')
 
     def Get_Fitness(self, objective='tri_fitness'):
         '''
