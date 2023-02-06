@@ -1,6 +1,4 @@
 import os
-from sys import platform
-import numpy as np
 import pyrosim.pyrosim as pyrosim
 import random
 import subprocess
@@ -8,7 +6,6 @@ import re
 
 from box import Box
 from robots.quadruped import Quadruped
-from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
@@ -38,14 +35,15 @@ class Solution:
                                 self.robot.Get_Body_File(), 
                                 '--directory', self.dir,
                                 '--objects_file', self.worldFile,
-                                '--motor_measure', self.motor_measure],
-                                # '--empowerment_window_size', str(self.empowerment_window_size)],
+                                '--motor_measure', self.motor_measure,
+                                '--empowerment_window_size', str(self.empowerment_window_size)],
                                 stdout=subprocess.PIPE)
 
         # Parse standard output from subprocess
         stdout, stderr = sp.communicate()
         sp.wait()
         out_str = stdout.decode('utf-8')
+        print(out_str)
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
         self.selection_metrics = {
             'displacement': float(fitness_metrics[0]),

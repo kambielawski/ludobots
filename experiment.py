@@ -23,8 +23,8 @@ def Get_Constants_AFPO_T2():
         'name': 'tri_random',
         'generations': 999,
         'target_population_size': 100,
-        'motor_measure': 'VELOCITY',
-        'objectives': ['box_displacement', 'random'], 
+        'motor_measure': 'DESIRED_ANGLE',
+        'objectives': ['box_displacement', 'empowerment'], 
         'empowerment_window_size': c.TIMESTEPS // 2,
         'batching': False,
         'batch_size': 5
@@ -75,10 +75,6 @@ class Experiment:
         # 1. Unpickle previous generation
         with open(self.pickle_file, 'rb') as pickle_file:
             self.evo_runs = pickle.load(pickle_file)
-
-        for t in self.evo_runs:
-            for afpo in self.evo_runs[t]:
-                self.evo_runs[t][afpo].empowerment_window_size = 500
 
         os.system(f'cp {self.experiment_directory}/evo_runs.pickle {self.experiment_directory}/evo_runs_saved.pickle')
         

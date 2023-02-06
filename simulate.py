@@ -9,7 +9,6 @@ parser.add_argument("display", help="Display mode for pybullet. 'GUI' or 'DIRECT
 parser.add_argument("solution_id", help="Solution ID for this simulation", type=int)
 parser.add_argument("brain_file", help="Path to .nndf file")
 parser.add_argument("body_file", help="Path to .urdf file")
-# parser.add_argument("objective", help="Objective scheme for AFPO", choices=['emp_fitness', 'tri_fitness'])
 parser.add_argument("--directory", default='.', help="Experiment directory", type=str)
 parser.add_argument("--empowerment_window_size", default=c.TIMESTEPS//2, help="Empowerment window size", type=int)
 parser.add_argument("--objects_file", default='', help=".sdf file for other world objects (e.g. box)", type=str)
@@ -30,6 +29,7 @@ robots = [Robot(args.solution_id, robot_options, dir=args.directory)]
 
 # Run pybullet simulation
 simulation.Run(robots)
+
 # Write robot objective values to stdout
 simulation.Print_Objectives()
 

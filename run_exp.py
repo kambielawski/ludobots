@@ -22,4 +22,3 @@ while True:
     exp.Run_One_Generation()
     t = exp.Run_T_Test()
     g += 1
-    # Check if t is cool, blow up the universe if it is 

@@ -1,4 +1,3 @@
-import os
 import pybullet as p 
 
 class World:
@@ -10,7 +9,3 @@ class World:
         except:
             self.objectId = p.loadSDF(f"{dir}/world.sdf")
 
-# if os.path.exists(worldFile):
-#     p.loadSDF(worldFile)
-# else:
-#     p.loadSDF(f"{dir}/world.sdf")

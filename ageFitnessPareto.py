@@ -30,7 +30,6 @@ class AgeFitnessPareto():
 
     def __del__(self):
         pass
-        # self.Clean_Directory()
     
     '''
     Main Evolve loop for a single run
@@ -98,7 +97,7 @@ class AgeFitnessPareto():
         while p2 == p1:
             p2 = np.random.choice(list(self.population.keys()))
 
-        # Tournament winner based only on fitness? Primary objective? 
+        # Tournament winner based only on primary objective (first listed)
         if self.population[p1].Get_Primary_Objective() > self.population[p2].Get_Primary_Objective():
             return p1
         else:
@@ -199,11 +198,6 @@ class AgeFitnessPareto():
         os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf')
         os.system(OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf') 
         os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
-        # Remove old Pareto-front brains
-        # pf_files = os.listdir(self.dir + '/best_robots/pareto_front')
-        # for pf_id in [(int(filestr.split('.')[0].split('_')[2]), filestr) for filestr in pf_files]:
-        #     if pf_id[0] not in pf:
-        #         os.system(OS_RM + ' ' + self.dir + '/best_robots/pareto_front/{filestr}'.format(filestr=pf_id[1]))
 
     def Save_Best(self):
         pf = self.Pareto_Front()
@@ -212,7 +206,6 @@ class AgeFitnessPareto():
         for id in pf:
             if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
                 os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
-                # os.system(OS_MV + f' brain_{id}.nndf ./best_robots/pareto_front/pf_brain_{id}.nndf')
         
         # Move over pareto front bests, then delete pareto_front dir
         for id in pf:

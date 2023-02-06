@@ -2,13 +2,9 @@ import pyrosim.pyrosim as pyrosim
 from pyrosim.neuralNetwork import NEURAL_NETWORK
 import pybullet as p
 import numpy as np
-from pyinform.dist import Dist
-from pyinform.shannon import mutual_info
 import pyinform
 from sensor import Sensor
 from motor import Motor
-import os
-from sys import platform
 
 import constants as c
 
@@ -21,11 +17,10 @@ class Robot:
         self.urdfFileName = options['body_file']
         self.dir = dir
 
-        self.robotId = None
+        self.robotId = p.loadURDF(self.urdfFileName if self.urdfFileName else "robots/body_quadruped.urdf")
         self.objectIds = None
         self.motorVals = []
         self.sensorVals = []
-        self.empowerment_values = []
         self.jointAngularVelocities = []
         self.boxStartPos = None
 
@@ -33,26 +28,11 @@ class Robot:
         self.motorValBins = np.array([(i / c.NUM_MOTOR_VAL_BUCKETS) - c.MOTOR_JOINT_RANGE for i in range(c.NUM_MOTOR_NEURONS)])
         self.empowerment = 0
         self.empowermentTimesteps = 0
+        self.empowerment_values = []
 
-        while not self.robotId:
-            try:
-                # optionally a body file can be passed in
-                if self.urdfFileName:
-                    self.robotId = p.loadURDF(self.urdfFileName)
-                # default to a quadruped
-                else:
-                    self.robotId = p.loadURDF("robots/body_quadruped.urdf")
-            except:
-                continue
-
-        # optionally a brain file can be passed in
+        # Optionally a brain file can be passed in
         if self.nndfFileName:
             self.nn = NEURAL_NETWORK(self.nndfFileName)
-        elif not os.path.exists("brain_" + str(self.solutionId) + ".nndf"):
-            # print("\nERROR: A brain file must be specified at the commandline or brain_<ID>.nndf must exist\n")
-            # exit(1)
-            self.nn = NEURAL_NETWORK("best_brain.nndf")
-            self.nndfFileName = "best_brain.nndf"
         else:
             self.nndfFileName = "brain_" + str(self.solutionId) + ".nndf"
             self.nn = NEURAL_NETWORK(self.nndfFileName)
@@ -64,13 +44,13 @@ class Robot:
     def __del__(self):
         pass
 
-    # create Sensor object for each link & store in dictionary
+    # Create Sensor object for each link & store in dictionary
     def Prepare_To_Sense(self):
         self.sensors = dict()
         for linkName in pyrosim.linkNamesToIndices:
             if linkName != 'Torso': self.sensors[linkName] = Sensor(linkName)
 
-    # create Motor object for each joint 
+    # Create Motor object for each joint 
     def Prepare_To_Act(self):
         self.motors = dict()
         for jointName in pyrosim.jointNamesToIndices:
@@ -85,16 +65,13 @@ class Robot:
             self.firstHalfFitness = self.Y_Axis_Fitness()
         
         # Sense
-        # sensorVector = [sensor.Get_Value(timestep) for sensor in self.sensors]
         sensorVector = []
         for sensor in self.sensors:
             sensorVector.append(self.sensors[sensor].Get_Value(timestep))
         self.sensorVals.append(tuple([1 if s>0 else 0 for s in sensorVector]))
 
     def Think(self):
-        # "think" by updating the neural network
         self.nn.Update()
-        # self.nn.Print()
 
     def Act(self, timestep):
         # Construct action vector
@@ -138,22 +115,13 @@ class Robot:
             self.jointAngularVelocities.append(jointVelocityVals)
             self.motorVals.append(tuple(actionVector))
             return actionVector
-
-
-    def Bucket_Motor_Val(self, actionVector):
-        counts, _ = np.histogram(actionVector, self.motorValBins)
-        self.motorVals = [m+c for m,c in zip(self.motorVals, counts)]
-        pass
     
     def Empowerment_Window(self, timestep): 
-        # convert motor and sensor states into integers
+        # Convert motor and sensor states into integers
         actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[((timestep+1)-(2*self.empowermentWindowSize)):((timestep+1)-self.empowermentWindowSize)]]
         sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[((timestep+1)-self.empowermentWindowSize):timestep+1]]
-        # Coarse grained actions, raw sensor states (both 2D arrays, flattened)
-        # actionz = np.array(self.motorVals[(timestep - (2*self.empowermentWindowSize)):(timestep - self.empowermentWindowSize)]).flatten()
-        # sensorz = np.array(self.sensorVals[(timestep-self.empowermentWindowSize):timestep]).flatten()
-        # timeseries calculation of mutual information
-        # mi = ee.mi(actionz, sensorz)
+
+        # Compute Mutual Information
         mi = pyinform.mutual_info(actionz, sensorz, local=False)
 
         return mi
@@ -164,16 +132,6 @@ class Robot:
     def Get_Box_Displacement(self):
         currentPos = p.getBasePositionAndOrientation(self.objectIds[0])[0]
         return np.linalg.norm([self.boxStartPos[i] - currentPos[i] for i in range(len(currentPos))])
-    
-    # returns average empowerment over all windows
-    # N timesteps; k window size
-    # returns average empowerment over ~N-k windows
-    def Empowerment_Window_Average(self):
-        emp = self.empowerment / self.empowermentTimesteps
-        return emp
-
-    def Empowerment_Window_Max(self):
-        return max(self.empowerment_values)
 
     def Simulation_Empowerment(self):
         actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(c.TIMESTEPS //2)]]
@@ -181,46 +139,27 @@ class Robot:
         mi = pyinform.mutual_info(actionz, sensorz, local=False)
         return mi
 
-    def Y_Axis_Fitness(self):
+    def Y_Axis_Displacement(self):
         basePositionAndOrientation = p.getBasePositionAndOrientation(self.robotId)
         basePosition = basePositionAndOrientation[0]
         yPosition = basePosition[1]
         return yPosition
         
-    def X_Axis_Fitness(self):
-        # self.linkZeroState = p.getLinkState(self.robotId, 0)
-        # self.positionOfLinkZero = self.linkZeroState[0]
+    def X_Axis_Displacement(self):
         basePositionAndOrientation = p.getBasePositionAndOrientation(self.robotId)
         basePosition = basePositionAndOrientation[0]
         xPosition = basePosition[0]
         return xPosition
 
     def Get_Empowerment(self):
-        # return self.Empowerment_Window_Average()
-        # return self.Simulation_Empowerment()
-        # return self.Empowerment_Window()
-        # return self.Empowerment_Window_Average()
-        return self.Empowerment_Window_Max()
+        return max(self.empowerment_values)
 
     def Print_Objectives(self):
-        displacement = self.Y_Axis_Fitness()
+        displacement = self.Y_Axis_Displacement()
         empowerment = self.Get_Empowerment()
         box_displacement = None if self.objectIds == None else self.Get_Box_Displacement()
         first_half_displacement = self.firstHalfFitness
         second_half_displacement = displacement - first_half_displacement
         random = np.random.random()
         print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random)} {str(box_displacement)})')
-
-    def Get_Fitness(self, objective='tri_fitness'):
-        '''
-        Writes both the fitness and the empowerment to stdout
-        '''
-        if objective == 'emp_fitness':
-            fitness = self.Y_Axis_Fitness()
-            empowerment = self.Get_Empowerment()
-            print(f'({str(fitness)} {str(empowerment)})')
-        elif objective == 'tri_fitness':
-            fitness1 = self.firstHalfFitness
-            fitness2 = self.Y_Axis_Fitness()
-            print(f'({str(fitness1)} {str(fitness2)})')
 
