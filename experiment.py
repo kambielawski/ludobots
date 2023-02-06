@@ -11,7 +11,8 @@ def Get_Constants_AFPO_T1():
         'name': 'tri_emp',
         'generations': 999,
         'target_population_size': 100,
-        'objectives': ['displacement', 'empowerment'],
+        'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
+        'objectives': ['box_displacement', 'empowerment'],
         'empowerment_window_size': c.TIMESTEPS // 2,
         'batching': False,
         'batch_size': 5
@@ -22,7 +23,8 @@ def Get_Constants_AFPO_T2():
         'name': 'tri_random',
         'generations': 999,
         'target_population_size': 100,
-        'objectives': ['displacement', 'random'], 
+        'motor_measure': 'VELOCITY',
+        'objectives': ['box_displacement', 'random'], 
         'empowerment_window_size': c.TIMESTEPS // 2,
         'batching': False,
         'batch_size': 5

@@ -18,8 +18,11 @@ class AgeFitnessPareto():
         self.targetPopSize = constants['target_population_size']
         self.batching = constants['batching']
         self.batch_size = constants['batch_size']
-        self.objectives = constants['objectives']
-        self.empowerment_window_size = constants['empowerment_window_size']
+        self.robot_constants = {
+            'empowerment_window_size': constants['empowerment_window_size'],
+            'motor_measure': constants['motor_measure'],
+            'objectives': constants['objectives']
+        }
         self.history = RunHistory(constants, dir=dir)
         self.currentGen = 0
         self.dir = dir
@@ -36,7 +39,7 @@ class AgeFitnessPareto():
         while self.currentGen < self.nGenerations:
             print('===== Generation ' + str(self.currentGen) + ' =====')
             self.Evolve_One_Generation()
-            if self.currentGen == self.nGenerations - 1:
+            if self.currentGen == self.nGenerations:
                 self.Save_Best()
                 self.Write_Gen_Statistics()
             self.Clean_Directory()
@@ -50,7 +53,7 @@ class AgeFitnessPareto():
             # Initialize random population
             for _ in range(self.targetPopSize):
                 rand_id = self.Get_Available_Id()
-                self.population[rand_id] = Solution(rand_id, (0, rand_id), objectives=self.objectives, dir=self.dir, empowerment_window_size=self.empowerment_window_size)
+                self.population[rand_id] = Solution(rand_id, (0, rand_id), constants=self.robot_constants, dir=self.dir)
         else:
             self.Increment_Ages()
             self.Extend_Population(self.currentGen)
@@ -84,7 +87,7 @@ class AgeFitnessPareto():
 
         # 2. Add a random individual
         rand_id = self.Get_Available_Id()
-        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), objectives=self.objectives, dir=self.dir, empowerment_window_size=self.empowerment_window_size)
+        self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), self.robot_constants, dir=self.dir)
 
     '''
     Tournament selection to decide which individuals reproduce
@@ -186,7 +189,6 @@ class AgeFitnessPareto():
         self.history.Pareto_Front_Data(genNumber, pfData)
 
     def Write_Gen_Statistics(self):
-        self.history.Write_Generation_Data_To_File(self.targetPopSize, self.nGenerations, self.objectives, self.run_id)
         self.history.Write_Pareto_Front_File()
 
     def Get_Available_Id(self):

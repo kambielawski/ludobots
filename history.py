@@ -48,6 +48,15 @@ class RunHistory:
             best_empowerment.append((gen, keyfunc(best_emp[0])))
         return best_empowerment
 
+    def Get_Top_Metric_Over_Generations(self, selectionMetric):
+        keyfunc = lambda x: x['metrics'][selectionMetric]
+
+        best = []
+        for gen in self.populationOverTime:
+            best_metric = sorted(self.populationOverTime[gen], key=keyfunc, reverse=True)
+            best.append((gen, keyfunc(best_metric[0])))
+        return best
+
     def Get_Population_Data(self):
         return self.populationOverTime
 

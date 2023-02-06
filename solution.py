@@ -12,16 +12,18 @@ from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
-    def __init__(self, solutionId, lineage, objectives, dir='.', empowerment_window_size=c.TIMESTEPS):
+    def __init__(self, solutionId, lineage, constants, dir='.'):
         self.id = solutionId
         self.robot = Quadruped(self.id, dir=dir)
         self.weights = self.robot.Generate_Weights()
         self.age = 1
         self.empowerment = 0
-        self.empowerment_window_size = empowerment_window_size
         self.been_simulated = False
         self.lineage = lineage
-        self.objectives = objectives
+        self.objectives = constants['objectives']
+        self.empowerment_window_size = constants['empowerment_window_size'] or c.TIMESTEPS // 2
+        self.motor_measure = constants['motor_measure']
+
         self.dir = dir
 
     def Run_Simulation(self, runMode="DIRECT"):
@@ -34,7 +36,9 @@ class Solution:
                                 str(self.id), 
                                 f'{self.dir}/brain_{self.id}.nndf', 
                                 self.robot.Get_Body_File(), 
-                                '--directory', self.dir],
+                                '--directory', self.dir,
+                                '--objects_file', self.worldFile,
+                                '--motor_measure', self.motor_measure],
                                 # '--empowerment_window_size', str(self.empowerment_window_size)],
                                 stdout=subprocess.PIPE)
 
@@ -48,7 +52,8 @@ class Solution:
             'empowerment': float(fitness_metrics[1]),
             'first_half_displacement': float(fitness_metrics[2]),
             'second_half_displacement': float(fitness_metrics[3]),
-            'random': float(fitness_metrics[4])
+            'random': float(fitness_metrics[4]),
+            'box_displacement': float(fitness_metrics[5])
         }
 
         self.been_simulated = True # Set simulated flag
@@ -74,7 +79,8 @@ class Solution:
             pyrosim.Send_Cube(name="Box", pos=cube.pos, size=cube.dims)
     
     def Create_World(self):
-        os.system(f'cp {self.dir}/world.sdf {self.dir}/world_{self.id}.sdf')
+        self.worldFile = f'{self.dir}/world_{self.id}.sdf'
+        os.system(f'cp {self.dir}/world.sdf {self.worldFile}')
         pyrosim.Start_SDF(f"{self.dir}/world_{self.id}.sdf")
         self.Generate_Environment()
         pyrosim.End()
