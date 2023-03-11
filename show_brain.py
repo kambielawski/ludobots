@@ -19,6 +19,12 @@ if not os.path.exists(body_file):
     print("Could not open " + sys.argv[2])
     exit(1)
 
+# ensure file exists
+world_file = sys.argv[3] if len(sys.argv) > 4 else 'world.sdf'
+if not os.path.exists(world_file):
+    print("Could not open " + sys.argv[3])
+    exit(1)
+
 # for windowSize in range(10,500,10):
-os.system("python3 simulate.py GUI 0 " + brain_file + " " + body_file + " emp_fitness")# " " + str(windowSize) +
+os.system("python3 simulate.py GUI 0 " + brain_file + " " + body_file + " --objects_file " + world_file)# " " + str(windowSize) +
 
