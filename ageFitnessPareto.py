@@ -66,6 +66,7 @@ class AgeFitnessPareto():
 
         # 4. Analyze and run statistics
         pf = self.Pareto_Front()
+        self.Save_Pareto_Front(pf)
         self.Run_Gen_Statistics(self.currentGen, pf)
         self.currentGen += 1
 
@@ -219,6 +220,13 @@ class AgeFitnessPareto():
         os.system(f'mkdir {self.dir}/gen_{self.currentGen}')
         for id in self.population:
             os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/gen_{self.currentGen}/brain_{id}.nndf')
+
+    def Save_Pareto_Front(self, pf):
+        # Remove current pareto front files
+        os.system(f'rm {self.dir}/pareto_front/run_{self.run_id}/*')
+        
+        # Save active pareto front
+        os.system(f'cp {self.dir}/brain_' + '{' + ','.join([str(id) for id in pf]) + '}' + f'.nndf {self.dir}/pareto_front/run_{self.run_id}')
 
     def Save_Best(self):
         pf = self.Pareto_Front()
