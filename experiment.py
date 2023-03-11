@@ -44,8 +44,8 @@ class Experiment:
             os.system(f'mkdir {self.experiment_directory}/data')
             os.system(f'mkdir {self.experiment_directory}/plots')
             os.system(f'mkdir {self.experiment_directory}/best_robots')
-            os.system(f'mkdir {self.experiment_directory}/best_robots/quadruped')
-            os.system(f'mkdir {self.experiment_directory}/best_robots/pareto_front')
+            # os.system(f'mkdir {self.experiment_directory}/best_robots/quadruped')
+            os.system(f'mkdir {self.experiment_directory}/pareto_front')
             os.system(f'cp robots/body_quadruped.urdf {self.experiment_directory}')
 
             # 2. Print experiment information to file
@@ -56,7 +56,7 @@ class Experiment:
             info_file.write(str(t2_info))
             info_file.close()
 
-            # TODO: Generalize world initialization (make per-experiment)
+            # TODO: Generalize world initialization (make per-treatment)
             # Finish directory setup
             if 'box_displacement' in t1_info['objectives']:
                 os.system(f'cp ./task_environments/box_world.sdf {self.experiment_directory}/world.sdf')
@@ -87,6 +87,9 @@ class Experiment:
         # 2. Compute a single generation for all runs
         for treatment in self.evo_runs:
             for run in self.evo_runs[treatment]:
+                # Create a directory for the *active* pareto front if it doesn't exist yet 
+                if not os.path.exists(f'{self.experiment_directory}/pareto_front/run_{self.evo_runs[treatment][run].run_id}'):
+                    os.system(f'mkdir {self.experiment_directory}/pareto_front/run_{self.evo_runs[treatment][run].run_id}')
                 print(f'\n\n========== \n Generation {self.evo_runs[treatment][run].currentGen}, Run {run} \n ==========\n\n')
                 self.evo_runs[treatment][run].Evolve_One_Generation()
                 self.evo_runs[treatment][run].Clean_Directory() # Clean up experiment directory
