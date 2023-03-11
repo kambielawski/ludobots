@@ -50,7 +50,9 @@ class Solution:
             'first_half_displacement': float(fitness_metrics[2]),
             'second_half_displacement': float(fitness_metrics[3]),
             'random': float(fitness_metrics[4]),
-            'box_displacement': float(fitness_metrics[5])
+            'box_displacement': float(fitness_metrics[5]),
+            'first_half_box_displacement': float(fitness_metrics[6]),
+            'second_half_box_displacement': float(fitness_metrics[7])
         }
 
         self.been_simulated = True # Set simulated flag
