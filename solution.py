@@ -42,7 +42,7 @@ class Solution:
         # Parse standard output from subprocess
         stdout, stderr = sp.communicate()
         sp.wait()
-        out_str = stdout.decode('utf-8')
+        out_str = stdout.decode()
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
         self.selection_metrics = {
             'displacement': float(fitness_metrics[0]),
@@ -64,25 +64,10 @@ class Solution:
         randCol = random.randint(0,self.robot.NUM_SENSOR_NEURONS-1)
 
         self.robot.weights[randRow][randCol] = random.random() * 2 - 1
-
-    def Generate_Environment(self):
-        cubes = []
-        l = 1
-        w = 1
-        h = 1
-        x = -4
-        y = 4
-        z = 0.5
-        cubes.append(Box(dims=[l,w,h], pos=[x,y,z]))
-        for cube in cubes:
-            pyrosim.Send_Cube(name="Box", pos=cube.pos, size=cube.dims)
     
     def Create_World(self):
         self.worldFile = f'{self.dir}/world_{self.id}.sdf'
         os.system(f'cp {self.dir}/world.sdf {self.worldFile}')
-        pyrosim.Start_SDF(f"{self.dir}/world_{self.id}.sdf")
-        self.Generate_Environment()
-        pyrosim.End()
 
     def Dominates_Other(self, other):
         assert self.objectives == other.objectives
