@@ -17,111 +17,75 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dir', required=True, type=str)
 args = parser.parse_args()
 
-def getAverageBoxDisplacement(runs):
-    # t2_runs = evo_runs[t2]
-    t1_top_fits = []
+def getMetric95CI(runs, metric):
+    best = []
 
     for afpo in runs:
-        top_fit_series = runs[afpo].history.Get_Top_Metric_Over_Generations('box_displacement')
-        t1_top_fits.append(top_fit_series)
+        best_over_generations = runs[afpo].history.Get_Top_Metric_Over_Generations(metric)
+        best.append(best_over_generations)
 
-    # The average top fitness for each generation, over all N evo runs
-    grouped_by_generation = list(zip(*t1_top_fits))
-    print(grouped_by_generation[0])
-    top_fitness_averages = [np.mean([x[1] for x in gen]) for gen in grouped_by_generation]
-    confidence_intervals = [st.t.interval(0.95, len(gen)-1, loc=top_fitness_averages[i], scale=st.sem(gen)) for i, gen in enumerate(grouped_by_generation)]
+    grouped_by_generation = list(zip(*best))
+    top_averages = [np.mean([x[1] for x in gen]) for gen in grouped_by_generation]
+    confidence_intervals = [st.t.interval(0.95, len(gen)-1, loc=top_averages[i], scale=st.sem(gen)) for i, gen in enumerate(grouped_by_generation)]
     confidence_intervals = [(ci[1][1] - ci[0][1])/2 for ci in confidence_intervals]
-    return np.array(top_fitness_averages), np.array(confidence_intervals)
+    return np.array(top_averages), np.array(confidence_intervals)
 
-def getAverageTopFitness(runs):
-    # t2_runs = evo_runs[t2]
-    t1_top_fits = []
-
-    for afpo in runs:
-        top_fit_series = runs[afpo].history.Get_Top_Fitness_Over_Generations()
-        t1_top_fits.append(top_fit_series)
-
-    # The average top fitness for each generation, over all N evo runs
-    grouped_by_generation = list(zip(*t1_top_fits))
-    print(grouped_by_generation[0])
-    top_fitness_averages = [np.mean([x[1] for x in gen]) for gen in grouped_by_generation]
-    confidence_intervals = [st.t.interval(0.95, len(gen)-1, loc=top_fitness_averages[i], scale=st.sem(gen)) for i, gen in enumerate(grouped_by_generation)]
-    confidence_intervals = [(ci[1][1] - ci[0][1])/2 for ci in confidence_intervals]
-    return np.array(top_fitness_averages), np.array(confidence_intervals)
-
-def getAverageTopEmpowerment(runs):
-    # t2_runs = evo_runs[t2]
-    t1_top_emp = []
-
-    for afpo in runs:
-        top_emp_series = runs[afpo].history.Get_Top_Empowerment_Over_Generations()
-        t1_top_emp.append(top_emp_series)
-
-    # The average top fitness for each generation, over all N evo runs
-    grouped_by_generation = list(zip(*t1_top_emp))
-    print(grouped_by_generation[0])
-    top_emp_averages = [np.mean([x[1] for x in gen]) for gen in grouped_by_generation]
-    confidence_intervals = [st.t.interval(0.95, len(gen)-1, loc=top_emp_averages[i], scale=st.sem(gen)) for i, gen in enumerate(grouped_by_generation)]
-    confidence_intervals = [(ci[1][1] - ci[0][1])/2 for ci in confidence_intervals]
-    return np.array(top_emp_averages), np.array(confidence_intervals)
-
-def paretoFrontLinePlot(evo_runs):
+def plotMetric95CI(evo_runs, metric):
     t1, t2 = evo_runs.keys()
-
-    # The average top fitness for each generation, over all N evo runs
-    t1_avg_best, t1_conf_int = getAverageTopFitness(evo_runs[t1])
-    t2_avg_best, t2_conf_int= getAverageTopFitness(evo_runs[t2])
+    t1_avg_best, t1_conf_int = getMetric95CI(evo_runs[t1], metric)
+    t2_avg_best, t2_conf_int= getMetric95CI(evo_runs[t2], metric)
 
     # Plotting
-    plt.plot(range(len(t1_avg_best)), t1_avg_best, label=t1, color='Red')
-    plt.plot(range(len(t2_avg_best)), t2_avg_best, label=t2, color='Blue')
+    plt.plot(range(len(t1_avg_best)), t1_avg_best, label=t1 + '_t1', color='Red')
+    plt.plot(range(len(t2_avg_best)), t2_avg_best, label=t2 + '_t2', color='Blue')
+    # plt.plot(range(len(t1_avg_best)), t1_avg_best, label='window_125', color='Red')
+    # plt.plot(range(len(t2_avg_best)), t2_avg_best, label='window_500', color='Blue')
     plt.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color='Red', alpha=0.3)
     plt.fill_between(range(len(t2_avg_best)), t2_avg_best-t2_conf_int, t2_avg_best+t2_conf_int, color='Blue', alpha=0.3)
+    plt.title(metric)
     plt.xlabel('Generation')
-    plt.ylabel('Top fitness (95% CI)')
+    plt.ylabel(f'{metric} (95% CI)')
     plt.legend()
-    plt.savefig(f'{args.dir}/data/95CI_gen{len(t1_avg_best)}_fit_{time.time()}.png')
+    plt.savefig(f'{args.dir}/plots/95CI_gen{len(t1_avg_best)}_fit_{time.time()}.png')
     plt.show()
 
-def empowermentPlot(evo_runs):
-    t1, t2 = evo_runs.keys()
-
-    # The average top fitness for each generation, over all N evo runs
-    t1_avg_best, t1_conf_int = getAverageTopEmpowerment(evo_runs[t1])
-    t2_avg_best, t2_conf_int= getAverageTopEmpowerment(evo_runs[t2])
-
-    # Plotting
-    plt.plot(range(len(t1_avg_best)), t1_avg_best, label=t1, color='Red')
-    plt.plot(range(len(t2_avg_best)), t2_avg_best, label=t2, color='Blue')
-    plt.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color='Red', alpha=0.3)
-    plt.fill_between(range(len(t2_avg_best)), t2_avg_best-t2_conf_int, t2_avg_best+t2_conf_int, color='Blue', alpha=0.3)
+def plotWindowSizes(experiments, metric):
+    for exp in experiments:
+        with open(f'{exp}/evo_runs.pickle', 'rb') as pickleFile:
+            evo_runs = pickle.load(pickleFile)
+            t1, t2 = evo_runs.keys()
+            t1_avg_best, t1_conf_int = getMetric95CI(evo_runs[t1], metric)
+            t2_avg_best, t2_conf_int= getMetric95CI(evo_runs[t2], metric)
+            if exp == 'experiments/exp_Mar01_10_08':
+                plt.plot(range(len(t1_avg_best)), t1_avg_best, label='window_125')
+                plt.plot(range(len(t2_avg_best)), t2_avg_best, label='window_500')
+            else:
+                plt.plot(range(len(t1_avg_best)), t1_avg_best, label=t1)
+                plt.plot(range(len(t2_avg_best)), t2_avg_best, label=t2)
+            plt.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color='Red', alpha=0.1)
+            plt.fill_between(range(len(t2_avg_best)), t2_avg_best-t2_conf_int, t2_avg_best+t2_conf_int, color='Blue', alpha=0.1)
+    plt.title(metric)
     plt.xlabel('Generation')
-    plt.ylabel('Top Empowerment (95% CI)')
+    plt.ylabel(f'{metric} (95% CI)')
     plt.legend()
-    plt.savefig(f'{args.dir}/data/95CI_gen{len(t1_avg_best)}_emp_{time.time()}.png')
+    plt.savefig(f'./window_sizes.png')
     plt.show()
 
-def boxDisplacementPlot(evo_runs):
-    t1, t2 = evo_runs.keys()
+# with open(f'{args.dir}/evo_runs.pickle', 'rb') as pickleFile:
+#     evo_runs = pickle.load(pickleFile)
 
-    # The average top fitness for each generation, over all N evo runs
-    t1_avg_best, t1_conf_int = getAverageBoxDisplacement(evo_runs[t1])
-    t2_avg_best, t2_conf_int= getAverageBoxDisplacement(evo_runs[t2])
+plotWindowSizes([
+    'experiments/exp_Mar03_05_05',
+    'experiments/exp_Mar01_10_08',
+    'experiments/exp_Mar04_11_21',
+], 'box_displacement')
 
-    # Plotting
-    plt.plot(range(len(t1_avg_best)), t1_avg_best, label=t1, color='Red')
-    plt.plot(range(len(t2_avg_best)), t2_avg_best, label=t2, color='Blue')
-    plt.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color='Red', alpha=0.3)
-    plt.fill_between(range(len(t2_avg_best)), t2_avg_best-t2_conf_int, t2_avg_best+t2_conf_int, color='Blue', alpha=0.3)
-    plt.xlabel('Generation')
-    plt.ylabel('Top Box Displacement (95% CI)')
-    plt.legend()
-    plt.savefig(f'{args.dir}/data/95CI_gen{len(t1_avg_best)}_boxdis_{time.time()}.png')
-    plt.show()
+# boxDisplacementPlot(evo_runs)
+# paretoFrontLinePlot(evo_runs)
+# empowermentPlot(evo_runs)
 
-with open(f'{args.dir}/evo_runs.pickle', 'rb') as pickleFile:
-    evo_runs = pickle.load(pickleFile)
-
-boxDisplacementPlot(evo_runs)
-paretoFrontLinePlot(evo_runs)
-empowermentPlot(evo_runs)
+# plotMetric95CI(evo_runs, 'empowerment')
+# plotMetric95CI(evo_runs, 'displacement')
+# plotMetric95CI(evo_runs, 'box_displacement')
+# plotMetric95CI(evo_runs, 'first_half_box_displacement')
+# plotMetric95CI(evo_runs, 'box_displacement')
