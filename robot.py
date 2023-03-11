@@ -63,6 +63,7 @@ class Robot:
         # If tri-fitness, record fitness at simulation half
         if timestep == c.TIMESTEPS // 2:
             self.firstHalfFitness = self.Y_Axis_Displacement()
+            self.firstHalfBoxDisplacement = self.Get_Box_Displacement()
         
         # Sense
         sensorVector = []
@@ -158,8 +159,10 @@ class Robot:
         displacement = self.Y_Axis_Displacement()
         empowerment = self.Get_Empowerment()
         box_displacement = None if self.objectIds == None else self.Get_Box_Displacement()
+        first_half_box_displacement = self.firstHalfBoxDisplacement
+        second_half_box_displacement = box_displacement - first_half_box_displacement
         first_half_displacement = self.firstHalfFitness
         second_half_displacement = displacement - first_half_displacement
         random = np.random.random()
-        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random)} {str(box_displacement)})')
+        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random)} {str(box_displacement)} {str(first_half_box_displacement)} {str(second_half_box_displacement)})')
 
