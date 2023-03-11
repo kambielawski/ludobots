@@ -63,7 +63,7 @@ class Robot:
         # If tri-fitness, record fitness at simulation half
         if timestep == c.TIMESTEPS // 2:
             self.firstHalfFitness = self.Y_Axis_Displacement()
-            self.firstHalfBoxDisplacement = self.Get_Box_Displacement()
+            self.firstHalfBoxDisplacement = None if self.objectIds == None else self.Get_Box_Displacement()
         
         # Sense
         sensorVector = []
