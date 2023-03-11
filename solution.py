@@ -4,7 +4,6 @@ import random
 import subprocess
 import re
 
-from box import Box
 from robots.quadruped import Quadruped
 import constants as c
 
