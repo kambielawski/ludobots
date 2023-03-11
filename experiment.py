@@ -44,7 +44,6 @@ class Experiment:
             os.system(f'mkdir {self.experiment_directory}/data')
             os.system(f'mkdir {self.experiment_directory}/plots')
             os.system(f'mkdir {self.experiment_directory}/best_robots')
-            # os.system(f'mkdir {self.experiment_directory}/best_robots/quadruped')
             os.system(f'mkdir {self.experiment_directory}/pareto_front')
             os.system(f'cp robots/body_quadruped.urdf {self.experiment_directory}')
 
