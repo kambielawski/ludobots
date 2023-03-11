@@ -2,7 +2,6 @@ import pybullet as p
 import pybullet_data
 import numpy as np
 import time 
-from world import World
 
 import constants as c
 
@@ -46,6 +45,14 @@ class Simulation:
                 robot.Act(i)
             if self.runMode == "GUI":
                 time.sleep(1/10000)
+
+        # PLOT A ROBOT'S JOINTS' VELOCITY VALUES OVER TIME
+        # TODO: move this to a better place
+        # velocity_vals_over_time = self.robots[0].jointAngularVelocities
+        # for i in range(len(velocity_vals_over_time[0])):
+        #     joint_val_over_time = [joint_vals[i] for joint_vals in velocity_vals_over_time]
+        #     plt.plot(range(len(joint_val_over_time)), joint_val_over_time)
+        # plt.show()
 
     def Get_Fitness(self, objective):
         return self.robots[0].Get_Fitness(objective)
