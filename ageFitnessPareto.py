@@ -39,6 +39,7 @@ class AgeFitnessPareto():
             print('===== Generation ' + str(self.currentGen) + ' =====')
             self.Evolve_One_Generation()
             if self.currentGen == self.nGenerations:
+                # self.Save_Emp()
                 self.Save_Best()
                 self.Write_Gen_Statistics()
             self.Clean_Directory()
@@ -198,6 +199,26 @@ class AgeFitnessPareto():
         os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf')
         os.system(OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf') 
         os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
+
+    def Save_Emp(self):
+        print(os.listdir())
+        pop_data = self.population
+        max_emp_id = -1
+        max_emp = -1
+        for id in pop_data:
+            emp = pop_data[id].selection_metrics['empowerment']
+            print('id: ', id, ', emp: ', emp)
+            if emp > max_emp:
+                max_emp_id = id
+                max_emp = emp
+        print(max_emp_id)
+        # Save highest empowerment
+        os.system(OS_MV + f' ./brain_{max_emp_id}.nndf best_robots/empowered/brain_{max_emp_id}.nndf')
+
+    def Save_Pop(self):
+        os.system(f'mkdir {self.dir}/gen_{self.currentGen}')
+        for id in self.population:
+            os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/gen_{self.currentGen}/brain_{id}.nndf')
 
     def Save_Best(self):
         pf = self.Pareto_Front()
