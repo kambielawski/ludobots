@@ -1,28 +1,17 @@
 import time
 import pickle
 import os
-import threading
-import constants as c
 
 from ageFitnessPareto import AgeFitnessPareto
 
-def Get_Constants_AFPO_T1():
+def Get_Experiment_Parameters():
     return {
         'name': 'displacement',
+        'morphology': 'quadruped',
         'generations': 999,
         'target_population_size': 100,
-        'motor_measure': 'DESIRED_ANGLE', # 'VELOCITY' or 'DESIRED_ANGLE'
+        'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
         'objectives': ['displacement'],
-        'empowerment_window_size': 500,
-    }
-
-def Get_Constants_AFPO_T2():
-    return {
-        'name': 'displacement_neg_avgemp',
-        'generations': 999,
-        'target_population_size': 100,
-        'motor_measure': 'DESIRED_ANGLE',
-        'objectives': ['displacement', 'empowerment'], 
         'empowerment_window_size': 500,
     }
 
@@ -34,49 +23,45 @@ class Experiment:
             self.experiment_directory = experiment_directory
         else: # Initialize a new experiment
             # 1. Create a new experiment directory
+            experiment_parameters = Get_Experiment_Parameters()
+
             timestr = time.strftime('%b%d_%I_%M')
-            self.experiment_directory = f'experiments/exp_{timestr}' 
+            motor_str = 'mA' if experiment_parameters['motor_measure'] == 'VELOCITY' else 'mD'
+            morphology = experiment_parameters['morphology']
+            self.experiment_directory = f'experiments/{timestr}_' + experiment_parameters['morphology'] + '_' + '-'.join(experiment_parameters['objectives']) + '_' + motor_str + '_' + f'n{N_runs}' + 'p' + str(experiment_parameters['target_population_size'])
             os.system(f'mkdir {self.experiment_directory}')
             os.system(f'mkdir {self.experiment_directory}/data')
             os.system(f'mkdir {self.experiment_directory}/plots')
             os.system(f'mkdir {self.experiment_directory}/best_robots')
             os.system(f'mkdir {self.experiment_directory}/pareto_front')
-            os.system(f'cp robots/body_quadruped.urdf {self.experiment_directory}')
+            os.system(f'cp robots/body_{morphology}.urdf {self.experiment_directory}')
 
-            # 2. Print experiment information to file
-            t1_info = Get_Constants_AFPO_T1()
-            t2_info = Get_Constants_AFPO_T2()
+            # 2. Print experiment parameters to file
             info_file = open(f'{self.experiment_directory}/info.txt', 'w')
-            info_file.write(str(t1_info) + '\n')
-            info_file.write(str(t2_info))
+            info_file.write(str(experiment_parameters) + '\n')
             info_file.close()
 
             # TODO: Generalize world initialization (make per-treatment)
             # Finish directory setup
-            if 'box_displacement' in t1_info['objectives']:
+            if 'box_displacement' in experiment_parameters['objectives']:
                 os.system(f'cp ./task_environments/box_world.sdf {self.experiment_directory}/world.sdf')
             else:
                 os.system(f'cp ./task_environments/world.sdf {self.experiment_directory}')
             
             # 3. Initialize N_runs AFPO objects and pickle them
-            treatment_1 = { i: AgeFitnessPareto(t1_info, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
-            treatment_2 = { i: AgeFitnessPareto(t2_info, run_id=(N_runs+i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
-            self.evo_runs = { t1_info['name']: treatment_1,
-                              t2_info['name']: treatment_2 }
+            treatment_1 = { i: AgeFitnessPareto(experiment_parameters, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
+            self.evo_runs = { experiment_parameters['name']: treatment_1 }
             self.pickle_file = f'{self.experiment_directory}/evo_runs.pickle'
             with open(self.pickle_file, 'wb') as pklFileHandle:
                 pickle.dump(self.evo_runs, pklFileHandle)
-    
-    def Thread_Func(self, treatment, run):
-        self.evo_runs[treatment][run].Evolve_One_Generation()
 
     def Run_One_Generation(self):
         t_start = time.time()
-        self.threads = []
         # 1. Unpickle previous generation
         with open(self.pickle_file, 'rb') as pickle_file:
             self.evo_runs = pickle.load(pickle_file)
 
+        # Save population pickle file (for insurance)
         os.system(f'cp {self.experiment_directory}/evo_runs.pickle {self.experiment_directory}/evo_runs_saved.pickle')
         
         # 2. Compute a single generation for all runs
@@ -85,7 +70,7 @@ class Experiment:
                 # Create a directory for the *active* pareto front if it doesn't exist yet 
                 if not os.path.exists(f'{self.experiment_directory}/pareto_front/run_{self.evo_runs[treatment][run].run_id}'):
                     os.system(f'mkdir {self.experiment_directory}/pareto_front/run_{self.evo_runs[treatment][run].run_id}')
-                print(f'\n\n========== \n Generation {self.evo_runs[treatment][run].currentGen}, Run {run} \n ==========\n\n')
+                print(f'\n\n========== \n Generation {self.evo_runs[treatment][run].currentGen} - Run {run} \n ==========\n\n')
                 self.evo_runs[treatment][run].Evolve_One_Generation()
                 self.evo_runs[treatment][run].Clean_Directory() # Clean up experiment directory
 
@@ -96,10 +81,6 @@ class Experiment:
         t_end = time.time()
         self.one_gen_time = t_end - t_start
         self.Print_GenTime_To_File()
-        # 4. Run t-test and print relevant information
-
-    def Run_T_Test(self):
-        return 1
 
     def Print_GenTime_To_File(self):
         f = open('gen_timing.txt', 'a')
