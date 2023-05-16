@@ -1,3 +1,4 @@
+import pickle
 import pybullet as p
 import pybullet_data
 import numpy as np
@@ -10,6 +11,7 @@ class Simulation:
         self.runMode = runMode
         self.solutionId = solutionId
         self.dir = dir
+        self.been_run = False
         if runMode == "GUI":
             self.physicsClient = p.connect(p.GUI)
         if runMode == "DIRECT":
@@ -46,6 +48,7 @@ class Simulation:
             if self.runMode == "GUI":
                 time.sleep(1/10000)
 
+        self.been_run = True
         # PLOT A ROBOT'S JOINTS' VELOCITY VALUES OVER TIME
         # TODO: move this to a better place
         # velocity_vals_over_time = self.robots[0].jointAngularVelocities
@@ -54,11 +57,18 @@ class Simulation:
         #     plt.plot(range(len(joint_val_over_time)), joint_val_over_time)
         # plt.show()
 
+    def Pickle_Sim(self, pickle_file_name="sim.pkl"):
+        with open(pickle_file_name, 'wb') as pf:
+            pickle.dump(self, pf, protocol=pickle.HIGHEST_PROTOCOL)
+
     def Get_Fitness(self, objective):
         return self.robots[0].Get_Fitness(objective)
 
     def Print_Objectives(self):
         self.robots[0].Print_Objectives()
+
+    def Get_Robots(self):
+        return self.robots
 
     def Save_Values(self):
         for sensor in self.robot.sensors:
