@@ -40,9 +40,9 @@ class AgeFitnessPareto():
             self.Evolve_One_Generation()
             if self.currentGen == self.nGenerations:
                 # self.Save_Emp()
-                self.Save_Best()
+                # self.Save_Best()
                 self.Write_Gen_Statistics()
-            self.Clean_Directory()
+            # self.Clean_Directory()
 
     '''
     Single generation process
@@ -66,7 +66,7 @@ class AgeFitnessPareto():
 
         # 4. Analyze and run statistics
         pf = self.Pareto_Front()
-        self.Save_Pareto_Front(pf)
+        # self.Save_Pareto_Front(pf)
         self.Run_Gen_Statistics(self.currentGen, pf)
         self.currentGen += 1
 
@@ -110,6 +110,7 @@ class AgeFitnessPareto():
     '''
     def Reduce_Population(self):
         pf_size = len(self.Pareto_Front())
+        print(pf_size)
         if pf_size >= self.targetPopSize:
             self.targetPopSize = pf_size
         # Remove individuals until target population is reached
@@ -202,17 +203,14 @@ class AgeFitnessPareto():
         os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
 
     def Save_Emp(self):
-        print(os.listdir())
         pop_data = self.population
         max_emp_id = -1
         max_emp = -1
         for id in pop_data:
             emp = pop_data[id].selection_metrics['empowerment']
-            print('id: ', id, ', emp: ', emp)
             if emp > max_emp:
                 max_emp_id = id
                 max_emp = emp
-        print(max_emp_id)
         # Save highest empowerment
         os.system(OS_MV + f' ./brain_{max_emp_id}.nndf best_robots/empowered/brain_{max_emp_id}.nndf')
 
@@ -228,15 +226,17 @@ class AgeFitnessPareto():
         # Save active pareto front
         os.system(f'cp {self.dir}/brain_' + '{' + ','.join([str(id) for id in pf]) + '}' + f'.nndf {self.dir}/pareto_front/run_{self.run_id}')
 
-    def Save_Best(self):
+    def Save_Best(self, pareto_front_dir='pareto_front', metric='displacement'):
         pf = self.Pareto_Front()
+        
+        max_id = max([(self.population[id].selection_metrics[metric], id) for id in pf])[1]
 
         # Save Pareto-front brains
-        for id in pf:
-            if os.path.exists(f'{self.dir}/brain_{id}.nndf'):
-                os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf')
-        
-        # Move over pareto front bests, then delete pareto_front dir
-        for id in pf:
-            os.system(f'{OS_MV} {self.dir}/best_robots/pareto_front/pf_brain_{id}.nndf ' + self.dir + '/best_robots/quadruped')
-        os.system(f'{OS_RM} {self.dir}/best_robots/pareto_front/*')
+        # for id in pf:
+        if os.path.exists(f'{self.dir}/brain_{max_id}.nndf'):
+            os.system(OS_MV + f' {self.dir}/brain_{max_id}.nndf {self.dir}/best_robots/{pareto_front_dir}/pf_brain_{max_id}.nndf')
+
+    def Save_Best_Simulation(self):
+        pass
+
+    
