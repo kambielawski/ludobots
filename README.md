@@ -21,3 +21,7 @@ Specify number of generations and population size in constants.py
 1. Build an experiment (altering Experiment class in experiment.py) by changing the Experiment's parameters  
 
 2. `python3 experiment.py`
+
+### Run a single experiment with simulate.py
+
+`python3 simulate.py GUI 0 ./best_robots/`
