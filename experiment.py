@@ -8,26 +8,22 @@ from ageFitnessPareto import AgeFitnessPareto
 
 def Get_Constants_AFPO_T1():
     return {
-        'name': 'window_50',
+        'name': 'displacement',
         'generations': 999,
         'target_population_size': 100,
         'motor_measure': 'DESIRED_ANGLE', # 'VELOCITY' or 'DESIRED_ANGLE'
-        'objectives': ['box_displacement', 'empowerment'],
-        'empowerment_window_size': 15,
-        'batching': False,
-        'batch_size': 5
+        'objectives': ['displacement'],
+        'empowerment_window_size': 500,
     }
 
 def Get_Constants_AFPO_T2():
     return {
-        'name': 'window_400',
+        'name': 'displacement_neg_avgemp',
         'generations': 999,
         'target_population_size': 100,
         'motor_measure': 'DESIRED_ANGLE',
-        'objectives': ['box_displacement', 'empowerment'], 
-        'empowerment_window_size': 300,
-        'batching': False,
-        'batch_size': 5
+        'objectives': ['displacement', 'empowerment'], 
+        'empowerment_window_size': 500,
     }
 
 class Experiment:

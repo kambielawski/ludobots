@@ -16,7 +16,6 @@ class AgeFitnessPareto():
         self.population = dict()
         self.nGenerations = constants['generations']
         self.targetPopSize = constants['target_population_size']
-        self.batching = constants['batching']
         self.batch_size = constants['batch_size']
         self.robot_constants = {
             'empowerment_window_size': constants['empowerment_window_size'],
