@@ -16,10 +16,12 @@ class AgeFitnessPareto():
         self.population = dict()
         self.nGenerations = constants['generations']
         self.targetPopSize = constants['target_population_size']
+        self.morphology = constants['morphology']
         self.robot_constants = {
             'empowerment_window_size': constants['empowerment_window_size'],
             'motor_measure': constants['motor_measure'],
-            'objectives': constants['objectives']
+            'objectives': constants['objectives'],
+            'morphology': constants['morphology']
         }
         self.history = RunHistory(constants, dir=dir)
         self.currentGen = 0
@@ -197,7 +199,7 @@ class AgeFitnessPareto():
     def Clean_Directory(self):
         # Remove the rest
         os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf')
-        os.system(OS_RM + ' ' + self.dir + '/body_quadruped_*.urdf') 
+        os.system(OS_RM + ' ' + self.dir + f'/body_{self.morphology}_*.urdf') 
         os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
 
     def Save_Emp(self):

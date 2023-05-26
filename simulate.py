@@ -24,7 +24,7 @@ simulation = Simulation(args.display, args.solution_id, objectsFile=args.objects
 robot_options = {
     'motor_measure': args.motor_measure,
     'empowerment_window_size': args.empowerment_window_size,
-    'body_file': "robots/body_quadruped.urdf",
+    'body_file': args.body_file,
     'brain_file': args.brain_file
 }
 robots = [Robot(args.solution_id, robot_options, dir=args.directory)]
