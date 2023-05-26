@@ -7,15 +7,9 @@ import numpy as np
 
 import scipy.stats as st
 import pickle
-import argparse
 import matplotlib.pyplot as plt
-import time
 
-# TODO: generalize these functions to take any objective.
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--dir', required=True, type=str)
-args = parser.parse_args()
+COLORS = ['red', 'blue', 'yellow', 'green', 'orange', 'purple']
 
 def getMetric95CI(runs, metric):
     best = []
@@ -30,23 +24,28 @@ def getMetric95CI(runs, metric):
     confidence_intervals = [(ci[1][1] - ci[0][1])/2 for ci in confidence_intervals]
     return np.array(top_averages), np.array(confidence_intervals)
 
-def plotMetric95CI(evo_runs, metric):
-    t1, t2 = evo_runs.keys()
-    t1_avg_best, t1_conf_int = getMetric95CI(evo_runs[t1], metric)
-    t2_avg_best, t2_conf_int= getMetric95CI(evo_runs[t2], metric)
+def plotMetric95CI(experiment_dirs, metric):
+    # Load each evo_runs object from pickled file in experiment directory
+    loaded_data = []
+    for exp_dir in experiment_dirs:
+        print(exp_dir)
+        with open(f'{exp_dir}/evo_runs.pickle', 'rb') as pickleFile:
+            evo_runs = pickle.load(pickleFile)
+            loaded_data.append(evo_runs)
 
-    # Plotting
-    plt.plot(range(len(t1_avg_best)), t1_avg_best, label=t1 + '_t1', color='Red')
-    plt.plot(range(len(t2_avg_best)), t2_avg_best, label=t2 + '_t2', color='Blue')
-    # plt.plot(range(len(t1_avg_best)), t1_avg_best, label='window_125', color='Red')
-    # plt.plot(range(len(t2_avg_best)), t2_avg_best, label='window_500', color='Blue')
-    plt.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color='Red', alpha=0.3)
-    plt.fill_between(range(len(t2_avg_best)), t2_avg_best-t2_conf_int, t2_avg_best+t2_conf_int, color='Blue', alpha=0.3)
+    # Plot each line from each loaded data
+    for i, evo_runs in enumerate(loaded_data):
+        exp_label = list(loaded_data[i].keys())[0]
+        t1_avg_best, t1_conf_int = getMetric95CI(evo_runs[exp_label], metric)
+        # Plotting
+        plt.plot(range(len(t1_avg_best)), t1_avg_best, label=exp_label, color=COLORS[i])
+        plt.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color=COLORS[i], alpha=0.3)
+    
     plt.title(metric)
     plt.xlabel('Generation')
     plt.ylabel(f'{metric} (95% CI)')
     plt.legend()
-    plt.savefig(f'{args.dir}/plots/95CI_gen{len(t1_avg_best)}_fit_{time.time()}.png')
+    # plt.savefig(f'{args.dir}/plots/95CI_gen{len(t1_avg_best)}_fit_{time.time()}.png')
     plt.show()
 
 def plotWindowSizes(experiments, metric):
@@ -71,21 +70,11 @@ def plotWindowSizes(experiments, metric):
     plt.savefig(f'./window_sizes.png')
     plt.show()
 
-# with open(f'{args.dir}/evo_runs.pickle', 'rb') as pickleFile:
-#     evo_runs = pickle.load(pickleFile)
+# plotWindowSizes([
+#     'experiments/exp_Mar03_05_05',
+#     'experiments/exp_Mar01_10_08',
+#     'experiments/exp_Mar04_11_21',
+# ], 'box_displacement')
 
-plotWindowSizes([
-    'experiments/exp_Mar03_05_05',
-    'experiments/exp_Mar01_10_08',
-    'experiments/exp_Mar04_11_21',
-], 'box_displacement')
-
-# boxDisplacementPlot(evo_runs)
-# paretoFrontLinePlot(evo_runs)
-# empowermentPlot(evo_runs)
-
-# plotMetric95CI(evo_runs, 'empowerment')
-# plotMetric95CI(evo_runs, 'displacement')
-# plotMetric95CI(evo_runs, 'box_displacement')
-# plotMetric95CI(evo_runs, 'first_half_box_displacement')
-# plotMetric95CI(evo_runs, 'box_displacement')
+plotMetric95CI(['./experiments/May17_10_15_hexapod_displacement_mA_n30p100',
+                './experiments/May22_10_50_hexapod_displacement-empowerment_mA_n30p100'], 'displacement')
