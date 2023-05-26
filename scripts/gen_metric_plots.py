@@ -74,7 +74,6 @@ def plotWindowSizes(experiments, metric):
 #     'experiments/exp_Mar03_05_05',
 #     'experiments/exp_Mar01_10_08',
 #     'experiments/exp_Mar04_11_21',
-# ], 'box_displacement')
+# ], 'boxdisplacement')
 
-plotMetric95CI(['./experiments/May17_10_15_hexapod_displacement_mA_n30p100',
-                './experiments/May22_10_50_hexapod_displacement-empowerment_mA_n30p100'], 'displacement')
+plotMetric95CI(['./experiments/May21_09_39_quadruped_displacement-empowerment_mA_n30p100w500'], 'displacement')

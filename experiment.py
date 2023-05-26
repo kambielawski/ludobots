@@ -11,7 +11,7 @@ def Get_Experiment_Parameters():
         'generations': 999,
         'target_population_size': 100,
         'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
-        'objectives': ['displacement', 'empowerment'],
+        'objectives': ['displacement', 'empowerment', 'boxdisplacement'], 
         'empowerment_window_size': 500,
     }
 
@@ -43,7 +43,7 @@ class Experiment:
 
             # TODO: Generalize world initialization (make per-treatment)
             # Finish directory setup
-            if 'box_displacement' in experiment_parameters['objectives']:
+            if 'boxdisplacement' in experiment_parameters['objectives']:
                 os.system(f'cp ./task_environments/box_world.sdf {self.experiment_directory}/world.sdf')
             else:
                 os.system(f'cp ./task_environments/world.sdf {self.experiment_directory}')
