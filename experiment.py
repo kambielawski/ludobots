@@ -7,11 +7,11 @@ from ageFitnessPareto import AgeFitnessPareto
 def Get_Experiment_Parameters():
     return {
         'name': 'displacement',
-        'morphology': 'quadruped',
+        'morphology': 'hexapod',
         'generations': 999,
         'target_population_size': 100,
         'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
-        'objectives': ['displacement'],
+        'objectives': ['displacement', 'empowerment'],
         'empowerment_window_size': 500,
     }
 
@@ -28,7 +28,7 @@ class Experiment:
             timestr = time.strftime('%b%d_%I_%M')
             motor_str = 'mA' if experiment_parameters['motor_measure'] == 'VELOCITY' else 'mD'
             morphology = experiment_parameters['morphology']
-            self.experiment_directory = f'experiments/{timestr}_' + experiment_parameters['morphology'] + '_' + '-'.join(experiment_parameters['objectives']) + '_' + motor_str + '_' + f'n{N_runs}' + 'p' + str(experiment_parameters['target_population_size'])
+            self.experiment_directory = f'experiments/{timestr}_' + experiment_parameters['morphology'] + '_' + '-'.join(experiment_parameters['objectives']) + '_' + motor_str + '_' + f'n{N_runs}' + 'p' + str(experiment_parameters['target_population_size']) + 'w' + str(experiment_parameters['empowerment_window_size'])
             os.system(f'mkdir {self.experiment_directory}')
             os.system(f'mkdir {self.experiment_directory}/data')
             os.system(f'mkdir {self.experiment_directory}/plots')
