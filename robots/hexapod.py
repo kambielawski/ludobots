@@ -1,12 +1,17 @@
-import numpy as np
+import os
 import sys
+import numpy as np
 sys.path.append('../pyrosim')
 import pyrosim.pyrosim as pyrosim
 
 class Hexapod:
-    def __init__(self, solnId):
+    def __init__(self, solnId, dir='.'):
+        self.dir = dir
         self.solnId = solnId
-        self.bodyFile = "body_hexapod.urdf"
+        self.sourceBodyFile = "robots/body_hexapod.urdf"
+        self.bodyFile = f"{self.dir}/body_hexapod_{self.solnId}.urdf"
+        self.brainFile = f"{self.dir}/brain_{self.solnId}.nndf"
+        os.system('cp ' + self.sourceBodyFile + ' ' + self.bodyFile)
 
         self.NUM_MOTOR_NEURONS = 6
         self.NUM_SENSOR_NEURONS = 6
@@ -100,7 +105,7 @@ class Hexapod:
     	# .nndf files are just used in Pyrosim
         # "Neural Network Description File"
         # pyrosim.Start_NeuralNetwork("brain_" + str(self.id) + ".nndf")
-        pyrosim.Start_NeuralNetwork("brain_" + str(self.solnId) + ".nndf")
+        pyrosim.Start_NeuralNetwork(f'{self.dir}/brain_' + str(self.solnId) + ".nndf")
 
         pyrosim.Send_Sensor_Neuron(name=0, linkName="LeftMid")
         pyrosim.Send_Sensor_Neuron(name=1, linkName="RightMid")

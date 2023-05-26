@@ -1,8 +1,30 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 class RunPlotter:
-    def __init__(self):
-        pass
+    def __init__(self, simulation):
+        self.simulation = simulation
+
+    def Action_Sensor_Pair_LogPlot(self):
+        robots = self.simulation.Get_Robots()
+
+        pairs = dict()
+        for robot in robots:
+            for a in robot.actionz:
+                for s in robot.sensorz:
+                    pair = (a,s)
+                    if pair in pairs:
+                        pairs[pair] += 1
+                    else:
+                        pairs[pair] = 1
+        print(pairs.values())
+
+        size = sorted(pairs.values(), reverse=True)
+        rank = range(1,len(size)+1)
+
+        plt.plot(np.log10(rank), np.log10(size))
+        plt.show()
+        
 
     # TODO: Rewrite this to take a particular run 
     def Rainbow_Waterfall_Plot(self, yaxis='fitness'):

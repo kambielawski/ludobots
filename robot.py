@@ -119,11 +119,11 @@ class Robot:
     
     def Empowerment_Window(self, timestep): 
         # Convert motor and sensor states into integers
-        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[((timestep+1)-(2*self.empowermentWindowSize)):((timestep+1)-self.empowermentWindowSize)]]
-        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[((timestep+1)-self.empowermentWindowSize):timestep+1]]
+        self.actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[((timestep+1)-(2*self.empowermentWindowSize)):((timestep+1)-self.empowermentWindowSize)]]
+        self.sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[((timestep+1)-self.empowermentWindowSize):timestep+1]]
 
         # Compute Mutual Information
-        mi = pyinform.mutual_info(actionz, sensorz, local=False)
+        mi = pyinform.mutual_info(self.actionz, self.sensorz, local=False)
 
         return mi
 
@@ -135,9 +135,9 @@ class Robot:
         return np.linalg.norm([self.boxStartPos[i] - currentPos[i] for i in range(len(currentPos))])
 
     def Simulation_Empowerment(self):
-        actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(c.TIMESTEPS //2)]]
-        sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(c.TIMESTEPS // 2):]]
-        mi = pyinform.mutual_info(actionz, sensorz, local=False)
+        self.actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(c.TIMESTEPS //2)]]
+        self.sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(c.TIMESTEPS // 2):]]
+        mi = pyinform.mutual_info(self.actionz, self.sensorz, local=False)
         return mi
 
     def Y_Axis_Displacement(self):
@@ -153,14 +153,15 @@ class Robot:
         return xPosition
 
     def Get_Empowerment(self):
-        return max(self.empowerment_values)
+        return np.mean(self.empowerment_values)
 
     def Print_Objectives(self):
         displacement = self.Y_Axis_Displacement()
         empowerment = self.Get_Empowerment()
+        print(self.objectIds)
         box_displacement = None if self.objectIds == None else self.Get_Box_Displacement()
-        first_half_box_displacement = self.firstHalfBoxDisplacement
-        second_half_box_displacement = box_displacement - first_half_box_displacement
+        first_half_box_displacement =  None if self.objectIds == None else self.firstHalfBoxDisplacement
+        second_half_box_displacement =  None if self.objectIds == None else box_displacement - first_half_box_displacement
         first_half_displacement = self.firstHalfFitness
         second_half_displacement = displacement - first_half_displacement
         random = np.random.random()

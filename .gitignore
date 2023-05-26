@@ -21,3 +21,4 @@ __pycache__/
 fitness*.txt
 log.txt
 experiments/
+best_robots/

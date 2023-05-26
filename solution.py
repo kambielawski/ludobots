@@ -5,13 +5,12 @@ import subprocess
 import re
 
 from robots.quadruped import Quadruped
+from robots.hexapod import Hexapod
 import constants as c
 
 class Solution:
     def __init__(self, solutionId, lineage, constants, dir='.'):
         self.id = solutionId
-        self.robot = Quadruped(self.id, dir=dir)
-        self.weights = self.robot.Generate_Weights()
         self.age = 1
         self.empowerment = 0
         self.been_simulated = False
@@ -19,6 +18,15 @@ class Solution:
         self.objectives = constants['objectives']
         self.empowerment_window_size = constants['empowerment_window_size'] or c.TIMESTEPS // 2
         self.motor_measure = constants['motor_measure']
+        self.morphology = constants['morphology']
+
+        # TODO: generalize robot morphology selection
+        if self.morphology == 'quadruped':
+            self.robot = Quadruped(self.id, dir=dir)
+        elif self.morphology == 'hexapod':
+            self.robot = Hexapod(self.id, dir=dir)
+            
+        self.weights = self.robot.Generate_Weights()
 
         self.dir = dir
 
@@ -49,9 +57,9 @@ class Solution:
             'first_half_displacement': float(fitness_metrics[2]),
             'second_half_displacement': float(fitness_metrics[3]),
             'random': float(fitness_metrics[4]),
-            'box_displacement': float(fitness_metrics[5]),
-            'first_half_box_displacement': float(fitness_metrics[6]),
-            'second_half_box_displacement': float(fitness_metrics[7])
+            'box_displacement': float(fitness_metrics[5]) if fitness_metrics[5] != 'None' else 0,
+            'first_half_box_displacement': float(fitness_metrics[6]) if fitness_metrics[6] != 'None' else 0,
+            'second_half_box_displacement': float(fitness_metrics[7]) if fitness_metrics[7] != 'None' else 0
         }
 
         self.been_simulated = True # Set simulated flag

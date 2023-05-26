@@ -1,3 +1,4 @@
+import pickle
 import pybullet as p
 import pybullet_data
 import numpy as np
@@ -5,11 +6,18 @@ import time
 
 import constants as c
 
+
+'''
+Simulation:
+- Manages Pybullet setup and interfacing 
+- 
+'''
 class Simulation:
     def __init__(self, runMode, solutionId, objectsFile='', dir='.'):
         self.runMode = runMode
         self.solutionId = solutionId
         self.dir = dir
+        self.been_run = False
         if runMode == "GUI":
             self.physicsClient = p.connect(p.GUI)
         if runMode == "DIRECT":
@@ -25,7 +33,6 @@ class Simulation:
             self.objectIds = None
 
     def __del__(self):
-        # self.Save_Values()
         p.disconnect()
 
     # Run simulation (sense -> act -> update sim) 
@@ -46,19 +53,17 @@ class Simulation:
             if self.runMode == "GUI":
                 time.sleep(1/10000)
 
-        # PLOT A ROBOT'S JOINTS' VELOCITY VALUES OVER TIME
-        # TODO: move this to a better place
-        # velocity_vals_over_time = self.robots[0].jointAngularVelocities
-        # for i in range(len(velocity_vals_over_time[0])):
-        #     joint_val_over_time = [joint_vals[i] for joint_vals in velocity_vals_over_time]
-        #     plt.plot(range(len(joint_val_over_time)), joint_val_over_time)
-        # plt.show()
+        self.been_run = True
 
-    def Get_Fitness(self, objective):
-        return self.robots[0].Get_Fitness(objective)
+    def Pickle_Sim(self, pickle_file_name="sim.pkl"):
+        with open(pickle_file_name, 'wb') as pf:
+            pickle.dump(self, pf, protocol=pickle.HIGHEST_PROTOCOL)
 
     def Print_Objectives(self):
         self.robots[0].Print_Objectives()
+
+    def Get_Robots(self):
+        return self.robots
 
     def Save_Values(self):
         for sensor in self.robot.sensors:
