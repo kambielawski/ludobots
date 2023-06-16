@@ -6,17 +6,18 @@ from ageFitnessPareto import AgeFitnessPareto
 
 def Get_Experiment_Parameters():
     return {
-        'name': 'displacement',
+        'name': 'boxdisplacement-emp',
         'morphology': 'hexapod',
+        'task_environment': './task_environments/box_world.sdf',
         'generations': 999,
         'target_population_size': 100,
         'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
-        'objectives': ['displacement', 'empowerment', 'boxdisplacement'], 
+        'objectives': ['empowerment'], 
         'empowerment_window_size': 500,
     }
 
 class Experiment:
-    def __init__(self, experiment_directory='', N_runs=30):
+    def __init__(self, experiment_directory='.', N_runs=30):
         print('EXP: experiment directory: ', experiment_directory)
         if experiment_directory: # Continue existing experiment
             self.pickle_file = f'{experiment_directory}/evo_runs.pickle'
@@ -41,12 +42,11 @@ class Experiment:
             info_file.write(str(experiment_parameters) + '\n')
             info_file.close()
 
-            # TODO: Generalize world initialization (make per-treatment)
-            # Finish directory setup
-            if 'boxdisplacement' in experiment_parameters['objectives']:
-                os.system(f'cp ./task_environments/box_world.sdf {self.experiment_directory}/world.sdf')
-            else:
-                os.system(f'cp ./task_environments/world.sdf {self.experiment_directory}')
+            # Finish directory setup with task environment
+            if 'boxdisplacement' in experiment_parameters['objectives'] and experiment_parameters['task_environment'] != './task_environments/box_world.sdf':
+                raise ValueError('Check your experiment setup. Cannot select for box displacement if box_world.sdf is not the task environment.')
+            self.task_env = experiment_parameters['task_environment']
+            os.system(f'cp {self.task_env} {self.experiment_directory}/world.sdf')
             
             # 3. Initialize N_runs AFPO objects and pickle them
             treatment_1 = { i: AgeFitnessPareto(experiment_parameters, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }

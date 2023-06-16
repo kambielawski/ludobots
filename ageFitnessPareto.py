@@ -21,7 +21,8 @@ class AgeFitnessPareto():
             'empowerment_window_size': constants['empowerment_window_size'],
             'motor_measure': constants['motor_measure'],
             'objectives': constants['objectives'],
-            'morphology': constants['morphology']
+            'morphology': constants['morphology'],
+            'task_environment': constants['task_environment']
         }
         self.history = RunHistory(constants, dir=dir)
         self.currentGen = 0
@@ -43,6 +44,14 @@ class AgeFitnessPareto():
                 # self.Save_Best()
                 self.Write_Gen_Statistics()
             # self.Clean_Directory()
+    
+    '''
+    Initialize population randomly at generation 0
+    '''
+    def Initialize_Population(self):
+        for _ in range(self.targetPopSize):
+            rand_id = self.Get_Available_Id()
+            self.population[rand_id] = Solution(rand_id, (0, rand_id), constants=self.robot_constants, dir=self.dir)
 
     '''
     Single generation process
@@ -50,13 +59,10 @@ class AgeFitnessPareto():
     def Evolve_One_Generation(self):
         # 1. Reproduce
         if self.currentGen == 0:
-            # Initialize random population
-            for _ in range(self.targetPopSize):
-                rand_id = self.Get_Available_Id()
-                self.population[rand_id] = Solution(rand_id, (0, rand_id), constants=self.robot_constants, dir=self.dir)
+            self.Initialize_Population()
         else:
             self.Increment_Ages()
-            self.Extend_Population(self.currentGen)
+            self.Extend_Population(self.currentGen) # Create |pop| + 1 new individuals
 
         # 2. Simulate
         self.Run_Solutions()
@@ -110,7 +116,6 @@ class AgeFitnessPareto():
     '''
     def Reduce_Population(self):
         pf_size = len(self.Pareto_Front())
-        print(pf_size)
         if pf_size >= self.targetPopSize:
             self.targetPopSize = pf_size
         # Remove individuals until target population is reached
@@ -226,15 +231,20 @@ class AgeFitnessPareto():
         # Save active pareto front
         os.system(f'cp {self.dir}/brain_' + '{' + ','.join([str(id) for id in pf]) + '}' + f'.nndf {self.dir}/pareto_front/run_{self.run_id}')
 
-    def Save_Best(self, pareto_front_dir='pareto_front', metric='displacement'):
+    def Save_Best(self, save_dir='pareto_front', metric='displacement'):
         pf = self.Pareto_Front()
-        
-        max_id = max([(self.population[id].selection_metrics[metric], id) for id in pf])[1]
+        max_id = max([(self.population[id].selection_metrics[metric], id) for id in pf])[1] # best ID
+        self.population[max_id].Regenerate_Brain_File() # Ensure the brain file exists
 
-        # Save Pareto-front brains
-        # for id in pf:
+        # Create directory if it doesn't already exist
+        if not os.path.exists(f'{self.dir}/{save_dir}'):
+            os.system(f'mkdir {self.dir}/{save_dir}')
+        
+        # Save best robot in whatever given metric
         if os.path.exists(f'{self.dir}/brain_{max_id}.nndf'):
-            os.system(OS_MV + f' {self.dir}/brain_{max_id}.nndf {self.dir}/best_robots/{pareto_front_dir}/pf_brain_{max_id}.nndf')
+            os.system(OS_MV + f' {self.dir}/brain_{max_id}.nndf {self.dir}/{save_dir}/brain_{max_id}.nndf')
+        else:
+            print(f'ERROR: Couldn\'t find path {self.dir}/brain_{max_id}.nndf')
 
     def Save_Best_Simulation(self):
         pass
