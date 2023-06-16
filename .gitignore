@@ -22,3 +22,4 @@ fitness*.txt
 log.txt
 experiments/
 best_robots/
+sa_pairs_save.pkl
