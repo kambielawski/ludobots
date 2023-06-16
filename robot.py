@@ -158,7 +158,7 @@ class Robot:
     def Print_Objectives(self):
         displacement = self.Y_Axis_Displacement()
         empowerment = self.Get_Empowerment()
-        print(self.objectIds)
+        # print(self.objectIds)
         box_displacement = None if self.objectIds == None else self.Get_Box_Displacement()
         first_half_box_displacement =  None if self.objectIds == None else self.firstHalfBoxDisplacement
         second_half_box_displacement =  None if self.objectIds == None else box_displacement - first_half_box_displacement

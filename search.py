@@ -3,11 +3,14 @@ import constants as c
 
 def Get_Constants_AFPO():
     return {
-        'generations': 50,
-        'target_population_size': 50,
-        'motor_measure': 'DESIRED_ANGLE', # 'VELOCITY' or 'DESIRED_ANGLE'
-        'objectives': ['displacement'], # 'tri_fitness'
-        'empowerment_window_size': c.TIMESTEPS // 2,
+        'name': 'boxdisplacement-emp',
+        'morphology': 'hexapod',
+        'task_environment': './task_environments/box_world.sdf',
+        'generations': 100,
+        'target_population_size': 20,
+        'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
+        'objectives': ['empowerment'], 
+        'empowerment_window_size': 500,
     }
 
 # Age-Fitness Pareto Optimization
