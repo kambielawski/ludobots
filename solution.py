@@ -6,6 +6,7 @@ import re
 
 from robots.quadruped import Quadruped
 from robots.hexapod import Hexapod
+from robots.biped import Biped
 import constants as c
 
 class Solution:
@@ -25,6 +26,8 @@ class Solution:
             self.robot = Quadruped(self.id, dir=dir)
         elif self.morphology == 'hexapod':
             self.robot = Hexapod(self.id, dir=dir)
+        elif self.morphology == 'biped':
+            self.robot = Biped(self.id, dir=dir)
             
         self.weights = self.robot.Generate_Weights()
 

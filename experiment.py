@@ -7,12 +7,12 @@ from ageFitnessPareto import AgeFitnessPareto
 def Get_Experiment_Parameters():
     return {
         'name': 'boxdisplacement-emp',
-        'morphology': 'hexapod',
-        'task_environment': './task_environments/box_world.sdf',
-        'generations': 999,
+        'morphology': 'biped',
+        'task_environment': './task_environments/world.sdf',
+        'generations': 200,
         'target_population_size': 100,
         'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
-        'objectives': ['empowerment'], 
+        'objectives': ['displacement'], 
         'empowerment_window_size': 500,
     }
 
