@@ -6,7 +6,6 @@ from ageFitnessPareto import AgeFitnessPareto
 
 class Experiment:
     def __init__(self, experiment_directory='.', exp_file=None, N_runs=30):
-        print('Experiment directory: ', experiment_directory)
         if experiment_directory: # Continue existing experiment
             self.pickle_file = f'{experiment_directory}/evo_runs.pickle'
             self.experiment_directory = experiment_directory
@@ -24,10 +23,9 @@ class Experiment:
             os.system(f'mkdir {self.experiment_directory}/best_robots')
             os.system(f'mkdir {self.experiment_directory}/pareto_front')
             os.system(f'cp robots/body_{morphology}.urdf {self.experiment_directory}')
-            os.system(f'cp {exp_file} {self.experiment_directory}/{self.experiment_directory}.exp')
 
             # 2. Print experiment parameters to file
-            info_file = open(f'{self.experiment_directory}/info.txt', 'w')
+            info_file = open(f'{self.experiment_directory}/exp_params.txt', 'w')
             info_file.write(str(experiment_parameters) + '\n')
             info_file.close()
 
