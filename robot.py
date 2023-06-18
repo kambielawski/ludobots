@@ -18,7 +18,7 @@ class Robot:
         self.urdfFileName = options['body_file']
         self.dir = dir
 
-        self.robotId = p.loadURDF(self.urdfFileName if self.urdfFileName else "robots/body_quadruped.urdf")
+        self.robotId = p.loadURDF(self.urdfFileName)
         self.objectIds = None
         self.motorVals = []
         self.sensorVals = []
