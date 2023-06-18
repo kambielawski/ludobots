@@ -1,10 +1,10 @@
 import pyrosim.pyrosim as pyrosim
-import constants as c
 import numpy as np
 
 class Sensor:
-    def __init__(self, name):
+    def __init__(self, name, timesteps):
         self.name = name
+        self.timesteps = timesteps
         self.Prepare_To_Sense()
 
     def Get_Value(self, i):
@@ -12,4 +12,4 @@ class Sensor:
         return self.values[i]
 
     def Prepare_To_Sense(self):
-        self.values = np.zeros(c.TIMESTEPS)
+        self.values = np.zeros(self.timesteps)

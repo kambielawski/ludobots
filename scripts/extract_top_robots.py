@@ -8,7 +8,6 @@ sys.path.insert(0, parent_dir)
 
 from robot import Robot
 from simulation import Simulation
-import constants as c
 from plotting.run_plotter import RunPlotter
 import numpy as np
 import matplotlib.pyplot as plt

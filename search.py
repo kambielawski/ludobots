@@ -1,5 +1,4 @@
 from ageFitnessPareto import AgeFitnessPareto
-import constants as c
 
 def Get_Constants_AFPO():
     return {

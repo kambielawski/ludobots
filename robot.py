@@ -6,7 +6,8 @@ import pyinform
 from sensor import Sensor
 from motor import Motor
 
-import constants as c
+TIMESTEPS = 1000
+MOTOR_JOINT_RANGE = 0.5
 
 class Robot:
     def __init__(self, solutionId, options, dir='.'):
@@ -25,7 +26,6 @@ class Robot:
         self.boxStartPos = None
 
         # Empowerment computation setup
-        self.motorValBins = np.array([(i / c.NUM_MOTOR_VAL_BUCKETS) - c.MOTOR_JOINT_RANGE for i in range(c.NUM_MOTOR_NEURONS)])
         self.empowerment = 0
         self.empowermentTimesteps = 0
         self.empowerment_values = []
@@ -48,7 +48,7 @@ class Robot:
     def Prepare_To_Sense(self):
         self.sensors = dict()
         for linkName in pyrosim.linkNamesToIndices:
-            if linkName != 'Torso': self.sensors[linkName] = Sensor(linkName)
+            if linkName != 'Torso': self.sensors[linkName] = Sensor(linkName, TIMESTEPS)
 
     # Create Motor object for each joint 
     def Prepare_To_Act(self):
@@ -61,7 +61,7 @@ class Robot:
         if timestep == 0 and self.objectIds:
             self.boxStartPos = p.getBasePositionAndOrientation(self.objectIds[0])[0]
         # If tri-fitness, record fitness at simulation half
-        if timestep == c.TIMESTEPS // 2:
+        if timestep == TIMESTEPS // 2:
             self.firstHalfFitness = self.Y_Axis_Displacement()
             self.firstHalfBoxDisplacement = None if self.objectIds == None else self.Get_Box_Displacement()
         
@@ -94,7 +94,7 @@ class Robot:
                 if self.nn.Is_Motor_Neuron(neuronName):
                     jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
                     # Neuron value will return a float in [-1,1] (tanh activation)
-                    desiredAngle = self.nn.Get_Value_Of(neuronName) * c.MOTOR_JOINT_RANGE
+                    desiredAngle = self.nn.Get_Value_Of(neuronName) * MOTOR_JOINT_RANGE
                     actionVector.append(1 if desiredAngle > 0 else 0)
                     self.motors[jointName].Set_Value(self, desiredAngle)
             self.motorVals.append(tuple(actionVector))
@@ -107,7 +107,7 @@ class Robot:
                 if self.nn.Is_Motor_Neuron(neuronName):
                     jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
                     # Neuron value will return a float in [-1,1] (tanh activation)
-                    desiredAngle = self.nn.Get_Value_Of(neuronName) * c.MOTOR_JOINT_RANGE
+                    desiredAngle = self.nn.Get_Value_Of(neuronName) * MOTOR_JOINT_RANGE
                     self.motors[jointName].Set_Value(self, desiredAngle)
 
             # Get actual motor angular velocities
@@ -135,8 +135,8 @@ class Robot:
         return np.linalg.norm([self.boxStartPos[i] - currentPos[i] for i in range(len(currentPos))])
 
     def Simulation_Empowerment(self):
-        self.actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(c.TIMESTEPS //2)]]
-        self.sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(c.TIMESTEPS // 2):]]
+        self.actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[:(TIMESTEPS //2)]]
+        self.sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[(TIMESTEPS // 2):]]
         mi = pyinform.mutual_info(self.actionz, self.sensorz, local=False)
         return mi
 

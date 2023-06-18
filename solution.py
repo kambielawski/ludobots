@@ -7,7 +7,6 @@ import re
 from robots.quadruped import Quadruped
 from robots.hexapod import Hexapod
 from robots.biped import Biped
-import constants as c
 
 class Solution:
     def __init__(self, solutionId, lineage, constants, dir='.'):
@@ -17,7 +16,7 @@ class Solution:
         self.been_simulated = False
         self.lineage = lineage
         self.objectives = constants['objectives']
-        self.empowerment_window_size = constants['empowerment_window_size'] or c.TIMESTEPS // 2
+        self.empowerment_window_size = constants['empowerment_window_size']
         self.motor_measure = constants['motor_measure']
         self.morphology = constants['morphology']
 
@@ -36,7 +35,7 @@ class Solution:
     def Run_Simulation(self, runMode="DIRECT"):
         self.runMode=runMode
         self.Create_World()
-        self.robot.Generate_Robot(self.weights, 0,0,1)
+        self.robot.Generate_Robot(self.weights, 0,0,1) # TODO: generalize the starting position for robots
 
         sp = subprocess.Popen(['python3', 'simulate.py', 
                                 runMode, 

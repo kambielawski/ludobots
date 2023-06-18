@@ -4,8 +4,7 @@ import pybullet_data
 import numpy as np
 import time 
 
-import constants as c
-
+GRAVITY_FORCE = -9.8 # m/s^2
 
 '''
 Simulation:
@@ -13,9 +12,10 @@ Simulation:
 - 
 '''
 class Simulation:
-    def __init__(self, runMode, solutionId, objectsFile='', dir='.'):
+    def __init__(self, runMode, solutionId, timesteps, objectsFile='', dir='.'):
         self.runMode = runMode
         self.solutionId = solutionId
+        self.timesteps = timesteps
         self.dir = dir
         self.been_run = False
         if runMode == "GUI":
@@ -23,7 +23,7 @@ class Simulation:
         if runMode == "DIRECT":
             self.physicsClient = p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        p.setGravity(0,0,c.GRAVITY_FORCE)
+        p.setGravity(0,0,GRAVITY_FORCE)
         # Load infinite plane
         self.planeId = p.loadURDF("plane.urdf")
         # Load objects if there are any
@@ -38,11 +38,11 @@ class Simulation:
     # Run simulation (sense -> act -> update sim) 
     def Run(self, robots):
         self.robots = robots
-        for i in range(c.TIMESTEPS):
+        for i in range(self.timesteps):
             p.stepSimulation()
             for robot in self.robots:
                 # Just going to let the robots know about all the objects in the world 
-                # This "global" information should only be used for computing fitness (robot should not use global info)
+                # This "global" information should only be used for computing fitness (robot should not use global info for action)
                 if self.objectIds:
                     robot.Set_Object_Ids(self.objectIds)
                 

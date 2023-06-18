@@ -2,7 +2,7 @@ import numpy as np
 import pybullet as p
 import pyrosim.pyrosim as pyrosim
 
-import constants as c
+MAX_FORCE=50 # Newton*meters
 
 class Motor:
     def __init__(self, jointName):
@@ -16,5 +16,5 @@ class Motor:
             jointName=self.jointName,
             controlMode=p.POSITION_CONTROL,
             targetPosition=desiredAngle,
-            maxForce=c.MAX_FORCE
+            maxForce=MAX_FORCE
         )
