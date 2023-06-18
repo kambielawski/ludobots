@@ -4,27 +4,15 @@ import os
 
 from ageFitnessPareto import AgeFitnessPareto
 
-def Get_Experiment_Parameters():
-    return {
-        'name': 'boxdisplacement-emp',
-        'morphology': 'biped',
-        'task_environment': './task_environments/world.sdf',
-        'generations': 200,
-        'target_population_size': 100,
-        'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
-        'objectives': ['displacement'], 
-        'empowerment_window_size': 500,
-    }
-
 class Experiment:
-    def __init__(self, experiment_directory='.', N_runs=30):
-        print('EXP: experiment directory: ', experiment_directory)
+    def __init__(self, experiment_directory='.', exp_file=None, N_runs=30):
+        print('Experiment directory: ', experiment_directory)
         if experiment_directory: # Continue existing experiment
             self.pickle_file = f'{experiment_directory}/evo_runs.pickle'
             self.experiment_directory = experiment_directory
         else: # Initialize a new experiment
             # 1. Create a new experiment directory
-            experiment_parameters = Get_Experiment_Parameters()
+            experiment_parameters = self.Get_Experiment_Parameters(exp_file)
 
             timestr = time.strftime('%b%d_%I_%M')
             motor_str = 'mA' if experiment_parameters['motor_measure'] == 'VELOCITY' else 'mD'
@@ -36,6 +24,7 @@ class Experiment:
             os.system(f'mkdir {self.experiment_directory}/best_robots')
             os.system(f'mkdir {self.experiment_directory}/pareto_front')
             os.system(f'cp robots/body_{morphology}.urdf {self.experiment_directory}')
+            os.system(f'cp {exp_file} {self.experiment_directory}/{self.experiment_directory}.exp')
 
             # 2. Print experiment parameters to file
             info_file = open(f'{self.experiment_directory}/info.txt', 'w')
@@ -81,6 +70,13 @@ class Experiment:
         t_end = time.time()
         self.one_gen_time = t_end - t_start
         self.Print_GenTime_To_File()
+
+    def Get_Experiment_Parameters(self, experiment_file):
+        expfile = open(experiment_file)
+        exp_string = expfile.read()
+        exp_params = eval(exp_string)
+        expfile.close()
+        return exp_params
 
     def Print_GenTime_To_File(self):
         f = open('gen_timing.txt', 'a')
