@@ -12,19 +12,19 @@ OS_MV = 'move' if platform == 'win32' else 'mv'
 OS_RM = 'del' if platform == 'win32' else 'rm'
 
 class AgeFitnessPareto():
-    def __init__(self, constants, run_id=1, dir='.'):
+    def __init__(self, exp_constants, run_id=1, dir='.'):
         self.population = dict()
-        self.nGenerations = constants['generations']
-        self.targetPopSize = constants['target_population_size']
-        self.morphology = constants['morphology']
+        self.nGenerations = exp_constants['generations']
+        self.targetPopSize = exp_constants['target_population_size']
+        self.morphology = exp_constants['morphology']
         self.robot_constants = {
-            'empowerment_window_size': constants['empowerment_window_size'],
-            'motor_measure': constants['motor_measure'],
-            'objectives': constants['objectives'],
-            'morphology': constants['morphology'],
-            'task_environment': constants['task_environment']
+            'empowerment_window_size': exp_constants['empowerment_window_size'],
+            'motor_measure': exp_constants['motor_measure'],
+            'objectives': exp_constants['objectives'],
+            'morphology': exp_constants['morphology'],
+            'task_environment': exp_constants['task_environment']
         }
-        self.history = RunHistory(constants, dir=dir)
+        self.history = RunHistory(exp_constants, dir=dir)
         self.currentGen = 0
         self.dir = dir
         self.run_id = run_id
@@ -133,6 +133,9 @@ class AgeFitnessPareto():
         for solnId in self.population:
             self.population[solnId].Increment_Age()
 
+    '''
+    Parallel execution for each individual's physics simulation
+    '''
     def Run_Solutions(self):
         def Run_One_Solution_Async(solnId):
             return self.population[solnId].Run_Simulation()
