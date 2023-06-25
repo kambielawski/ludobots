@@ -2,11 +2,11 @@ from ageFitnessPareto import AgeFitnessPareto
 
 def Get_Constants_AFPO():
     return {
-        'name': 'boxdisplacement-emp',
-        'morphology': 'biped',
+        'name': 'displacement',
+        'morphology': 'snake4',
         'task_environment': './task_environments/world.sdf',
-        'generations': 100,
-        'target_population_size': 30,
+        'generations': 30,
+        'target_population_size': 24,
         'motor_measure': 'VELOCITY', # 'VELOCITY' or 'DESIRED_ANGLE'
         'objectives': ['displacement'], 
         'empowerment_window_size': 500,
