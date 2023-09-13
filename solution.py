@@ -8,6 +8,7 @@ from robots.quadruped import Quadruped
 from robots.hexapod import Hexapod
 from robots.biped import Biped
 from robots.snake4 import Snake4
+from robots.octoped import Octoped
 
 class Solution:
     def __init__(self, solutionId, lineage, constants, dir='.'):
@@ -20,6 +21,7 @@ class Solution:
         self.empowerment_window_size = constants['empowerment_window_size']
         self.motor_measure = constants['motor_measure']
         self.morphology = constants['morphology']
+        self.selection_metrics = None
 
         # TODO: generalize robot morphology selection
         if self.morphology == 'quadruped':
@@ -30,6 +32,8 @@ class Solution:
             self.robot = Biped(self.id, dir=dir)
         elif self.morphology == 'snake4':
             self.robot = Snake4(self.id, dir=dir)
+        elif self.morphology == 'octoped':
+            self.robot = Octoped(self.id, dir=dir)
             
         self.weights = self.robot.Generate_Weights()
 
