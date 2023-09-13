@@ -12,7 +12,6 @@ data/
 *.swp
 *.swo
 *.urdf
-*.sdf
 *.nndf
 *.pyc
 .DS_STORE
