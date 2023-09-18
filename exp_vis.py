@@ -14,7 +14,7 @@ COLORS = ['red', 'blue', 'yellow', 'green', 'orange', 'purple']
 class DataManager():
     def __init__(self, experiment_rootdir='./experiments'):
         self.experiment_rootdir = experiment_rootdir
-        self.experiment_directories = [d for d in os.listdir(experiment_rootdir) if os.path.isdir(f'{experiment_rootdir}/{d}')]
+        self.experiment_directories = sorted([d for d in os.listdir(experiment_rootdir) if os.path.isdir(f'{experiment_rootdir}/{d}')])
 
     def Get_Experiment_Directories(self):
         return self.experiment_directories
@@ -174,18 +174,17 @@ class MainWindow(QMainWindow):
         ax1 = self.figure1.add_subplot(111)
         # Plot each line from each loaded data
         for i, evo_runs in enumerate(loaded_data):
-            exp_label = list(loaded_data[i].keys())[0]
-            t1_avg_best, t1_conf_int = self.dataManager.getMetric95CI(evo_runs[exp_label], metric)
+            exp_key = list(loaded_data[i].keys())[0]
+            plot_label = '-'.join(self.dataManager.Get_Experiment_Constants(experiment_dirs[i])['objectives'])
+            t1_avg_best, t1_conf_int = self.dataManager.getMetric95CI(evo_runs[exp_key], metric)
             # Plotting
-            ax1.plot(range(len(t1_avg_best)), t1_avg_best, label=exp_label, color=COLORS[i])
+            ax1.plot(range(len(t1_avg_best)), t1_avg_best, label=plot_label, color=COLORS[i])
             ax1.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color=COLORS[i], alpha=0.3)
         
         if len(experiment_dirs): # Create title (body, task environment)
             consts = self.dataManager.Get_Experiment_Constants(experiment_dirs[0])
             body = consts['morphology']
-            task_environment = consts['task_environment']
-            # selections = '-'.join(consts['objectives'])
-            title = f'{body}_{task_environment}'
+            title = f'{body}' # _{task_environment}'
         else:
             title = metric
 
