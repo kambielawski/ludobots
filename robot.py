@@ -155,6 +155,9 @@ class Robot:
     def Get_Empowerment(self):
         return np.mean(self.empowerment_values)
 
+    def Print_NN(self):
+        print([(s, self.nn.synapses[s].weight) for s in self.nn.synapses])
+
     def Print_Objectives(self):
         displacement = self.Y_Axis_Displacement()
         empowerment = self.Get_Empowerment()
