@@ -30,5 +30,4 @@ SAVE_DIRECTORY = f'top_{args.metric}_{current_gen}'
 # Save the best of the bunch
 for i, run in enumerate(evo_runs):
     print(f'=============\nrun {i}\n===============')
-    evo_runs[run].Evolve_One_Generation() # AFPO object
     evo_runs[run].Save_Best(save_dir=SAVE_DIRECTORY, metric=args.metric)
