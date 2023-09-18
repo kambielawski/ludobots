@@ -44,7 +44,7 @@ class Solution:
         self.Create_World()
         self.robot.Generate_Robot(self.weights, 0,0,1) # TODO: generalize the starting position for robots
 
-        sp = subprocess.Popen(['python3', 'simulate.py', 
+        subprocess_run_string = ['python3', 'simulate.py', 
                                 runMode, 
                                 str(self.id), 
                                 f'{self.dir}/brain_{self.id}.nndf', 
@@ -52,8 +52,10 @@ class Solution:
                                 '--directory', self.dir,
                                 '--objects_file', self.worldFile,
                                 '--motor_measure', self.motor_measure,
-                                '--empowerment_window_size', str(self.empowerment_window_size)],
-                                stdout=subprocess.PIPE)
+                                '--empowerment_window_size', 
+                                str(self.empowerment_window_size)]
+
+        sp = subprocess.Popen(subprocess_run_string, stdout=subprocess.PIPE)
 
         # Parse standard output from subprocess
         stdout, stderr = sp.communicate()
