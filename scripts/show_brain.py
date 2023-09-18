@@ -2,7 +2,7 @@ import sys
 import os
 
 if len(sys.argv) < 3:
-    print("Usage: python show_brain.py <brain.nndf file> <body.urdf file>\n")
+    print("Usage: python show_brain.py <brain.nndf file> <body.urdf file> <world file>\n")
     exit(1)
 
 
