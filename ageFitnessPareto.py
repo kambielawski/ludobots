@@ -245,7 +245,7 @@ class AgeFitnessPareto():
         
         # Save best robot in whatever given metric
         if os.path.exists(f'{self.dir}/brain_{max_id}.nndf'):
-            os.system(OS_MV + f' {self.dir}/brain_{max_id}.nndf {self.dir}/{save_dir}/brain_{max_id}.nndf')
+            os.system('cp ' + f'{self.dir}/brain_{max_id}.nndf {self.dir}/{save_dir}/brain_{max_id}.nndf')
         else:
             print(f'ERROR: Couldn\'t find path {self.dir}/brain_{max_id}.nndf')
 
