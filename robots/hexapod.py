@@ -101,11 +101,12 @@ class Hexapod:
 
         pyrosim.End()
         
-    def Generate_NN(self):
+    def Generate_NN(self, dir=None):
     	# .nndf files are just used in Pyrosim
         # "Neural Network Description File"
         # pyrosim.Start_NeuralNetwork("brain_" + str(self.id) + ".nndf")
-        pyrosim.Start_NeuralNetwork(f'{self.dir}/brain_' + str(self.solnId) + ".nndf")
+        brain_dir = dir if dir else self.dir
+        pyrosim.Start_NeuralNetwork(f'{brain_dir}/brain_' + str(self.solnId) + ".nndf")
 
         pyrosim.Send_Sensor_Neuron(name=0, linkName="LeftMid")
         pyrosim.Send_Sensor_Neuron(name=1, linkName="RightMid")

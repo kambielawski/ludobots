@@ -108,8 +108,8 @@ class Solution:
         # First objective listed in self.objectives will be the "primary objective"
         return self.selection_metrics[self.objectives[0]]
 
-    def Regenerate_Brain_File(self):
-        self.robot.Generate_NN()
+    def Regenerate_Brain_File(self, dir=None):
+        self.robot.Generate_NN(dir)
 
     def Get_Fitness(self):
         return self.selection_metrics['displacement']
