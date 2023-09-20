@@ -249,6 +249,11 @@ class AgeFitnessPareto():
         else:
             print(f'ERROR: Couldn\'t find path {self.dir}/brain_{max_id}.nndf')
 
+    def Get_Best_Id(self, metric='displacement'):
+        pf = self.Pareto_Front()
+        max_id = max([(self.population[id].selection_metrics[metric], id) for id in pf])[1] # best ID
+        return (self.population[max_id].selection_metrics[metric], max_id)
+
     def Save_Best_Simulation(self):
         pass
 
