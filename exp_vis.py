@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import subprocess
+from collections import Counter
 import pickle
 from PyQt5.QtWidgets import QMainWindow, QApplication, QSplitter, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget, QTabWidget, QComboBox, QToolBar, QPushButton, QAction
 from PyQt5.QtCore import Qt
@@ -11,7 +12,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 
-COLORS = ['red', 'blue', 'yellow', 'green', 'orange', 'purple']
+COLORS = ['red', 'blue', 'green', 'orange', 'yellow', 'purple']
+
+def Simulate_Brain(brain_file, 
+                   body_file='./robots/body_quadruped.urdf', 
+                   world_file='./task_environments/world.sdf'):
+    # Simulate and store simulations
+    print(f'Simulating brain from file {brain_file}')
+    os.system(f'python3 simulate.py DIRECT 0 {brain_file} {body_file} --objects_file {world_file} --pickle_sim True')
+    with open('transient.pkl', 'rb') as pf:
+        sim = pickle.load(pf)
+
+    # Create sensor/action pairs and rank sizes
+    robot = sim.robots[0]
+    return robot.actionz, robot.sensorz
 
 class DataManager():
     def __init__(self, experiment_rootdir='./experiments'):
@@ -79,6 +93,22 @@ class DataManager():
         
         return brain_file, body_file, world_file
 
+    def get_top_robots_all_runs(self, dir, metric):
+        print(f'\n\n{dir}\n\n')
+        evo_runs = self.get_evo_runs(dir)
+        evo_runs = evo_runs[list(evo_runs.keys())[0]] 
+        top_robots = [(evo_runs[exp_id].Get_Best_Id(metric), exp_id) for exp_id, afpo in enumerate(evo_runs)]
+        for (_, max_id), exp_id in top_robots: # Ensure the brain file exists
+            evo_runs[exp_id].population[max_id].Regenerate_Brain_File()
+
+        top_robots = [(f'./experiments/{dir}/brain_{max_soln_id}.nndf', 
+                        evo_runs[max_exp_id].robot_constants['morphology'], 
+                        './task_environments/box_world.sdf')
+                        # evo_runs[max_exp_id].robot_constants['task_environment']) 
+                        for ((_, max_soln_id), max_exp_id) in top_robots]
+
+        return top_robots
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -87,13 +117,22 @@ class MainWindow(QMainWindow):
         self.data_manager = DataManager()
 
         # Toolbar
-        self.save_plot_action = QAction('Save Plot', self)
-        self.show_top_brain_action = QAction('Show Top Brain', self)
+        self.save_plot_action = QAction('Save Plot', self)                      # Save plot button
+        self.show_top_brain_action = QAction('Show Top Brain', self)            # Show top brain button
+        self.show_brains_pairplot_action = QAction('SA Pair Plot', self)     # SA pair plot
+        self.show_action_plot_action = QAction('Action Distribution', self)     # Action distribution plot
+        self.show_sensor_plot_action = QAction('Sensor Distribution', self)     # Sensor distribution plot
         self.toolbar = self.addToolBar('Toolbar')
         self.toolbar.addAction(self.save_plot_action)
         self.toolbar.addAction(self.show_top_brain_action)
+        self.toolbar.addAction(self.show_brains_pairplot_action)
+        self.toolbar.addAction(self.show_action_plot_action)
+        self.toolbar.addAction(self.show_sensor_plot_action)
         self.save_plot_action.triggered.connect(self.save_plot_button_onpress)
         self.show_top_brain_action.triggered.connect(self.show_brain_button_onpress)
+        self.show_brains_pairplot_action.triggered.connect(self.show_brains_pairplot_onpress)
+        self.show_action_plot_action.triggered.connect(self.show_action_plot_onpress)
+        self.show_sensor_plot_action.triggered.connect(self.show_sensor_plot_onpress)
 
         # Tabs
         self.figure1 = Figure()
@@ -135,6 +174,20 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.rhsWidget)
 
         self.Plot()
+
+    def get_checked_items(self, tree_widget):
+        checked_items = []
+        
+        # Iterate through all top-level items
+        top_level_item_count = tree_widget.topLevelItemCount()
+        for i in range(top_level_item_count):
+            item = tree_widget.topLevelItem(i)
+            
+            # Check the state of the item
+            if item.checkState(0) == Qt.Checked:
+                checked_items.append(item.text(0))
+                
+        return checked_items
 
     def Init_Experiment_Checklist(self):
         for exp_dir_str in self.data_manager.Get_Experiment_Directories():
@@ -241,8 +294,7 @@ class MainWindow(QMainWindow):
 
         # Spawn subprocess to show the brain
         print(current_dir, metric)
-        subprocess_run_string = ['python3', 'simulate.py', 'GUI', 
-                                '0', 
+        subprocess_run_string = ['python3', 'simulate.py', 'GUI', '0', 
                                 brain_file, 
                                 body_file,
                                 '--objects_file', world_file,
@@ -258,9 +310,127 @@ class MainWindow(QMainWindow):
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
         print(fitness_metrics)
 
+    def show_brains_pairplot_onpress(self):
+        self.figure1.clear() # Clear the previous plot
+        ax1 = self.figure1.add_subplot(111)
+
+        # Get the currently selected experiment
+        checked_dirs = self.get_checked_items(self.tree)
+        metric = self.metricDropdownWidget.currentText()
+
+        # Get the top robot files from all runs
+        robot_files = {}
+        for dir in checked_dirs:
+            robots = self.data_manager.get_top_robots_all_runs(dir, metric)
+            robot_files[dir] = robots
+        
+        # Aggregate results from each run
+        for i, dir in enumerate(robot_files):
+            for j, (brain_file, body, world_file) in enumerate(robot_files[dir][:10]):
+                # 1000 sensors
+                # Stored in a temporary directory... 
+                body_file = f'./robots/body_{body}.urdf'
+                print(f'=============\n{brain_file}, {body_file}, {world_file}\n===========\n')
+                actions, sensors = Simulate_Brain(brain_file, body_file, world_file)
+                sa_pairs = [(a,s) for a in actions for s in sensors]
+                pair_counts = Counter(sa_pairs)
+                size = sorted(pair_counts.values(), reverse=True)
+                rank = range(1,len(size)+1)
+                if j == 0:
+                    label = brain_file.split('_')[4]
+                    ax1.scatter(np.log10(rank), np.log10(size), color=COLORS[i], alpha=0.1, label=label)
+                else:
+                    ax1.scatter(np.log10(rank), np.log10(size), color=COLORS[i], alpha=0.1)
+        
+        ax1.set_title('')
+        ax1.set_xlabel(f'Log(rank)')
+        ax1.set_ylabel(f'Log(size)')
+        ax1.legend()
+        self.canvas1.draw()
+
+    '''
+    Show N robots' action plots
+    '''
+    def show_action_plot_onpress(self):
+        self.figure1.clear() # Clear the previous plot
+        ax1 = self.figure1.add_subplot(111)
+
+        # Get the currently selected experiment
+        checked_dirs = self.get_checked_items(self.tree)
+        metric = self.metricDropdownWidget.currentText()
+
+        # Get the top robot files from all runs
+        robot_files = {}
+        for dir in checked_dirs:
+            robots = self.data_manager.get_top_robots_all_runs(dir, metric)
+            robot_files[dir] = robots
+        
+        # Aggregate results from each run
+        for i, dir in enumerate(robot_files):
+            for j, (brain_file, body, world_file) in enumerate(robot_files[dir][:10]):
+                # 1000 actions
+                # Stored in a temporary directory... 
+                body_file = f'./robots/body_{body}.urdf'
+                print(f'=============\n{brain_file}, {body_file}, {world_file}\n===========\n')
+                actions, _ = Simulate_Brain(brain_file, body_file, world_file)
+                action_counts = Counter(actions)
+                size = sorted(action_counts.values(), reverse=True)
+                rank = range(1,len(size)+1)
+                if j == 0:
+                    label = brain_file.split('_')[4]
+                    ax1.scatter(np.log10(rank), np.log10(size), color=COLORS[i], alpha=0.2, label=label)
+                else:
+                    ax1.scatter(np.log10(rank), np.log10(size), color=COLORS[i], alpha=0.2)
+        
+        ax1.set_title('Actions')
+        ax1.set_xlabel(f'Log(Rank)')
+        ax1.set_ylabel(f'Log(Size)')
+        ax1.legend()
+        self.canvas1.draw()
+        
+    '''
+    Show N robots' sensor plots
+    '''
+    def show_sensor_plot_onpress(self):
+        self.figure1.clear() # Clear the previous plot
+        ax1 = self.figure1.add_subplot(111)
+
+        # Get the currently selected experiment
+        checked_dirs = self.get_checked_items(self.tree)
+        metric = self.metricDropdownWidget.currentText()
+
+        # Get the top robot files from all runs
+        robot_files = {}
+        for dir in checked_dirs:
+            robots = self.data_manager.get_top_robots_all_runs(dir, metric)
+            robot_files[dir] = robots
+        
+        # Aggregate results from each run
+        for i, dir in enumerate(robot_files):
+            for j, (brain_file, body, world_file) in enumerate(robot_files[dir][:10]):
+                # 1000 actions
+                # Stored in a temporary directory... 
+                body_file = f'./robots/body_{body}.urdf'
+                print(f'=============\n{brain_file}, {body_file}, {world_file}\n===========\n')
+                _, sensors = Simulate_Brain(brain_file, body_file, world_file)
+                sensor_counts = Counter(sensors)
+                size = sorted(sensor_counts.values(), reverse=True)
+                rank = range(1,len(size)+1)
+                if j == 0:
+                    label = brain_file.split('_')[4]
+                    ax1.scatter(np.log10(rank), np.log10(size), color=COLORS[i], alpha=0.2, label=label)
+                else:
+                    ax1.scatter(np.log10(rank), np.log10(size), color=COLORS[i], alpha=0.2)
+        
+        ax1.set_title('Sensors')
+        ax1.set_xlabel(f'Log(Rank)')
+        ax1.set_ylabel(f'Log(Size)')
+        ax1.legend()
+        self.canvas1.draw()
+
+
     def on_experiment_selection_update(self, new_id):
         pass
-        # print(new_id)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
