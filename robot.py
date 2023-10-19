@@ -2,6 +2,8 @@ import pyrosim.pyrosim as pyrosim
 from pyrosim.neuralNetwork import NEURAL_NETWORK
 import pybullet as p
 import numpy as np
+import random
+import math
 import pyinform
 from sensor import Sensor
 from motor import Motor
@@ -84,6 +86,21 @@ class Robot:
             self.empowerment += e
             self.empowermentTimesteps += 1
             self.empowerment_values.append(e)
+
+    def generate_random_force_vector(self, magnitude):
+        theta = random.uniform(0, 2 * math.pi)  # azimuthal angle in [0, 2*pi]
+        phi = random.uniform(0, math.pi)  # polar angle in [0, pi]
+
+        fx = magnitude * math.sin(phi) * math.cos(theta)
+        fy = magnitude * math.sin(phi) * math.sin(theta)
+        fz = magnitude * math.cos(phi)
+
+        return [fx, fy, fz]
+
+    def apply_random_force_vector(self, force_magnitude):
+        force_vector = self.generate_random_force_vector(force_magnitude)
+        robot_position = p.getBasePositionAndOrientation(self.robotId)[0]
+        p.applyExternalForce(objectUniqueId=self.robotId, linkIndex=-1, forceObj=force_vector, posObj=robot_position, flags=p.WORLD_FRAME)
 
     def Compute_Action_Vector(self):
         # Two action schemes: "desiredAngle" and "velocity"

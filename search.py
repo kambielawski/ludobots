@@ -5,11 +5,12 @@ def Get_Constants_AFPO():
         'name': 'displacement',
         'morphology': 'octoped',
         'task_environment': './task_environments/world.sdf',
-        'generations': 500,
-        'target_population_size': 50,
+        'generations': 50,
+        'target_population_size': 20,
         'motor_measure': 'DESIRED_ANGLE', # 'VELOCITY' or 'DESIRED_ANGLE'
         'objectives': ['displacement', 'empowerment'], 
         'empowerment_window_size': 500,
+        'wind': 0
     }
 
 # Age-Fitness Pareto Optimization

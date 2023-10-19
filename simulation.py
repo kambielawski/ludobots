@@ -3,6 +3,7 @@ import pybullet as p
 import pybullet_data
 import numpy as np
 import time 
+import random
 
 GRAVITY_FORCE = -9.8 # m/s^2
 
@@ -12,12 +13,14 @@ Simulation:
 - 
 '''
 class Simulation:
-    def __init__(self, runMode, solutionId, timesteps, objectsFile='', dir='.'):
+    def __init__(self, runMode, solutionId, timesteps, wind=0, objectsFile='', dir='.'):
         self.runMode = runMode
         self.solutionId = solutionId
         self.timesteps = timesteps
         self.dir = dir
         self.been_run = False
+        self.wind = wind
+        self.wind_timesteps = random.sample(range(self.timesteps), self.wind)
         if runMode == "GUI":
             self.physicsClient = p.connect(p.GUI)
         if runMode == "DIRECT":
@@ -38,6 +41,7 @@ class Simulation:
     # Run simulation (sense -> act -> update sim) 
     def Run(self, robots):
         self.robots = robots
+        p.setRealTimeSimulation(0)
         for i in range(self.timesteps):
             p.stepSimulation()
             for robot in self.robots:
@@ -50,6 +54,11 @@ class Simulation:
                 robot.Sense(i)
                 robot.Think()
                 robot.Act(i)
+
+                # Apply wind
+                if self.wind > 0 and i in self.wind_timesteps:
+                    robot.apply_random_force_vector(5000)
+
             if self.runMode == "GUI":
                 time.sleep(1/10000)
 
