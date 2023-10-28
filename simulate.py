@@ -18,6 +18,8 @@ parser.add_argument("--pickle_sim", default=False, help="Pickle the simulation (
 parser.add_argument("--motor_measure", default='DESIRED_ANGLE', help="Motor measurement for empowerment calc. 'VELOCITY' or 'DESIRED_ANGLE'", 
                     type=str,  choices=['VELOCITY', 'DESIRED_ANGLE'])
 parser.add_argument("--wind", default=0, type=int, help="Degree of 'windiness', i.e. number of random force vectors to apply during simulation")
+parser.add_argument("--save_sa_data", type=str, default="", help="Save sensor and action values over course of simulation")
+parser.add_argument("--save_position_data", type=str, default="", help="Save position values over course of simulation")
 
 args = parser.parse_args()
 
@@ -39,3 +41,9 @@ simulation.Print_Objectives()
 
 if args.pickle_sim:
     simulation.Pickle_Sim("transient.pkl")
+
+if args.save_sa_data != "":
+    simulation.save_sa_values(f'{args.save_sa_data}')
+
+if args.save_position_data != "":
+    simulation.save_position_values(f'{args.save_position_data}')

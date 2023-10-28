@@ -21,6 +21,7 @@ class Simulation:
         self.been_run = False
         self.wind = wind
         self.wind_timesteps = random.sample(range(self.timesteps), self.wind)
+        self.body_positions = []
         if runMode == "GUI":
             self.physicsClient = p.connect(p.GUI)
         if runMode == "DIRECT":
@@ -41,6 +42,7 @@ class Simulation:
     # Run simulation (sense -> act -> update sim) 
     def Run(self, robots):
         self.robots = robots
+        self.morphology = self.robots[0].morphology
         p.setRealTimeSimulation(0)
         for i in range(self.timesteps):
             p.stepSimulation()
@@ -73,6 +75,24 @@ class Simulation:
 
     def Get_Robots(self):
         return self.robots
+
+    def save_sa_values(self, dir):
+        all_robot_sa_values = []
+        for robot in self.robots:
+            sa_values = {'sensor_states': robot.sensorVals, 'motor_states': robot.motorVals}
+            all_robot_sa_values.append(sa_values)
+
+        with open(f'{dir}/{robot.morphology}_{robot.solutionId}_sa.pkl', 'wb') as pf:
+            pickle.dump(all_robot_sa_values, pf)
+
+    def save_position_values(self, dir):
+        all_position_values = []
+        for robot in self.robots: 
+            all_position_values.append(robot.get_position_values())
+
+        with open(f'{dir}/{robot.morphology}_{robot.solutionId}_positions.pkl', 'wb') as pf:
+            pickle.dump(all_position_values, pf)
+            
 
     def Save_Values(self):
         for sensor in self.robot.sensors:
