@@ -6,6 +6,8 @@ plotting/saved_plots
 pyrosim
 pyrosim/
 pyrosim/__pycache__/*
+notebooks
+notebooks/*
 plots/
 ./data/*
 data/
