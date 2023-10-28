@@ -9,6 +9,7 @@ from robots.hexapod import Hexapod
 from robots.biped import Biped
 from robots.snake4 import Snake4
 from robots.octoped import Octoped
+from robots.quadruped2x import Quadruped2X
 
 class Solution:
     def __init__(self, solutionId, lineage, constants, dir='.'):
@@ -35,6 +36,8 @@ class Solution:
             self.robot = Snake4(self.id, dir=dir)
         elif self.morphology == 'octoped':
             self.robot = Octoped(self.id, dir=dir)
+        elif self.morphology == 'quadruped2x':
+            self.robot = Quadruped2X(self.id, dir=dir)
             
         self.weights = self.robot.Generate_Weights()
 
