@@ -86,6 +86,12 @@ class DataManager():
         evo_runs[max_exp_id].population[max_solution_id].Regenerate_Brain_File(dir='.')
         brain_file = f'./brain_{max_solution_id}.nndf'
 
+        if 'task_environment' not in evo_runs[max_exp_id].robot_constants:
+            if 'boxdisplacement' in dir:
+                evo_runs[max_exp_id].robot_constants['task_environment'] = './task_environments/box_world.sdf'
+            else:
+                evo_runs[max_exp_id].robot_constants['task_environment'] = './task_environments/world.sdf'
+
         morphology = evo_runs[max_exp_id].robot_constants['morphology']
         body_file = f'./robots/body_{morphology}.urdf'
 
