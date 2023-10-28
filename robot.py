@@ -18,12 +18,14 @@ class Robot:
         self.motorScheme = options['motor_measure']
         self.nndfFileName = options['brain_file']
         self.urdfFileName = options['body_file']
+        self.morphology = self.urdfFileName.split('.')[2].split('_')[1]
         self.dir = dir
 
         self.robotId = p.loadURDF(self.urdfFileName)
         self.objectIds = None
         self.motorVals = []
         self.sensorVals = []
+        self.positionVals = []
         self.jointAngularVelocities = []
         self.boxStartPos = None
 
@@ -67,6 +69,9 @@ class Robot:
             self.firstHalfFitness = self.Y_Axis_Displacement()
             self.firstHalfBoxDisplacement = None if self.objectIds == None else self.Get_Box_Displacement()
         
+        robot_position = p.getBasePositionAndOrientation(self.robotId)[0]
+        self.positionVals.append(robot_position)
+
         # Sense
         sensorVector = []
         for sensor in self.sensors:
@@ -101,6 +106,9 @@ class Robot:
         force_vector = self.generate_random_force_vector(force_magnitude)
         robot_position = p.getBasePositionAndOrientation(self.robotId)[0]
         p.applyExternalForce(objectUniqueId=self.robotId, linkIndex=-1, forceObj=force_vector, posObj=robot_position, flags=p.WORLD_FRAME)
+
+    def get_position_values(self):
+        return self.positionVals
 
     def Compute_Action_Vector(self):
         # Two action schemes: "desiredAngle" and "velocity"
