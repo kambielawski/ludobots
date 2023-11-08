@@ -18,6 +18,7 @@ class Robot:
         self.urdfFileName = options['body_file']
         self.dir = dir
 
+        print(self.urdfFileName)
         self.robotId = p.loadURDF(self.urdfFileName)
         self.objectIds = None
         self.motorVals = []

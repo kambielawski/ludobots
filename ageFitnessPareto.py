@@ -43,7 +43,7 @@ class AgeFitnessPareto():
                 # self.Save_Emp()
                 # self.Save_Best()
                 self.Write_Gen_Statistics()
-            # self.Clean_Directory()
+            self.Clean_Directory()
     
     '''
     Initialize population randomly at generation 0
@@ -58,12 +58,14 @@ class AgeFitnessPareto():
     '''
     def Evolve_One_Generation(self):
         # 1. Reproduce
+        print(f'CURRENT GEN: {self.currentGen}')
         if self.currentGen == 0:
             self.Initialize_Population()
         else:
             self.Increment_Ages()
             self.Extend_Population(self.currentGen) # Create |pop| + 1 new individuals
 
+        print('RUNNING SOLNS')
         # 2. Simulate
         self.Run_Solutions()
 
@@ -144,14 +146,20 @@ class AgeFitnessPareto():
             with ThreadPoolExecutor() as executor:
                 futures = []
                 # Start threads
+                print(self.population)
                 for solnId in self.population:
                     if not self.population[solnId].Has_Been_Simulated():
                         f = executor.submit(Run_One_Solution_Async, solnId)
                         futures.append(f)
                 # Wait for all threads to be finished running
                 while not all([f.done() for f in futures]):
+                    print('waiting')
                     time.sleep(0.1)
+
+                print('futures: ', [f.result() for f in futures])
+            print('DONE RUNNING SOLNS')
         except Exception as err:
+            print('ERRORRRRRR: ', err)
             os.system(f'echo {err} >> {self.dir}/error_log.txt')
 
     '''
@@ -206,9 +214,10 @@ class AgeFitnessPareto():
 
     def Clean_Directory(self):
         # Remove the rest
-        os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf')
-        os.system(OS_RM + ' ' + self.dir + f'/body_{self.morphology}_*.urdf') 
-        os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
+        os.system('python3 ./scripts/clean_dir.py' + ' --dir ' + self.dir)
+        # os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf')
+        # os.system(OS_RM + ' ' + self.dir + f'/body_{self.morphology}_*.urdf') 
+        # os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
 
     def Save_Emp(self):
         pop_data = self.population
