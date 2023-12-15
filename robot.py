@@ -18,7 +18,6 @@ class Robot:
         self.motorScheme = options['motor_measure']
         self.nndfFileName = options['brain_file']
         self.urdfFileName = options['body_file']
-        self.morphology = self.urdfFileName.split('.')[2].split('_')[1]
         self.dir = dir
 
         self.robotId = p.loadURDF(self.urdfFileName)
