@@ -24,3 +24,4 @@ experiments/*
 best_robots/
 sa_pairs_save.pkl
 *.exp
+notebooks
