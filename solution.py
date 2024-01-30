@@ -92,6 +92,7 @@ class Solution:
         os.system(f'cp {self.dir}/world.sdf {self.worldFile}')
 
     def Dominates_Other(self, other):
+        print(f'solnid: ', self.id)
         assert self.objectives == other.objectives
 
         dominates = [self.age <= other.Get_Age()]
