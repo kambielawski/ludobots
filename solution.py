@@ -21,6 +21,7 @@ class Solution:
         self.empowerment_window_size = constants['empowerment_window_size']
         self.motor_measure = constants['motor_measure']
         self.morphology = constants['morphology']
+        self.wind = constants['wind']
         self.selection_metrics = None
 
         # TODO: generalize robot morphology selection
@@ -52,8 +53,8 @@ class Solution:
                                 '--directory', self.dir,
                                 '--objects_file', self.worldFile,
                                 '--motor_measure', self.motor_measure,
-                                '--empowerment_window_size', 
-                                str(self.empowerment_window_size)]
+                                '--empowerment_window_size', str(self.empowerment_window_size),
+                                '--wind', str(self.wind)]
 
         sp = subprocess.Popen(subprocess_run_string, stdout=subprocess.PIPE)
 

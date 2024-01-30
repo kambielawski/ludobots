@@ -22,7 +22,8 @@ class AgeFitnessPareto():
             'motor_measure': exp_constants['motor_measure'],
             'objectives': exp_constants['objectives'],
             'morphology': exp_constants['morphology'],
-            'task_environment': exp_constants['task_environment']
+            'task_environment': exp_constants['task_environment'],
+            'wind': exp_constants['wind']
         }
         self.history = RunHistory(exp_constants, dir=dir)
         self.currentGen = 0
@@ -215,9 +216,6 @@ class AgeFitnessPareto():
     def Clean_Directory(self):
         # Remove the rest
         os.system('python3 ./scripts/clean_dir.py' + ' --dir ' + self.dir)
-        # os.system(OS_RM + ' ' + self.dir + '/brain_*.nndf')
-        # os.system(OS_RM + ' ' + self.dir + f'/body_{self.morphology}_*.urdf') 
-        # os.system(OS_RM + ' ' + self.dir + '/world_*.sdf')
 
     def Save_Emp(self):
         pop_data = self.population

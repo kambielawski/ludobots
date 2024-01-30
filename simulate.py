@@ -17,11 +17,12 @@ parser.add_argument("--objects_file", default='', help=".sdf file for other worl
 parser.add_argument("--pickle_sim", default=False, help="Pickle the simulation (true/false)", type=bool)
 parser.add_argument("--motor_measure", default='DESIRED_ANGLE', help="Motor measurement for empowerment calc. 'VELOCITY' or 'DESIRED_ANGLE'", 
                     type=str,  choices=['VELOCITY', 'DESIRED_ANGLE'])
+parser.add_argument("--wind", default=0, type=int, help="Degree of 'windiness', i.e. number of random force vectors to apply during simulation")
 
 args = parser.parse_args()
 
 # Setup simulation, world, and robot
-simulation = Simulation(args.display, args.solution_id, TIMESTEPS, objectsFile=args.objects_file, dir=args.directory)
+simulation = Simulation(args.display, args.solution_id, TIMESTEPS, wind=args.wind, objectsFile=args.objects_file, dir=args.directory)
 robot_options = {
     'motor_measure': args.motor_measure,
     'empowerment_window_size': args.empowerment_window_size,
@@ -38,6 +39,3 @@ simulation.Print_Objectives()
 
 if args.pickle_sim:
     simulation.Pickle_Sim("transient.pkl")
-
-# run_plotter = RunPlotter(simulation)
-# run_plotter.Action_Sensor_Pair_LogPlot()

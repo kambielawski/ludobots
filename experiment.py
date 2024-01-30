@@ -16,9 +16,11 @@ class Experiment:
             timestr = time.strftime('%b%d_%I_%M')
             motor_str = 'mA' if experiment_parameters['motor_measure'] == 'VELOCITY' else 'mD'
             morphology = experiment_parameters['morphology']
+            windy = 'windy_' if experiment_parameters['wind'] else ''
             self.experiment_directory = f'experiments/{timestr}_' + experiment_parameters['morphology'] + '_' \
                                         + experiment_parameters['task_environment'].split('/')[-1].split('.')[0] \
                                         + '_' + '-'.join(experiment_parameters['objectives']) + '_' \
+                                        + windy \
                                         + motor_str + '_' + f'n{N_runs}' + 'p' \
                                         + str(experiment_parameters['target_population_size']) + 'w' \
                                         + str(experiment_parameters['empowerment_window_size'])
