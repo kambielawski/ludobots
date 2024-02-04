@@ -162,7 +162,6 @@ class AgeFitnessPareto():
                             futures.append(f)
                 # Wait for all threads to be finished running
                 while not all([f.done() for f in futures]):
-                    print('waiting')
                     time.sleep(0.1)
 
                 print('futures: ', [f.result() for f in futures])

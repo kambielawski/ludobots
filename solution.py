@@ -104,7 +104,7 @@ class Solution:
         os.system(f'cp {self.dir}/{task_env_file_name} {self.worldFile}')
 
     def Dominates_Other(self, other):
-        assert self.objectives == other.objectives
+        assert self.selection_objectives == other.selection_objectives
 
         dominates = [self.age <= other.Get_Age()]
         for objective in self.selection_metrics:
