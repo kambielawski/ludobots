@@ -5,13 +5,17 @@ import os
 from ageFitnessPareto import AgeFitnessPareto
 
 class Experiment:
-    def __init__(self, experiment_directory='.', exp_file=None, N_runs=30):
+    """Experiment class"""
+    def __init__(self, experiment_directory='.', exp_file=None):
         if experiment_directory: # Continue existing experiment
             self.pickle_file = f'{experiment_directory}/evo_runs.pickle'
             self.experiment_directory = experiment_directory
         else: # Initialize a new experiment
             # 1. Create a new experiment directory
             experiment_parameters = self.Get_Experiment_Parameters(exp_file)
+            self.n_runs = experiment_parameters['n_trials']
+            self.max_generations = experiment_parameters['generations']
+            self.current_generation = 0
 
             timestr = time.strftime('%b%d_%I_%M')
             motor_str = 'mA' if experiment_parameters['motor_measure'] == 'VELOCITY' else 'mD'
@@ -21,7 +25,7 @@ class Experiment:
                                         + experiment_parameters['task_environment'].split('/')[-1].split('.')[0] \
                                         + '_' + '-'.join(experiment_parameters['objectives']) + '_' \
                                         + windy \
-                                        + motor_str + '_' + f'n{N_runs}' + 'p' \
+                                        + motor_str + '_' + f'n{self.n_runs}' + 'p' \
                                         + str(experiment_parameters['target_population_size']) + 'w' \
                                         + str(experiment_parameters['empowerment_window_size'])
             os.system(f'mkdir {self.experiment_directory}')
@@ -43,17 +47,30 @@ class Experiment:
             os.system(f'cp {self.task_env} {self.experiment_directory}/world.sdf')
             
             # 3. Initialize N_runs AFPO objects and pickle them
-            treatment_1 = { i: AgeFitnessPareto(experiment_parameters, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(N_runs) }
+            treatment_1 = { i: AgeFitnessPareto(experiment_parameters, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(self.n_runs) }
             self.evo_runs = { experiment_parameters['name']: treatment_1 }
             self.pickle_file = f'{self.experiment_directory}/evo_runs.pickle'
             with open(self.pickle_file, 'wb') as pklFileHandle:
                 pickle.dump(self.evo_runs, pklFileHandle)
 
+
+    def Run(self):
+        """Run the different runs until we max out"""
+        while self.current_generation < self.max_generations:
+            self.Run_One_Generation()
+
+
     def Run_One_Generation(self):
         t_start = time.time()
         # 1. Unpickle previous generation
         with open(self.pickle_file, 'rb') as pickle_file:
-            self.evo_runs = pickle.load(pickle_file)
+            self.pkl_obj = pickle.load(pickle_file)
+            if isinstance(self.pkl_obj, dict):
+                self.evo_runs = self.pkl_obj
+            elif isinstance(self.pkl_obj, Experiment):
+                self.evo_runs = self.pkl_obj.evo_runs
+            else:
+                raise TypeError("Pickled object needs to be of type Experiment or type dictionary")
 
         # Save population pickle file (for insurance)
         os.system(f'cp {self.experiment_directory}/evo_runs.pickle {self.experiment_directory}/evo_runs_saved.pickle')

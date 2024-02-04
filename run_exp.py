@@ -34,9 +34,4 @@ if args.dir:   # Continue running existing experiment
 elif args.exp: # Start new experiment with experiment specification file
     exp = Experiment(None, args.exp)
 
-g = 1
-while True:
-    print(f'\n\n========== \n Generation {g} \n ==========\n\n')
-    exp.Run_One_Generation()
-    g += 1
-
+exp.Run()
