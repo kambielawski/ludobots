@@ -54,6 +54,9 @@ class DataManager():
             if exp_population[solution].selection_metrics:
                 all_selection_metrics = exp_population[solution].selection_metrics
                 break
+            elif exp_population[solution].aggregate_metrics:
+                all_selection_metrics = exp_population[solution].aggregate_metrics
+                break
         return all_selection_metrics
 
     def Get_Experiment_Constants(self, dir):
@@ -63,6 +66,14 @@ class DataManager():
         robot_constants = evo_runs[k][0].robot_constants
 
         return robot_constants
+
+    def get_experiment_selection_metrics(self, dir):
+        with open(f'./experiments/{dir}/evo_runs.pickle', 'rb') as pickleFile:
+            evo_runs = pickle.load(pickleFile)
+        k = list(evo_runs.keys())[0]
+        selection_metrics = evo_runs[k][0].selection_metrics.keys()
+
+        return selection_metrics
 
     def getMetric95CI(self, runs, metric):
         best = []
@@ -266,7 +277,7 @@ class MainWindow(QMainWindow):
         # Plot each line from each loaded data
         for i, evo_runs in enumerate(loaded_data):
             exp_key = list(loaded_data[i].keys())[0]
-            plot_label = '-'.join(self.data_manager.Get_Experiment_Constants(experiment_dirs[i])['objectives'])
+            plot_label = '-'.join(self.data_manager.Get_Experiment_Metrics(experiment_dirs[i]))
             t1_avg_best, t1_conf_int = self.data_manager.getMetric95CI(evo_runs[exp_key], metric)
             # Plotting
             ax1.plot(range(len(t1_avg_best)), t1_avg_best, label=plot_label, color=COLORS[i])

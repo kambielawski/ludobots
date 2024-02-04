@@ -1,6 +1,7 @@
 import time
 import pickle
 import os
+import numpy as np
 
 from ageFitnessPareto import AgeFitnessPareto
 
@@ -22,8 +23,7 @@ class Experiment:
             morphology = experiment_parameters['morphology']
             windy = 'windy_' if experiment_parameters['wind'] else ''
             self.experiment_directory = f'experiments/{timestr}_' + experiment_parameters['morphology'] + '_' \
-                                        + experiment_parameters['task_environment'].split('/')[-1].split('.')[0] \
-                                        + '_' + '-'.join(experiment_parameters['objectives']) + '_' \
+                                        + '_' \
                                         + windy \
                                         + motor_str + '_' + f'n{self.n_runs}' + 'p' \
                                         + str(experiment_parameters['target_population_size']) + 'w' \
@@ -41,12 +41,16 @@ class Experiment:
             info_file.close()
 
             # Finish directory setup with task environment
-            if 'boxdisplacement' in experiment_parameters['objectives'] and experiment_parameters['task_environment'] != './task_environments/box_world.sdf':
+            if 'boxdisplacement' in np.array([sim['objectives'] for sim in experiment_parameters['simulations']]).flatten() and experiment_parameters['task_environment'] != './task_environments/box_world.sdf':
                 raise ValueError('Check your experiment setup. Cannot select for box displacement if box_world.sdf is not the task environment.')
-            self.task_env = experiment_parameters['task_environment']
-            os.system(f'cp {self.task_env} {self.experiment_directory}/world.sdf')
             
-            # 3. Initialize N_runs AFPO objects and pickle them
+            for sim in experiment_parameters['simulations']:
+                # self.task_env = experiment_parameters['task_environment']
+                task_env_file_name = sim['task_environment'].split('/')[2]
+                template_env_file = sim['task_environment']
+                os.system(f'cp {template_env_file} {self.experiment_directory}/{task_env_file_name}')
+            
+            # 3. Initialize n_runs AFPO objects and pickle them
             treatment_1 = { i: AgeFitnessPareto(experiment_parameters, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(self.n_runs) }
             self.evo_runs = { experiment_parameters['name']: treatment_1 }
             self.pickle_file = f'{self.experiment_directory}/evo_runs.pickle'

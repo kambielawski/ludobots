@@ -3,6 +3,7 @@ import pyrosim.pyrosim as pyrosim
 import random
 import subprocess
 import re
+import numpy as np
 
 from robots.quadruped import Quadruped
 from robots.hexapod import Hexapod
@@ -16,14 +17,18 @@ class Solution:
         self.id = solutionId
         self.age = 1
         self.empowerment = 0
-        self.been_simulated = False
         self.lineage = lineage
-        self.objectives = constants['objectives']
+        self.simulations = constants['simulations']
         self.empowerment_window_size = constants['empowerment_window_size']
         self.motor_measure = constants['motor_measure']
         self.morphology = constants['morphology']
         self.wind = constants['wind']
-        self.selection_metrics = None
+        self.been_simulated = [False for _ in self.simulations]
+        self.sim_metrics = {}           # Metrics for individual simulations
+        # self.selection_metrics = None
+        self.selection_objectives = np.unique([objective for sim in self.simulations for objective in sim['objectives']])
+        self.selection_metrics = {objective: 0 for objective in self.selection_objectives}     # Metrics for selection
+        self.aggregate_metrics = {}     # Aggregate metrics 
 
         # TODO: generalize robot morphology selection
         if self.morphology == 'quadruped':
@@ -43,10 +48,11 @@ class Solution:
 
         self.dir = dir
 
-    def Run_Simulation(self, runMode="DIRECT"):
+    def Run_Simulation(self, runMode="DIRECT", sim_number=0):
         self.runMode=runMode
-        self.Create_World()
-        self.robot.Generate_Robot(self.weights, 0,0,1) # TODO: generalize the starting position for robots
+        self.Create_World(sim_number)
+
+        self.robot.Generate_Robot(self.weights, 0,0,2, orientation=self.simulations[sim_number]['body_orientation']) # TODO: generalize the starting position for robots
 
         subprocess_run_string = ['python3', 'simulate.py', 
                                 runMode, 
@@ -66,7 +72,7 @@ class Solution:
         sp.wait()
         out_str = stdout.decode()
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
-        self.selection_metrics = {
+        sim_metrics = {
             'displacement': float(fitness_metrics[0]),
             'empowerment': float(fitness_metrics[1]),
             'first_half_displacement': float(fitness_metrics[2]),
@@ -77,9 +83,14 @@ class Solution:
             'second_half_box_displacement': float(fitness_metrics[7]) if fitness_metrics[7] != 'None' else 0
         }
 
-        self.been_simulated = True # Set simulated flag
+        self.sim_metrics[sim_number] = sim_metrics
 
-        return self.selection_metrics
+        for objective in sim_metrics:
+            if objective in self.selection_metrics:
+                self.selection_metrics[objective] += sim_metrics[objective]
+
+        self.been_simulated[sim_number] = True
+
 
     def Mutate(self):
         randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
@@ -87,18 +98,16 @@ class Solution:
 
         self.robot.weights[randRow][randCol] = random.random() * 2 - 1
     
-    def Create_World(self):
+    def Create_World(self, sim_number=0):
         self.worldFile = f'{self.dir}/world_{self.id}.sdf'
-        os.system(f'cp {self.dir}/world.sdf {self.worldFile}')
+        task_env_file_name = self.simulations[sim_number]['task_environment'].split('/')[2]
+        os.system(f'cp {self.dir}/{task_env_file_name} {self.worldFile}')
 
     def Dominates_Other(self, other):
-        print(f'solnid: ', self.id)
         assert self.objectives == other.objectives
 
         dominates = [self.age <= other.Get_Age()]
-        # We have 1) Fitness, 2) First-half Fitness, 3) Second-half Fitness, 4) Empowerment
-        for objective in self.objectives:
-            # Always maximize these selection metrics
+        for objective in self.selection_metrics:
             dominates.append(self.selection_metrics[objective] >= other.selection_metrics[objective])
 
         return all(dominates)
@@ -110,23 +119,21 @@ class Solution:
         return self.age
 
     def Get_Primary_Objective(self):
-        # First objective listed in self.objectives will be the "primary objective"
-        return self.selection_metrics[self.objectives[0]]
+        return self.selection_metrics['displacement']
 
     def Regenerate_Brain_File(self, dir=None):
         self.robot.Generate_NN(dir)
-
-    def Get_Fitness(self):
-        return self.selection_metrics['displacement']
 
     def Get_Empowerment(self):
         return self.selection_metrics['empowerment']
 
     def Has_Been_Simulated(self):
-        return self.been_simulated
+        return all(self.been_simulated)
 
     def Reset_Simulated(self):
-        self.been_simulated = False
+        self.selection_metrics = {objective: 0 for objective in self.selection_objectives}
+        self.aggregate_metrics = {}
+        self.been_simulated = [False for _ in self.simulations]
 
     def Set_ID(self, newId):
         self.robot.Set_Id(newId)

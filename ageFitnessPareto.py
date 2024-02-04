@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import os
 import time
+import traceback
 from sys import platform
 from concurrent.futures import ThreadPoolExecutor
 
@@ -17,13 +18,13 @@ class AgeFitnessPareto():
         self.nGenerations = exp_constants['generations']
         self.targetPopSize = exp_constants['target_population_size']
         self.morphology = exp_constants['morphology']
+        self.simulations = exp_constants['simulations']
         self.robot_constants = {
             'empowerment_window_size': exp_constants['empowerment_window_size'],
             'motor_measure': exp_constants['motor_measure'],
-            'objectives': exp_constants['objectives'],
             'morphology': exp_constants['morphology'],
-            'task_environment': exp_constants['task_environment'],
-            'wind': exp_constants['wind']
+            'wind': exp_constants['wind'],
+            'simulations': exp_constants['simulations']
         }
         self.history = RunHistory(exp_constants, dir=dir)
         self.currentGen = 0
@@ -44,7 +45,8 @@ class AgeFitnessPareto():
                 # self.Save_Emp()
                 # self.Save_Best()
                 self.Write_Gen_Statistics()
-            self.Clean_Directory()
+            if self.currentGen != self.nGenerations:
+                self.Clean_Directory()
     
     '''
     Initialize population randomly at generation 0
@@ -85,6 +87,7 @@ class AgeFitnessPareto():
     def Extend_Population(self, genNumber):
         # 1. Breed
         # - do tournament selection |pop| times 
+        new_solutions = {}
         for _ in range(self.targetPopSize):
             parent = self.Tournament_Select()
             child = copy.deepcopy(self.population[parent])
@@ -93,7 +96,11 @@ class AgeFitnessPareto():
             rand_id = self.Get_Available_Id()
             child.Set_ID(rand_id)
             child.Reset_Simulated()
-            self.population[rand_id] = child
+            new_solutions[rand_id] = child
+
+        # Add new solutions to the population
+        for soln in new_solutions:
+            self.population[soln] = new_solutions[soln]
 
         # 2. Add a random individual
         rand_id = self.Get_Available_Id()
@@ -140,8 +147,8 @@ class AgeFitnessPareto():
     Parallel execution for each individual's physics simulation
     '''
     def Run_Solutions(self):
-        def Run_One_Solution_Async(solnId):
-            return self.population[solnId].Run_Simulation()
+        def Run_One_Solution_Async(solnId, sim_number):
+            return self.population[solnId].Run_Simulation(sim_number=sim_number)
 
         try:
             with ThreadPoolExecutor() as executor:
@@ -149,9 +156,10 @@ class AgeFitnessPareto():
                 # Start threads
                 print(self.population)
                 for solnId in self.population:
-                    if not self.population[solnId].Has_Been_Simulated():
-                        f = executor.submit(Run_One_Solution_Async, solnId)
-                        futures.append(f)
+                    for i, sim in enumerate(self.simulations):
+                        if not self.population[solnId].Has_Been_Simulated():
+                            f = executor.submit(Run_One_Solution_Async, solnId, i)
+                            futures.append(f)
                 # Wait for all threads to be finished running
                 while not all([f.done() for f in futures]):
                     print('waiting')
@@ -160,7 +168,9 @@ class AgeFitnessPareto():
                 print('futures: ', [f.result() for f in futures])
             print('DONE RUNNING SOLNS')
         except Exception as err:
-            print('ERRORRRRRR: ', err)
+            print('ERRR!!!!', err)
+            tb = traceback.format_exc()
+            print(tb)
             os.system(f'echo {err} >> {self.dir}/error_log.txt')
 
     '''
@@ -243,7 +253,7 @@ class AgeFitnessPareto():
 
     def Save_Best(self, save_dir='pareto_front', metric='displacement'):
         pf = self.Pareto_Front()
-        max_id = max([(self.population[id].selection_metrics[metric], id) for id in pf])[1] # best ID
+        max_id = max([(self.population[id].aggregate_metrics[metric], id) for id in pf])[1] # best ID
         self.population[max_id].Regenerate_Brain_File() # Ensure the brain file exists
 
         # Create directory if it doesn't already exist
@@ -258,8 +268,8 @@ class AgeFitnessPareto():
 
     def Get_Best_Id(self, metric='displacement'):
         pf = self.Pareto_Front()
-        max_id = max([(self.population[id].selection_metrics[metric], id) for id in pf])[1] # best ID
-        return (self.population[max_id].selection_metrics[metric], max_id)
+        max_id = max([(self.population[id].aggregate_metrics[metric], id) for id in pf])[1] # best ID
+        return (self.population[max_id].aggregate_metrics[metric], max_id)
 
     def Save_Best_Simulation(self):
         pass
