@@ -44,7 +44,8 @@ class Experiment:
             for sim in experiment_parameters['simulations']:
                 # self.task_env = experiment_parameters['task_environment']
                 task_env_file_name = sim['task_environment'].split('/')[2]
-                os.system(f'cp {task_env_file_name} {self.experiment_directory}/{task_env_file_name}')
+                template_env_file = sim['task_environment']
+                os.system(f'cp {template_env_file} {self.experiment_directory}/{task_env_file_name}')
             
             # 3. Initialize n_runs AFPO objects and pickle them
             treatment_1 = { i: AgeFitnessPareto(experiment_parameters, run_id=(i+1), dir=f'{self.experiment_directory}') for i in range(self.n_runs) }
