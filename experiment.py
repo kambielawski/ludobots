@@ -12,6 +12,7 @@ class Trial:
     - Has access to the AFPO-level pickle file
     """
     def __init__(self, run_idx, experiment_directory, experiment_parameters):
+        self.run_idx = run_idx
         self.experiment_directory = experiment_directory
         self.trial_directory = self.experiment_directory + f'/trial_{run_idx}'
         self.pickle_file = f'{self.trial_directory}/trial_{run_idx}.pkl'
@@ -33,7 +34,7 @@ class Trial:
         t_start = time.time()
 
         # 1. Save population pickle file (for insurance)
-        os.system(f'cp {self.trial_directory}/{self.pickle_file} {self.trial_directory}/saved_{self.pickle_file}')
+        os.system(f'cp {self.pickle_file} {self.trial_directory}/saved_trial_{self.run_idx}.pkl')
         
         # 2. Compute a single generation for this trial
         print(f'\n\n========== \n Generation {self.afpo.currentGen} - Run {self.afpo.run_id} \n ==========\n\n')
@@ -131,6 +132,7 @@ class Experiment:
               os.system(f'cp {template_env_file} {self.experiment_directory}/{task_env_file_name}')
               for run_idx in range(self.n_runs):
                   os.system(f'cp {template_env_file} {self.experiment_directory}/trial_{run_idx}/{task_env_file_name}')
+                  os.system(f'cp robots/body_{morphology}.urdf {self.experiment_directory}/trial_{run_idx}')
           
           # 5. Initialize n_runs Trial objects and pickle them into an aggregate trial directories
           self.trials = { run_idx: Trial(run_idx, self.experiment_directory, exp_params_1trial) for run_idx in range(self.n_runs) }
