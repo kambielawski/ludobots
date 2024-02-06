@@ -7,7 +7,7 @@ class URDF:
 
     def Save_Start_Tag(self):
 
-        self.file.write('<robot name = "robot">\n')
+        self.file.write('<robot name="robot">\n')
 
     def Save_End_Tag(self):
 

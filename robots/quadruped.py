@@ -278,7 +278,7 @@ class Quadruped:
 
         self.Generate_Fully_Connected_Synapses()
 
-        pyrosim.filetype = pyrosim.NNDF
+        pyrosim.filetype = pyrosim.NNDF_FILETYPE
         pyrosim.End()
         
     def Set_Id(self, newId):
