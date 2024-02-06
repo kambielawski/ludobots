@@ -15,5 +15,4 @@ cd /gpfs1/home/k/t/ktbielaw/projects/ludobots
 
 source /gpfs1/home/k/t/ktbielaw/anaconda3/bin/activate pyrosim
 
-echo $3
 python3 run_trial.py --file $3
