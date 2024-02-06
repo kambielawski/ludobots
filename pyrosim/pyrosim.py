@@ -22,6 +22,9 @@ URDF_FILETYPE = 1
 
 NNDF_FILETYPE   = 2
 
+nndf = NNDF()
+urdf = URDF()
+
 # global availableLinkIndex
 
 # global linkNamesToIndices
@@ -108,7 +111,7 @@ def Prepare_To_Simulate(bodyID):
 
     Prepare_Joint_Dictionary(bodyID)
 
-def Send_Cube(file, name="default",pos=[0,0,0],size=[1,1,1]):
+def Send_Cube(file, filetype, name="default",pos=[0,0,0],size=[1,1,1]):
 
     global availableLinkIndex
 
@@ -171,17 +174,8 @@ def Set_Motor_For_Joint(bodyIndex,jointName,controlMode,targetPosition,maxForce)
 
 def Start_NeuralNetwork(filename):
 
-    global filetype
-
-    filetype = NNDF_FILETYPE
-
     file = open(filename,"w")
 
-    global nndf
-
-    nndf = NNDF(file)
-
-    nndf.Save_Start_Tag()
     return file
 
 def Start_SDF(filename):
@@ -222,17 +216,7 @@ def Start_URDF(filename):
 
     linkNamesToIndices = {}
 
-    global filetype
-
-    filetype = URDF_FILETYPE
-
     file = open(filename,"w")
-
-    global urdf 
-
-    urdf = URDF(file)
-
-    urdf.Save_Start_Tag()
 
     global links
 

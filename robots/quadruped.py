@@ -44,6 +44,7 @@ class Quadruped:
 
     def Generate_Body(self, start_x, start_y, start_z, orientation=0):
         file = pyrosim.Start_URDF(self.bodyFile)
+        pyrosim.urdf.Save_Start_Tag(file)
 
         orientations = [
             {"x": 0, "y": 0, "z": 0},
@@ -57,7 +58,7 @@ class Quadruped:
         o = orientations[orientation]
 
         # root link
-        pyrosim.Send_Cube(file, name="Torso", pos=[start_x, start_y, start_z], size=[1,1,1])
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="Torso", pos=[start_x, start_y, start_z], size=[1,1,1])
 
         torso_backleg_pos = [start_x, start_y-0.5,start_z]
         torso_leftleg_pos = [start_x-0.5, start_y, start_z]
@@ -194,10 +195,10 @@ class Quadruped:
         # print(rightleg_size)
 
         # Relative to upstream joint...
-        pyrosim.Send_Cube(file, name="FrontLeg", pos=frontleg_relative, size=frontleg_size) # [0.2,1,0.2])
-        pyrosim.Send_Cube(file, name="LeftLeg", pos=leftleg_relative, size=leftleg_size) # [1,0.2,0.2])
-        pyrosim.Send_Cube(file, name="RightLeg", pos=rightleg_relative, size=rightleg_size) # [1,0.2,0.2])
-        pyrosim.Send_Cube(file, name="BackLeg", pos=backleg_relative, size=backleg_size) # [0.2,1,0.2])
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="FrontLeg", pos=frontleg_relative, size=frontleg_size) # [0.2,1,0.2])
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="LeftLeg", pos=leftleg_relative, size=leftleg_size) # [1,0.2,0.2])
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="RightLeg", pos=rightleg_relative, size=rightleg_size) # [1,0.2,0.2])
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="BackLeg", pos=backleg_relative, size=backleg_size) # [0.2,1,0.2])
 
         bottomlegs_relative_pos = self.transform_position([0,0,-0.5], orientation=o, start_pos=(0,0,0))
         bottomlegs_size = [0.2 if a == 0 else a for a in np.abs(np.array(bottomlegs_relative_pos) * 2)]
@@ -206,12 +207,12 @@ class Quadruped:
         # print(bottomlegs_relative_pos)
         # print(bottomlegs_size)
 
-        pyrosim.Send_Cube(file, name="BackLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
-        pyrosim.Send_Cube(file, name="FrontLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
-        pyrosim.Send_Cube(file, name="LeftLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
-        pyrosim.Send_Cube(file, name="RightLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="BackLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="FrontLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="LeftLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, filetype=pyrosim.URDF_FILETYPE, name="RightLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
         
-        pyrosim.urdf.Save_End_Tag()
+        pyrosim.urdf.Save_End_Tag(file)
         file.close()
         # pyrosim.End()
 
@@ -267,6 +268,7 @@ class Quadruped:
         # "Neural Network Description File"
         brain_dir = dir if dir else self.dir
         file = pyrosim.Start_NeuralNetwork(f"{brain_dir}/brain_{self.solnId}.nndf")
+        pyrosim.nndf.Save_Start_Tag(file)
 
         pyrosim.Send_Sensor_Neuron(file, name=0, linkName="RightLower")
         pyrosim.Send_Sensor_Neuron(file, name=1, linkName="LeftLower")
@@ -285,7 +287,8 @@ class Quadruped:
 
         self.Generate_Fully_Connected_Synapses(file)
 
-        pyrosim.nndf.Save_End_Tag()
+        pyrosim.nndf.Save_End_Tag(file)
+        file.close()
         
     def Set_Id(self, newId):
         self.solnId = newId
