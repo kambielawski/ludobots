@@ -11,7 +11,7 @@ args = parser.parse_args()
 
 ############# RUN EXPERIMENT(S) #############
 
-with open(args.dir, 'rb') as pickle_file:
+with open(args.file, 'rb') as pickle_file:
     trial : Trial = pickle.load(pickle_file)
 
 trial.Run()
