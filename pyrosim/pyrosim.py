@@ -34,9 +34,9 @@ def End():
 
     elif filetype == NNDF_FILETYPE:
 
-        nndf.Save_End_Tag(f)
+        nndf.Save_End_Tag()
     else:
-        urdf.Save_End_Tag(f)
+        urdf.Save_End_Tag()
 
     f.close()
 
@@ -181,9 +181,9 @@ def Start_NeuralNetwork(filename):
 
     global nndf
 
-    nndf = NNDF()
+    nndf = NNDF(f)
 
-    nndf.Save_Start_Tag(f)
+    nndf.Save_Start_Tag()
 
 def Start_SDF(filename):
 
@@ -233,9 +233,9 @@ def Start_URDF(filename):
 
     global urdf 
 
-    urdf = URDF()
+    urdf = URDF(f)
 
-    urdf.Save_Start_Tag(f)
+    urdf.Save_Start_Tag()
 
     global links
 

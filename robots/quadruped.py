@@ -205,7 +205,7 @@ class Quadruped:
         print('filetype: ', pyrosim.filetype)
         print('file: ', pyrosim.f)
         
-        pyrosim.f = pyrosim.URDF_FILETYPE
+        pyrosim.filetype = pyrosim.URDF_FILETYPE
         pyrosim.End()
 
     def round_if_close(self, num, tolerance=1e-9):
@@ -278,7 +278,7 @@ class Quadruped:
 
         self.Generate_Fully_Connected_Synapses()
 
-        pyrosim.f = pyrosim.NNDF
+        pyrosim.filetype = pyrosim.NNDF
         pyrosim.End()
         
     def Set_Id(self, newId):

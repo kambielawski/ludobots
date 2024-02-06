@@ -1,13 +1,14 @@
 class URDF:
 
-    def __init__(self):
+    def __init__(self, file):
 
         self.depth = 0
+        self.file = file
 
-    def Save_Start_Tag(self,f):
+    def Save_Start_Tag(self):
 
-        f.write('<robot name = "robot">\n')
+        self.file.write('<robot name = "robot">\n')
 
-    def Save_End_Tag(self,f):
+    def Save_End_Tag(self):
 
-        f.write("</robot>")
+        self.file.write("</robot>")
