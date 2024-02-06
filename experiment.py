@@ -39,7 +39,7 @@ class Trial:
         # 2. Compute a single generation for this trial
         print(f'\n\n========== \n Generation {self.afpo.currentGen} - Run {self.afpo.run_id} \n ==========\n\n')
         self.afpo.Evolve_One_Generation()
-        self.afpo.Clean_Directory()
+        # self.afpo.Clean_Directory()
 
         # 3. Update pickle file
         with open(self.pickle_file, 'wb') as pickle_file:
