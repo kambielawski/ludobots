@@ -54,6 +54,7 @@ class Solution:
 
         self.robot.Generate_Robot(self.weights, 0,0,2, orientation=self.simulations[sim_number]['body_orientation']) # TODO: generalize the starting position for robots
 
+        print(self.robot.Get_Body_File())
         subprocess_run_string = ['python3', 'simulate.py', 
                                 runMode, 
                                 str(self.id), 
