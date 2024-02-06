@@ -22,7 +22,10 @@ class Robot:
         self.dir = dir
 
         print(self.urdfFileName)
-        self.robotId = p.loadURDF(self.urdfFileName)
+        try:
+            self.robotId = p.loadURDF(self.urdfFileName)
+        except:
+            print(f"Error loading {self.urdfFileName}")
         self.objectIds = None
         self.motorVals = []
         self.sensorVals = []
