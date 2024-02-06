@@ -31,13 +31,8 @@ class Trial:
     def Run_One_Generation(self):
         """Run a single generation of the trial"""
         t_start = time.time()
-        # 1. Unpickle previous generation
-        with open(self.pickle_file, 'rb') as pickle_file:
-            self.afpo = pickle.load(pickle_file)
-            if not isinstance(self.afpo, AgeFitnessPareto):
-                raise TypeError("Pickled object needs to be of type AgeFitnessPareto")
 
-        # Save population pickle file (for insurance)
+        # 1. Save population pickle file (for insurance)
         os.system(f'cp {self.trial_directory}/{self.pickle_file} {self.trial_directory}/saved_{self.pickle_file}')
         
         # 2. Compute a single generation for this trial
@@ -45,9 +40,9 @@ class Trial:
         self.afpo.Evolve_One_Generation()
         self.afpo.Clean_Directory()
 
-        # 3. Pickle runs
-        with open(self.pickle_file, 'wb') as pkl:
-            pickle.dump(self.afpo, pkl, protocol=pickle.HIGHEST_PROTOCOL)
+        # 3. Update pickle file
+        with open(self.pickle_file, 'wb') as pickle_file:
+            pickle.dump(self, pickle_file, protocol=pickle.HIGHEST_PROTOCOL)
 
         self.current_generation += 1
 
