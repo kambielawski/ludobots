@@ -70,6 +70,7 @@ class Solution:
 
         # Parse standard output from subprocess
         stdout, stderr = sp.communicate()
+        print(stdout, stderr)
         sp.wait()
         out_str = stdout.decode()
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
