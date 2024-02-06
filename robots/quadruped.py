@@ -205,6 +205,7 @@ class Quadruped:
         print('filetype: ', pyrosim.filetype)
         print('file: ', pyrosim.f)
         
+        pyrosim.f = pyrosim.URDF_FILETYPE
         pyrosim.End()
 
     def round_if_close(self, num, tolerance=1e-9):
