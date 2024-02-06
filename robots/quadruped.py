@@ -84,23 +84,6 @@ class Quadruped:
         joint_axis_left = ' '.join(['1' if b==0 else '0' for b in [1 if a != 0 else a for a in leftleg_relative]])
         joint_axis_right = ' '.join(['1' if b==0 else '0' for b in [1 if a != 0 else a for a in rightleg_relative]])
 
-        rightleg_size = [0.2 if a == 0 else a for a in np.abs(rightleg_relative * 2)]
-        leftleg_size = [0.2 if a == 0 else a for a in np.abs(leftleg_relative * 2)]
-        frontleg_size = [0.2 if a == 0 else a for a in np.abs(frontleg_relative * 2)]
-        backleg_size = [0.2 if a == 0 else a for a in np.abs(backleg_relative * 2)]
-
-        # print('top leg size')
-        # print(frontleg_size)
-        # print(backleg_size)
-        # print(leftleg_size)
-        # print(rightleg_size)
-
-        # Relative to upstream joint...
-        pyrosim.Send_Cube(name="FrontLeg", pos=frontleg_relative, size=frontleg_size) # [0.2,1,0.2])
-        pyrosim.Send_Cube(name="LeftLeg", pos=leftleg_relative, size=leftleg_size) # [1,0.2,0.2])
-        pyrosim.Send_Cube(name="RightLeg", pos=rightleg_relative, size=rightleg_size) # [1,0.2,0.2])
-        pyrosim.Send_Cube(name="BackLeg", pos=backleg_relative, size=backleg_size) # [0.2,1,0.2])
-
         # print(joint_axis_front)
         # print(joint_axis_back)
         # print(joint_axis_left)
@@ -190,6 +173,23 @@ class Quadruped:
             jointAxis=joint_axis_left
             )
 
+        rightleg_size = [0.2 if a == 0 else a for a in np.abs(rightleg_relative * 2)]
+        leftleg_size = [0.2 if a == 0 else a for a in np.abs(leftleg_relative * 2)]
+        frontleg_size = [0.2 if a == 0 else a for a in np.abs(frontleg_relative * 2)]
+        backleg_size = [0.2 if a == 0 else a for a in np.abs(backleg_relative * 2)]
+
+        # print('top leg size')
+        # print(frontleg_size)
+        # print(backleg_size)
+        # print(leftleg_size)
+        # print(rightleg_size)
+
+        # Relative to upstream joint...
+        pyrosim.Send_Cube(name="FrontLeg", pos=frontleg_relative, size=frontleg_size) # [0.2,1,0.2])
+        pyrosim.Send_Cube(name="LeftLeg", pos=leftleg_relative, size=leftleg_size) # [1,0.2,0.2])
+        pyrosim.Send_Cube(name="RightLeg", pos=rightleg_relative, size=rightleg_size) # [1,0.2,0.2])
+        pyrosim.Send_Cube(name="BackLeg", pos=backleg_relative, size=backleg_size) # [0.2,1,0.2])
+
         bottomlegs_relative_pos = self.transform_position([0,0,-0.5], orientation=o, start_pos=(0,0,0))
         bottomlegs_size = [0.2 if a == 0 else a for a in np.abs(np.array(bottomlegs_relative_pos) * 2)]
 
@@ -202,6 +202,9 @@ class Quadruped:
         pyrosim.Send_Cube(name="LeftLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
         pyrosim.Send_Cube(name="RightLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
 
+        print('filetype: ', pyrosim.filetype)
+        print('file: ', pyrosim.f)
+        
         pyrosim.End()
 
     def round_if_close(self, num, tolerance=1e-9):
