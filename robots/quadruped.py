@@ -210,11 +210,8 @@ class Quadruped:
         pyrosim.Send_Cube(file, name="FrontLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
         pyrosim.Send_Cube(file, name="LeftLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
         pyrosim.Send_Cube(file, name="RightLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
-
-        print('filetype: ', pyrosim.filetype)
-        print('file: ', pyrosim.f)
         
-        pyrosim.urdf.Save_End_Tag(file)
+        pyrosim.urdf.Save_End_Tag()
         file.close()
         # pyrosim.End()
 
@@ -288,8 +285,7 @@ class Quadruped:
 
         self.Generate_Fully_Connected_Synapses(file)
 
-        pyrosim.filetype = pyrosim.NNDF_FILETYPE
-        pyrosim.nndf.Save_End_Tag(file)
+        pyrosim.nndf.Save_End_Tag()
         
     def Set_Id(self, newId):
         self.solnId = newId

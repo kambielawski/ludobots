@@ -140,7 +140,7 @@ def Send_Joint(file, name,parent,child,type,position, jointAxis):
 
     joint = JOINT(file, name,parent,child,type,position)
 
-    joint.Save(file, jointAxis)
+    joint.Save(jointAxis)
 
 def Send_Motor_Neuron(file, name,jointName):
 
