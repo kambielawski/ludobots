@@ -19,9 +19,9 @@ class Trial:
         self.afpo = AgeFitnessPareto(experiment_parameters, run_id=run_idx, dir=f'{self.experiment_directory}/trial_{run_idx}')
         self.max_generations = experiment_parameters['generations']
         self.current_generation = 0
-        # Create trial-level pickle file for AFPO object
+        # Create trial pickle file for Trial object (self)
         with open(self.pickle_file, 'wb') as pickle_file:
-            pickle.dump(self.afpo, pickle_file, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, pickle_file, protocol=pickle.HIGHEST_PROTOCOL)
 
     def Run(self):
         """Run the different runs until we max out"""
@@ -49,6 +49,8 @@ class Trial:
         with open(self.pickle_file, 'wb') as pkl:
             pickle.dump(self.afpo, pkl, protocol=pickle.HIGHEST_PROTOCOL)
 
+        self.current_generation += 1
+
         t_end = time.time()
         self.one_gen_time = t_end - t_start
 
@@ -72,19 +74,15 @@ class Experiment:
         else: # Initialize a new experiment
             self.initialize_directory(exp_file)
 
-    def Run(self):
+    def Run_Local(self):
         """Run the different runs until we max out"""
         for run_idx, trial in self.trials.items():
             trial.Run()
 
     def Run_Vacc(self):
-        # Submit a job for each trial... 
-        # all the trials use the exact same exp params
-        # Each job will be a run_exp.py (NOT run_exp_vacc.py) with the
-        # TRIAL directory as the argument for exp_directory
-        for trial in self.trials:
-            # submit VACC job
-            pass
+        # Submit a job for each trial...
+        for run_idx, trial in self.trials.items():
+            os.system('sbatch run_trial.sh ' + trial.trial_directory)
 
     def initialize_directory(self, exp_file):
           # 1. Create a new experiment directory
