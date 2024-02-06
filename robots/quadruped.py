@@ -29,10 +29,11 @@ class Quadruped:
         self.weights = np.random.rand(self.NUM_MOTOR_NEURONS, self.NUM_SENSOR_NEURONS) * 2 - 1
         return self.weights
 
-    def Generate_Fully_Connected_Synapses(self):
+    def Generate_Fully_Connected_Synapses(self, file):
         for m in range(self.NUM_MOTOR_NEURONS):
             for s in range(self.NUM_SENSOR_NEURONS):
                 pyrosim.Send_Synapse(
+                    file,
                     sourceNeuronName=s,
                     targetNeuronName=m+self.NUM_SENSOR_NEURONS,
                     weight=self.weights[m][s]
@@ -42,7 +43,7 @@ class Quadruped:
         return self.bodyFile
 
     def Generate_Body(self, start_x, start_y, start_z, orientation=0):
-        pyrosim.Start_URDF(self.bodyFile)
+        file = pyrosim.Start_URDF(self.bodyFile)
 
         orientations = [
             {"x": 0, "y": 0, "z": 0},
@@ -56,7 +57,7 @@ class Quadruped:
         o = orientations[orientation]
 
         # root link
-        pyrosim.Send_Cube(name="Torso", pos=[start_x, start_y, start_z], size=[1,1,1])
+        pyrosim.Send_Cube(file, name="Torso", pos=[start_x, start_y, start_z], size=[1,1,1])
 
         torso_backleg_pos = [start_x, start_y-0.5,start_z]
         torso_leftleg_pos = [start_x-0.5, start_y, start_z]
@@ -97,6 +98,7 @@ class Quadruped:
 
         # joints extending from root link
         pyrosim.Send_Joint(
+            file,
             name="Torso_BackLeg", 
             parent="Torso", 
             child="BackLeg", 
@@ -105,6 +107,7 @@ class Quadruped:
             jointAxis=joint_axis_back
         )
         pyrosim.Send_Joint(
+            file,
             name="Torso_LeftLeg", 
             parent="Torso", child="LeftLeg", 
             type="revolute", 
@@ -112,6 +115,7 @@ class Quadruped:
             jointAxis=joint_axis_left
             )
         pyrosim.Send_Joint(
+            file,
             name="Torso_RightLeg", 
             parent="Torso", 
             child="RightLeg", 
@@ -120,6 +124,7 @@ class Quadruped:
             jointAxis=joint_axis_right
             )
         pyrosim.Send_Joint(
+            file,
             name="Torso_FrontLeg", 
             parent="Torso", 
             child="FrontLeg", 
@@ -141,6 +146,7 @@ class Quadruped:
 
         # now all links & joints with an upstream joint have positions relative to the upstream joint
         pyrosim.Send_Joint(
+            file,
             name="BackLeg_BackLower", 
             parent="BackLeg", 
             child="BackLower", 
@@ -149,6 +155,7 @@ class Quadruped:
             jointAxis=joint_axis_back
             )
         pyrosim.Send_Joint(
+            file,
             name="FrontLeg_FrontLower", 
             parent="FrontLeg", 
             child="FrontLower", 
@@ -157,6 +164,7 @@ class Quadruped:
             jointAxis=joint_axis_front
             )
         pyrosim.Send_Joint(
+            file,
             name="RightLeg_RightLower", 
             parent="RightLeg", 
             child="RightLower", 
@@ -165,6 +173,7 @@ class Quadruped:
             jointAxis=joint_axis_right
             )
         pyrosim.Send_Joint(
+            file,
             name="LeftLeg_LeftLower", 
             parent="LeftLeg", 
             child="LeftLower", 
@@ -185,10 +194,10 @@ class Quadruped:
         # print(rightleg_size)
 
         # Relative to upstream joint...
-        pyrosim.Send_Cube(name="FrontLeg", pos=frontleg_relative, size=frontleg_size) # [0.2,1,0.2])
-        pyrosim.Send_Cube(name="LeftLeg", pos=leftleg_relative, size=leftleg_size) # [1,0.2,0.2])
-        pyrosim.Send_Cube(name="RightLeg", pos=rightleg_relative, size=rightleg_size) # [1,0.2,0.2])
-        pyrosim.Send_Cube(name="BackLeg", pos=backleg_relative, size=backleg_size) # [0.2,1,0.2])
+        pyrosim.Send_Cube(file, name="FrontLeg", pos=frontleg_relative, size=frontleg_size) # [0.2,1,0.2])
+        pyrosim.Send_Cube(file, name="LeftLeg", pos=leftleg_relative, size=leftleg_size) # [1,0.2,0.2])
+        pyrosim.Send_Cube(file, name="RightLeg", pos=rightleg_relative, size=rightleg_size) # [1,0.2,0.2])
+        pyrosim.Send_Cube(file, name="BackLeg", pos=backleg_relative, size=backleg_size) # [0.2,1,0.2])
 
         bottomlegs_relative_pos = self.transform_position([0,0,-0.5], orientation=o, start_pos=(0,0,0))
         bottomlegs_size = [0.2 if a == 0 else a for a in np.abs(np.array(bottomlegs_relative_pos) * 2)]
@@ -197,16 +206,17 @@ class Quadruped:
         # print(bottomlegs_relative_pos)
         # print(bottomlegs_size)
 
-        pyrosim.Send_Cube(name="BackLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
-        pyrosim.Send_Cube(name="FrontLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
-        pyrosim.Send_Cube(name="LeftLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
-        pyrosim.Send_Cube(name="RightLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, name="BackLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, name="FrontLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, name="LeftLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
+        pyrosim.Send_Cube(file, name="RightLower", pos=bottomlegs_relative_pos, size=bottomlegs_size)
 
         print('filetype: ', pyrosim.filetype)
         print('file: ', pyrosim.f)
         
-        pyrosim.filetype = pyrosim.URDF_FILETYPE
-        pyrosim.End()
+        pyrosim.urdf.Save_End_Tag(file)
+        file.close()
+        # pyrosim.End()
 
     def round_if_close(self, num, tolerance=1e-9):
         """Round number if it's very close to a whole number."""
@@ -259,27 +269,27 @@ class Quadruped:
     	# .nndf files are just used in Pyrosim
         # "Neural Network Description File"
         brain_dir = dir if dir else self.dir
-        pyrosim.Start_NeuralNetwork(f"{brain_dir}/brain_{self.solnId}.nndf")
+        file = pyrosim.Start_NeuralNetwork(f"{brain_dir}/brain_{self.solnId}.nndf")
 
-        pyrosim.Send_Sensor_Neuron(name=0, linkName="RightLower")
-        pyrosim.Send_Sensor_Neuron(name=1, linkName="LeftLower")
-        pyrosim.Send_Sensor_Neuron(name=2, linkName="FrontLower")
-        pyrosim.Send_Sensor_Neuron(name=3, linkName="BackLower")
-        pyrosim.Send_Sensor_Neuron(name=4, linkName="Torso")
+        pyrosim.Send_Sensor_Neuron(file, name=0, linkName="RightLower")
+        pyrosim.Send_Sensor_Neuron(file, name=1, linkName="LeftLower")
+        pyrosim.Send_Sensor_Neuron(file, name=2, linkName="FrontLower")
+        pyrosim.Send_Sensor_Neuron(file, name=3, linkName="BackLower")
+        pyrosim.Send_Sensor_Neuron(file, name=4, linkName="Torso")
 
-        pyrosim.Send_Motor_Neuron(name=5, jointName="Torso_BackLeg")
-        pyrosim.Send_Motor_Neuron(name=6, jointName="Torso_FrontLeg")
-        pyrosim.Send_Motor_Neuron(name=7, jointName="Torso_LeftLeg")
-        pyrosim.Send_Motor_Neuron(name=8, jointName="Torso_RightLeg")
-        pyrosim.Send_Motor_Neuron(name=9, jointName="LeftLeg_LeftLower")
-        pyrosim.Send_Motor_Neuron(name=10, jointName="RightLeg_RightLower")
-        pyrosim.Send_Motor_Neuron(name=11, jointName="BackLeg_BackLower")
-        pyrosim.Send_Motor_Neuron(name=12, jointName="FrontLeg_FrontLower")
+        pyrosim.Send_Motor_Neuron(file, name=5, jointName="Torso_BackLeg")
+        pyrosim.Send_Motor_Neuron(file, name=6, jointName="Torso_FrontLeg")
+        pyrosim.Send_Motor_Neuron(file, name=7, jointName="Torso_LeftLeg")
+        pyrosim.Send_Motor_Neuron(file, name=8, jointName="Torso_RightLeg")
+        pyrosim.Send_Motor_Neuron(file, name=9, jointName="LeftLeg_LeftLower")
+        pyrosim.Send_Motor_Neuron(file, name=10, jointName="RightLeg_RightLower")
+        pyrosim.Send_Motor_Neuron(file, name=11, jointName="BackLeg_BackLower")
+        pyrosim.Send_Motor_Neuron(file, name=12, jointName="FrontLeg_FrontLower")
 
-        self.Generate_Fully_Connected_Synapses()
+        self.Generate_Fully_Connected_Synapses(file)
 
         pyrosim.filetype = pyrosim.NNDF_FILETYPE
-        pyrosim.End()
+        pyrosim.nndf.Save_End_Tag(file)
         
     def Set_Id(self, newId):
         self.solnId = newId

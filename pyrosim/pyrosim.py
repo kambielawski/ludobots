@@ -108,7 +108,7 @@ def Prepare_To_Simulate(bodyID):
 
     Prepare_Joint_Dictionary(bodyID)
 
-def Send_Cube(name="default",pos=[0,0,0],size=[1,1,1]):
+def Send_Cube(file, name="default",pos=[0,0,0],size=[1,1,1]):
 
     global availableLinkIndex
 
@@ -126,7 +126,7 @@ def Send_Cube(name="default",pos=[0,0,0],size=[1,1,1]):
 
         links.append(link)
 
-    link.Save(f)
+    link.Save(file)
 
     if filetype == SDF_FILETYPE:
 
@@ -136,23 +136,23 @@ def Send_Cube(name="default",pos=[0,0,0],size=[1,1,1]):
 
     availableLinkIndex = availableLinkIndex + 1
 
-def Send_Joint(name,parent,child,type,position, jointAxis):
+def Send_Joint(file, name,parent,child,type,position, jointAxis):
 
-    joint = JOINT(name,parent,child,type,position)
+    joint = JOINT(file, name,parent,child,type,position)
 
-    joint.Save(f, jointAxis)
+    joint.Save(file, jointAxis)
 
-def Send_Motor_Neuron(name,jointName):
+def Send_Motor_Neuron(file, name,jointName):
 
-    f.write('    <neuron name = "' + str(name) + '" type = "motor"  jointName = "' + jointName + '" />\n')
+    file.write('    <neuron name = "' + str(name) + '" type = "motor"  jointName = "' + jointName + '" />\n')
 
-def Send_Sensor_Neuron(name,linkName):
+def Send_Sensor_Neuron(file, name,linkName):
 
-    f.write('    <neuron name = "' + str(name) + '" type = "sensor" linkName = "' + linkName + '" />\n')
+    file.write('    <neuron name = "' + str(name) + '" type = "sensor" linkName = "' + linkName + '" />\n')
 
-def Send_Synapse( sourceNeuronName , targetNeuronName , weight ):
+def Send_Synapse(file, sourceNeuronName , targetNeuronName , weight ):
 
-    f.write('    <synapse sourceNeuronName = "' + str(sourceNeuronName) + '" targetNeuronName = "' + str(targetNeuronName) + '" weight = "' + str(weight) + '" />\n')
+    file.write('    <synapse sourceNeuronName = "' + str(sourceNeuronName) + '" targetNeuronName = "' + str(targetNeuronName) + '" weight = "' + str(weight) + '" />\n')
 
  
 def Set_Motor_For_Joint(bodyIndex,jointName,controlMode,targetPosition,maxForce):
@@ -175,15 +175,14 @@ def Start_NeuralNetwork(filename):
 
     filetype = NNDF_FILETYPE
 
-    global f
-
-    f = open(filename,"w")
+    file = open(filename,"w")
 
     global nndf
 
-    nndf = NNDF(f)
+    nndf = NNDF(file)
 
     nndf.Save_Start_Tag()
+    return file
 
 def Start_SDF(filename):
 
@@ -227,19 +226,19 @@ def Start_URDF(filename):
 
     filetype = URDF_FILETYPE
 
-    global f
-
-    f = open(filename,"w")
+    file = open(filename,"w")
 
     global urdf 
 
-    urdf = URDF(f)
+    urdf = URDF(file)
 
     urdf.Save_Start_Tag()
 
     global links
 
     links = []
+
+    return file
 
 def Start_Model(modelName,pos):
 
