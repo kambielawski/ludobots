@@ -15,6 +15,4 @@ cd /gpfs1/home/k/t/ktbielaw/projects/ludobots
 
 source /gpfs1/home/k/t/ktbielaw/anaconda3/bin/activate pyrosim
 
-conda env list
-
-python3 run_exp.py --exp experiment.exp
+python3 run_exp.py --exp $3 --vacc

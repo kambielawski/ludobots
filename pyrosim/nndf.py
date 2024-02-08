@@ -1,14 +1,13 @@
 class NNDF: 
 
     def __init__(self):
-
         pass
 
-    def Save_Start_Tag(self,f):
+    def Save_Start_Tag(self, file):
 
-        f.write('<neuralNetwork>\n')
+        file.write('<neuralNetwork>\n')
 
-    def Save_End_Tag(self,f):
+    def Save_End_Tag(self, file):
 
-        f.write('</neuralNetwork>')
+        file.write('</neuralNetwork>')
 

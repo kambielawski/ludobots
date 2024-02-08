@@ -22,6 +22,9 @@ URDF_FILETYPE = 1
 
 NNDF_FILETYPE   = 2
 
+nndf = NNDF()
+urdf = URDF()
+
 # global availableLinkIndex
 
 # global linkNamesToIndices
@@ -34,9 +37,9 @@ def End():
 
     elif filetype == NNDF_FILETYPE:
 
-        nndf.Save_End_Tag(f)
+        nndf.Save_End_Tag()
     else:
-        urdf.Save_End_Tag(f)
+        urdf.Save_End_Tag()
 
     f.close()
 
@@ -108,7 +111,7 @@ def Prepare_To_Simulate(bodyID):
 
     Prepare_Joint_Dictionary(bodyID)
 
-def Send_Cube(name="default",pos=[0,0,0],size=[1,1,1]):
+def Send_Cube(file, filetype, name="default",pos=[0,0,0],size=[1,1,1]):
 
     global availableLinkIndex
 
@@ -126,7 +129,7 @@ def Send_Cube(name="default",pos=[0,0,0],size=[1,1,1]):
 
         links.append(link)
 
-    link.Save(f)
+    link.Save(file)
 
     if filetype == SDF_FILETYPE:
 
@@ -136,23 +139,23 @@ def Send_Cube(name="default",pos=[0,0,0],size=[1,1,1]):
 
     availableLinkIndex = availableLinkIndex + 1
 
-def Send_Joint(name,parent,child,type,position, jointAxis):
+def Send_Joint(file, name,parent,child,type,position, jointAxis):
 
-    joint = JOINT(name,parent,child,type,position)
+    joint = JOINT(file, name,parent,child,type,position)
 
-    joint.Save(f, jointAxis)
+    joint.Save(jointAxis)
 
-def Send_Motor_Neuron(name,jointName):
+def Send_Motor_Neuron(file, name,jointName):
 
-    f.write('    <neuron name = "' + str(name) + '" type = "motor"  jointName = "' + jointName + '" />\n')
+    file.write('    <neuron name = "' + str(name) + '" type = "motor"  jointName = "' + jointName + '" />\n')
 
-def Send_Sensor_Neuron(name,linkName):
+def Send_Sensor_Neuron(file, name,linkName):
 
-    f.write('    <neuron name = "' + str(name) + '" type = "sensor" linkName = "' + linkName + '" />\n')
+    file.write('    <neuron name = "' + str(name) + '" type = "sensor" linkName = "' + linkName + '" />\n')
 
-def Send_Synapse( sourceNeuronName , targetNeuronName , weight ):
+def Send_Synapse(file, sourceNeuronName , targetNeuronName , weight ):
 
-    f.write('    <synapse sourceNeuronName = "' + str(sourceNeuronName) + '" targetNeuronName = "' + str(targetNeuronName) + '" weight = "' + str(weight) + '" />\n')
+    file.write('    <synapse sourceNeuronName = "' + str(sourceNeuronName) + '" targetNeuronName = "' + str(targetNeuronName) + '" weight = "' + str(weight) + '" />\n')
 
  
 def Set_Motor_For_Joint(bodyIndex,jointName,controlMode,targetPosition,maxForce):
@@ -171,19 +174,9 @@ def Set_Motor_For_Joint(bodyIndex,jointName,controlMode,targetPosition,maxForce)
 
 def Start_NeuralNetwork(filename):
 
-    global filetype
+    file = open(filename,"w")
 
-    filetype = NNDF_FILETYPE
-
-    global f
-
-    f = open(filename,"w")
-
-    global nndf
-
-    nndf = NNDF()
-
-    nndf.Save_Start_Tag(f)
+    return file
 
 def Start_SDF(filename):
 
@@ -223,23 +216,13 @@ def Start_URDF(filename):
 
     linkNamesToIndices = {}
 
-    global filetype
-
-    filetype = URDF_FILETYPE
-
-    global f
-
-    f = open(filename,"w")
-
-    global urdf 
-
-    urdf = URDF()
-
-    urdf.Save_Start_Tag(f)
+    file = open(filename,"w")
 
     global links
 
     links = []
+
+    return file
 
 def Start_Model(modelName,pos):
 

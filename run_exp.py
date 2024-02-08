@@ -7,6 +7,7 @@ from experiment import Experiment
 parser = argparse.ArgumentParser()
 parser.add_argument('--dir', required=False, default='', help='Experiment ID')
 parser.add_argument('--exp', required=False, default='', help='Experiment file')
+parser.add_argument('--vacc', action='store_true', help='Run experiment on VACC')
 args = parser.parse_args()
 
 ############# ERROR CHECKING #############
@@ -34,4 +35,7 @@ if args.dir:   # Continue running existing experiment
 elif args.exp: # Start new experiment with experiment specification file
     exp = Experiment(None, args.exp)
 
-exp.Run()
+if args.vacc:
+    exp.Run_Vacc()
+else:
+    exp.Run_Local()
