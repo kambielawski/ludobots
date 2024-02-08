@@ -68,7 +68,7 @@ class Experiment:
                 self.trials = self.experiment_object['trials']
                 self.experiment_params = self.experiment_object['experiment_parameters']
         else: # Initialize a new experiment
-            self.initialize_directory(exp_file)
+            self.Initialize_Directory(exp_file)
 
     def Run_Local(self):
         """Run the different runs until we max out"""
@@ -80,7 +80,8 @@ class Experiment:
         for run_idx, trial in self.trials.items():
             os.system('sbatch run_trial_vacc.sh ' + trial.pickle_file)
 
-    def initialize_directory(self, exp_file):
+    def Initialize_Directory(self, exp_file):
+          """Initialize a new experiment directory and populate it with the necessary files and directories."""
           # 1. Create a new experiment directory
           experiment_parameters = self.Get_Experiment_Parameters(exp_file)
           self.n_runs = experiment_parameters['n_trials']
@@ -146,13 +147,10 @@ class Experiment:
               pickle.dump(experiment_object, pkl)
       
     def Get_Experiment_Parameters(self, experiment_file):
+        """Read in the experiment parameters from a file."""
         expfile = open(experiment_file)
         exp_string = expfile.read()
         exp_params = eval(exp_string)
         expfile.close()
         return exp_params
 
-    def Print_GenTime_To_File(self):
-        f = open('gen_timing.txt', 'a')
-        f.write(f'\ngeneration time: ' + str(self.one_gen_time))
-        f.close()

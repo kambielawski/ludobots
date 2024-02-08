@@ -43,7 +43,7 @@ if args.pickle_sim:
     simulation.Pickle_Sim("transient.pkl")
 
 if args.save_sa_data != "":
-    simulation.save_sa_values(f'{args.save_sa_data}')
+    simulation.Save_SA_Values(f'{args.save_sa_data}')
 
 if args.save_position_data != "":
-    simulation.save_position_values(f'{args.save_position_data}')
+    simulation.Save_Position_Values(f'{args.save_position_data}')

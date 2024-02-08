@@ -1,3 +1,4 @@
+"""Simulation class"""
 import pickle
 import pybullet as p
 import pybullet_data
@@ -5,14 +6,13 @@ import numpy as np
 import time 
 import random
 
+#TODO: Migrate this to a config file
 GRAVITY_FORCE = -9.8 # m/s^2
 
-'''
-Simulation:
-- Manages Pybullet setup and interfacing 
-- 
-'''
 class Simulation:
+    """Simulation class
+    - Manages Pybullet setup and interfacing
+    """
     def __init__(self, runMode, solutionId, timesteps, wind=0, objectsFile='', dir='.'):
         self.runMode = runMode
         self.solutionId = solutionId
@@ -39,8 +39,8 @@ class Simulation:
     def __del__(self):
         p.disconnect()
 
-    # Run simulation (sense -> act -> update sim) 
     def Run(self, robots):
+        """Run simulation for robots (sense -> act -> update sim)"""
         self.robots = robots
         p.setRealTimeSimulation(0)
         for i in range(self.timesteps):
@@ -58,7 +58,7 @@ class Simulation:
 
                 # Apply wind
                 if self.wind > 0 and i in self.wind_timesteps:
-                    robot.apply_random_force_vector(5000)
+                    robot.Apply_Random_Force_Vector(5000)
 
             if self.runMode == "GUI":
                 time.sleep(1/10000)
@@ -66,16 +66,20 @@ class Simulation:
         self.been_run = True
 
     def Pickle_Sim(self, pickle_file_name="sim.pkl"):
+        """Pickle the simulation object for later use"""
         with open(pickle_file_name, 'wb') as pf:
             pickle.dump(self, pf, protocol=pickle.HIGHEST_PROTOCOL)
 
     def Print_Objectives(self):
+        """Print the objectives of the robot in the simulation."""
         self.robots[0].Print_Objectives()
 
     def Get_Robots(self):
+        """Return the robots in the simulation."""
         return self.robots
 
-    def save_sa_values(self, dir):
+    def Save_SA_Values(self, dir):
+        """Save sensor and action values over the course of the simulation."""
         all_robot_sa_values = []
         for robot in self.robots:
             sa_values = {'sensor_states': robot.sensorVals, 'motor_states': robot.motorVals}
@@ -84,18 +88,12 @@ class Simulation:
         with open(f'{dir}/{robot.solutionId}_sa.pkl', 'wb') as pf:
             pickle.dump(all_robot_sa_values, pf)
 
-    def save_position_values(self, dir):
+    def Save_Position_Values(self, dir):
+        """Save position values over the course of the simulation."""
         all_position_values = []
         for robot in self.robots: 
-            all_position_values.append(robot.get_position_values())
+            all_position_values.append(robot.Get_Position_Values())
 
         with open(f'{dir}/{robot.solutionId}_positions.pkl', 'wb') as pf:
             pickle.dump(all_position_values, pf)
-            
-
-    def Save_Values(self):
-        for sensor in self.robot.sensors:
-            print(self.robot.sensors[sensor].values)
-            np.save(self.dir + "/data/data_" + self.robot.sensors[sensor].name + "_sensor.npy", self.robot.sensors[sensor].values)
-            print(f"Sensor data saved to {self.dir}/data/data_" + self.robot.sensors[sensor].name + "_sensor.npy")
-
+    

@@ -1,3 +1,4 @@
+"""Solution class"""
 import os
 import pyrosim.pyrosim as pyrosim
 import random
@@ -13,6 +14,7 @@ from robots.octoped import Octoped
 from robots.quadruped2x import Quadruped2X
 
 class Solution:
+    """Solution class"""
     def __init__(self, solutionId, lineage, constants, dir='.'):
         self.id = solutionId
         self.age = 1
@@ -30,7 +32,7 @@ class Solution:
         self.selection_metrics = {objective: 0 for objective in self.selection_objectives}     # Metrics for selection
         self.aggregate_metrics = {}     # Aggregate metrics 
 
-        # TODO: generalize robot morphology selection
+        #TODO: generalize robot morphology selection
         if self.morphology == 'quadruped':
             self.robot = Quadruped(self.id, dir=dir)
         elif self.morphology == 'hexapod':
@@ -48,17 +50,18 @@ class Solution:
 
         self.dir = dir
 
-    def Run_Simulation(self, runMode="DIRECT", sim_number=0):
-        self.runMode=runMode
+    def Run_Simulation(self, run_mode="DIRECT", sim_number=0):
+        """Run simulation for this solution."""
+        self.run_mode=run_mode
         self.Create_World(sim_number)
 
         self.robot.Generate_Robot(self.weights, 0,0,2, orientation=self.simulations[sim_number]['body_orientation']) # TODO: generalize the starting position for robots
 
-        subprocess_run_string = ['python3', 'simulate.py', 
-                                runMode, 
-                                str(self.id), 
+        subprocess_run_string = ['python3', 'simulate.py',
+                                run_mode,
+                                str(self.id),
                                 f'{self.dir}/brain_{self.id}.nndf', 
-                                self.robot.Get_Body_File(), 
+                                self.robot.Get_Body_File(),
                                 '--directory', self.dir,
                                 '--objects_file', self.worldFile,
                                 '--motor_measure', self.motor_measure,
@@ -94,17 +97,20 @@ class Solution:
 
 
     def Mutate(self):
-        randRow = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
-        randCol = random.randint(0,self.robot.NUM_SENSOR_NEURONS-1)
+        """Mutate the solution's weights."""
+        rand_row = random.randint(0,self.robot.NUM_MOTOR_NEURONS-1)
+        rand_col = random.randint(0,self.robot.NUM_SENSOR_NEURONS-1)
 
-        self.robot.weights[randRow][randCol] = random.random() * 2 - 1
+        self.robot.weights[rand_row][rand_col] = random.random() * 2 - 1
     
     def Create_World(self, sim_number=0):
+        """Create the world file for the simulation."""
         self.worldFile = f'{self.dir}/world_{self.id}.sdf'
         task_env_file_name = self.simulations[sim_number]['task_environment'].split('/')[2]
         os.system(f'cp {self.dir}/{task_env_file_name} {self.worldFile}')
 
     def Dominates_Other(self, other):
+        """Check if this solution dominates another."""
         assert self.selection_objectives == other.selection_objectives
 
         dominates = [self.age <= other.Get_Age()]
@@ -114,34 +120,44 @@ class Solution:
         return all(dominates)
 
     def Increment_Age(self):
+        """Increment the age of the solution."""
         self.age += 1
 
     def Get_Age(self):
+        """Return the age of the solution."""
         return self.age
 
     def Get_Primary_Objective(self):
+        """Return the primary objective of the solution."""
         return self.selection_metrics['displacement']
 
     def Regenerate_Brain_File(self, dir=None):
+        """Regenerate the brain file for the solution."""
         self.robot.Generate_NN(dir)
 
     def Get_Empowerment(self):
+        """Return the empowerment of the solution."""
         return self.selection_metrics['empowerment']
 
     def Has_Been_Simulated(self):
+        """Return whether the solution has been simulated."""
         return all(self.been_simulated)
 
     def Reset_Simulated(self):
+        """Reset the simulated attribute of the solution."""
         self.selection_metrics = {objective: 0 for objective in self.selection_objectives}
         self.aggregate_metrics = {}
         self.been_simulated = [False for _ in self.simulations]
 
     def Set_ID(self, newId):
+        """Set the ID of the solution."""
         self.robot.Set_Id(newId)
         self.id = newId
 
     def Get_ID(self):
+        """Return the ID of the solution."""
         return self.id
 
     def Get_Lineage(self):
+        """Return the lineage of the solution."""
         return self.lineage
