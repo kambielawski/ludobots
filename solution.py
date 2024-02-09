@@ -15,8 +15,8 @@ from robots.quadruped2x import Quadruped2X
 
 class Solution:
     """Solution class"""
-    def __init__(self, solutionId, lineage, constants, dir='.'):
-        self.id = solutionId
+    def __init__(self, solution_id, lineage, constants, dir='.'):
+        self.id = solution_id
         self.age = 1
         self.empowerment = 0
         self.lineage = lineage
@@ -27,7 +27,6 @@ class Solution:
         self.wind = constants['wind']
         self.been_simulated = [False for _ in self.simulations]
         self.sim_metrics = {}           # Metrics for individual simulations
-        # self.selection_metrics = None
         self.selection_objectives = np.unique([objective for sim in self.simulations for objective in sim['objectives']])
         self.selection_metrics = {objective: 0 for objective in self.selection_objectives}     # Metrics for selection
         self.aggregate_metrics = {}     # Aggregate metrics 
@@ -72,7 +71,6 @@ class Solution:
 
         # Parse standard output from subprocess
         stdout, stderr = sp.communicate()
-        print(stdout, stderr)
         sp.wait()
         out_str = stdout.decode()
         fitness_metrics = re.search('\(.+\)', out_str)[0].strip('()').split(' ')
@@ -84,7 +82,20 @@ class Solution:
             'random': float(fitness_metrics[4]),
             'boxdisplacement': float(fitness_metrics[5]) if fitness_metrics[5] != 'None' else 0,
             'first_half_box_displacement': float(fitness_metrics[6]) if fitness_metrics[6] != 'None' else 0,
-            'second_half_box_displacement': float(fitness_metrics[7]) if fitness_metrics[7] != 'None' else 0
+            'second_half_box_displacement': float(fitness_metrics[7]) if fitness_metrics[7] != 'None' else 0,
+            'H_actions': float(fitness_metrics[8]),
+            'H_sensors': float(fitness_metrics[9]),
+            'H_joint_AS': float(fitness_metrics[10]),
+            'H_A_cond_S': float(fitness_metrics[11]),
+            'H_S_cond_A': float(fitness_metrics[12]),
+            'empowerment_joint_normalized': float(fitness_metrics[13]),
+            '-empowerment': -float(fitness_metrics[1]),
+            '-H_actions': -float(fitness_metrics[8]),
+            '-H_sensors': -float(fitness_metrics[9]),
+            '-H_joint_AS': -float(fitness_metrics[10]),
+            '-H_A_cond_S': -float(fitness_metrics[11]),
+            '-H_S_cond_A': -float(fitness_metrics[12]),
+            '-empowerment_joint_normalized': -float(fitness_metrics[13]),
         }
 
         self.sim_metrics[sim_number] = sim_metrics
@@ -128,16 +139,13 @@ class Solution:
         return self.age
 
     def Get_Primary_Objective(self):
-        """Return the primary objective of the solution."""
-        return self.selection_metrics['displacement']
+        """Return the primary objective of the solution (first objective listed)."""
+        primary_objective = self.selection_objectives[0]
+        return self.selection_metrics[primary_objective]
 
     def Regenerate_Brain_File(self, dir=None):
         """Regenerate the brain file for the solution."""
         self.robot.Generate_NN(dir)
-
-    def Get_Empowerment(self):
-        """Return the empowerment of the solution."""
-        return self.selection_metrics['empowerment']
 
     def Has_Been_Simulated(self):
         """Return whether the solution has been simulated."""

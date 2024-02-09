@@ -6,8 +6,11 @@ import numpy as np
 import random
 import math
 import pyinform
+from pyinform.dist import Dist
 from sensor import Sensor
 from motor import Motor
+
+from info_funcs import compute_joint_entropy, compute_joint_counts
 
 #TODO: Migrate these to a config file
 TIMESTEPS = 1000
@@ -34,10 +37,16 @@ class Robot:
         self.jointAngularVelocities = []
         self.boxStartPos = None
 
-        # Empowerment computation setup
+        # Information computation setup
         self.empowerment = 0
         self.empowermentTimesteps = 0
+        self.entropy_action_values = []
+        self.entropy_sensor_values = []
+        self.entropy_joint_values = []
+        self.entropy_s_cond_a_values = []
+        self.entropy_a_cond_s_values = []
         self.empowerment_values = []
+        self.empowerment_joint_normalized_values = []
 
         # Optionally a brain file can be passed in
         if self.nndfFileName:
@@ -95,10 +104,7 @@ class Robot:
         
         # calculate empowerment over last k timesteps
         if timestep >= 2 * self.empowermentWindowSize-1:
-            e = self.Empowerment_Window(timestep)
-            self.empowerment += e
-            self.empowermentTimesteps += 1
-            self.empowerment_values.append(e)
+            self.Compute_Information_Components(timestep)
 
     def Generate_Random_Force_Vector(self, magnitude):
         """Generate a random force vector of a given magnitude."""
@@ -153,17 +159,34 @@ class Robot:
             self.jointAngularVelocities.append(jointVelocityVals)
             self.motorVals.append(tuple(actionVector))
             return actionVector
-    
-    def Empowerment_Window(self, timestep): 
-        """Compute empowerment over last k timesteps."""
+        
+    def Compute_Information_Components(self, timestep):
         # Convert motor and sensor states into integers
-        self.actionz = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[((timestep+1)-(2*self.empowermentWindowSize)):((timestep+1)-self.empowermentWindowSize)]]
-        self.sensorz = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[((timestep+1)-self.empowermentWindowSize):timestep+1]]
+        action_states = [int(''.join([str(b) for b in A]), base=2) for A in self.motorVals[((timestep+1)-(2*self.empowermentWindowSize)):((timestep+1)-self.empowermentWindowSize)]]
+        sensor_states = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[((timestep+1)-self.empowermentWindowSize):timestep+1]]
+        
+        # Create distribution objects
+        action_dist = Dist(action_states)
+        sensor_dist = Dist(sensor_states)
+        joint_dist = Dist(compute_joint_counts(action_states, sensor_states))
 
-        # Compute Mutual Information
-        mi = pyinform.mutual_info(self.actionz, self.sensorz, local=False)
+        # Compute entropy components
+        entropy_actions = pyinform.shannon.entropy(action_dist)
+        entropy_sensors = pyinform.shannon.entropy(sensor_dist)
+        entropy_joint_AS = pyinform.shannon.entropy(joint_dist)
+        entropy_A_cond_S = entropy_joint_AS - entropy_sensors
+        entropy_S_cond_A = entropy_joint_AS - entropy_actions
+        empowerment = entropy_joint_AS - entropy_A_cond_S - entropy_S_cond_A
 
-        return mi
+        self.entropy_action_values.append(entropy_actions)
+        self.entropy_sensor_values.append(entropy_sensors)
+        self.entropy_joint_values.append(entropy_joint_AS)
+        self.entropy_s_cond_a_values.append(entropy_S_cond_A)
+        self.entropy_a_cond_s_values.append(entropy_A_cond_S)
+        self.empowerment_values.append(empowerment)
+        self.empowerment_joint_normalized_values.append(empowerment / entropy_joint_AS)
+
+        self.empowermentTimesteps += 1
 
     def Set_Object_Ids(self, objectIds):
         """Set the object IDs for the robot to sense."""
@@ -195,23 +218,33 @@ class Robot:
         xPosition = basePosition[0]
         return xPosition
 
-    def Get_Empowerment(self):
-        """Return the empowerment value."""
-        return np.mean(self.empowerment_values)
-
     def Print_NN(self):
         """Print the neural network synapse weights."""
         print([(s, self.nn.synapses[s].weight) for s in self.nn.synapses])
 
     def Print_Objectives(self):
-        """Print the robot's objectives."""
+        """Print the robot's objectives.
+        This communicates the robot's objectives to the parent process (in solution)."""
         displacement = self.Y_Axis_Displacement()
-        empowerment = self.Get_Empowerment()
         box_displacement = None if self.objectIds == None else self.Get_Box_Displacement()
         first_half_box_displacement =  None if self.objectIds == None else self.firstHalfBoxDisplacement
         second_half_box_displacement =  None if self.objectIds == None else box_displacement - first_half_box_displacement
         first_half_displacement = self.firstHalfFitness
         second_half_displacement = displacement - first_half_displacement
         random_num = np.random.random()
-        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random_num)} {str(box_displacement)} {str(first_half_box_displacement)} {str(second_half_box_displacement)})')
+
+        # Compute entropy components
+        entropy_actions = np.mean(self.entropy_action_values)
+        entropy_sensors = np.mean(self.entropy_sensor_values)
+        entropy_joint_AS = np.mean(self.entropy_joint_values)
+        entropy_AcondS = np.mean(self.entropy_a_cond_s_values)
+        entropy_ScondA = np.mean(self.entropy_s_cond_a_values)
+        empowerment = np.mean(self.empowerment_values)
+        empowerment_joint_normalized = np.mean(self.empowerment_joint_normalized_values)
+
+        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} \
+                {str(second_half_displacement)} {str(random_num)} {str(box_displacement)} \
+                {str(first_half_box_displacement)} {str(second_half_box_displacement)} \
+                {str(entropy_actions)} {str(entropy_sensors)} {str(entropy_joint_AS)} \
+                {str(entropy_AcondS)} {str(entropy_ScondA)} {str(empowerment_joint_normalized)}')
 
