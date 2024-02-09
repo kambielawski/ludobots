@@ -123,7 +123,7 @@ class Solution:
     def Dominates_Other(self, other):
         """Check if this solution dominates another."""
         assert len(self.selection_objectives) == len(other.selection_objectives)
-        assert all([self.selection_objectives[i] == other.selection_objectives[i] for i in range(len(self.selection_objectives)])
+        assert all([self.selection_objectives[i] == other.selection_objectives[i] for i in range(len(self.selection_objectives))])
 
         dominates = [self.age <= other.Get_Age()]
         for objective in self.selection_metrics:
