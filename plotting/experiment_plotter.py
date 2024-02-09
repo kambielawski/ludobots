@@ -34,7 +34,7 @@ class ExperimentPlotter:
         # Create a list of all runs' series of top fitness individuals
         top_fitness = []
         for afpo in runs:
-            top_fit_series = runs[afpo].history.Get_Top_Fitness_Over_Generations()
+            top_fit_series = runs[afpo].history.Get_Top_Metric_Over_Generations('displacement')
             top_fitness.append(top_fit_series)
 
         # The average top fitness for each generation, over all N evo runs

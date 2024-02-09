@@ -1,10 +1,8 @@
-import os
-import csv
-from ast import literal_eval
+"""Stores data from a single run of an experiment."""
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 class RunHistory:
+    """Stores data from a single run of an experiment."""
     def __init__(self, constants=None, dir='.'):
         self.constants = {} if constants==None else constants
         self.populationOverTime = {}
@@ -14,53 +12,36 @@ class RunHistory:
         self.dir = dir
 
     def Population_Data(self, genNumber, population):
+        """Stores the population at a given generation number."""
         self.populationOverTime[genNumber] = population
 
     def Pareto_Front_Data(self, genNumber, paretoFront):
+        """Stores the pareto front at a given generation number."""
         self.paretoFrontOverTime[genNumber] = paretoFront
         self.paretoFrontSizeOverTime.append(len(paretoFront))
 
     def Write_Pareto_Front_File(self):
+        """Writes the pareto front data to a file."""
         f = open(f'{self.dir}/data/pf_size.txt', 'w')
         for n in self.paretoFrontSizeOverTime:
             f.write(str(n) + '\n')
 
-    def Get_Top_Fitness(self):
-        keyfunc = lambda x: x[2]
-        sortedRobots = sorted(self.populationOverTime[-1], key=keyfunc, reverse=True)
-        return sortedRobots
-
-    def Get_Top_Fitness_Over_Generations(self):
-        keyfunc = lambda x:x['metrics']['displacement']
-
-        best_fitness = []
-        for gen in self.populationOverTime:
-            best_fit = sorted(self.populationOverTime[gen], key=keyfunc, reverse=True)
-            best_fitness.append((gen, keyfunc(best_fit[0])))
-        return best_fitness
-
-    def Get_Top_Empowerment_Over_Generations(self):
-        keyfunc = lambda x: x['metrics']['empowerment']
-
-        best_empowerment = []
-        for gen in self.populationOverTime:
-            best_emp = sorted(self.populationOverTime[gen], key=keyfunc, reverse=True)
-            best_empowerment.append((gen, keyfunc(best_emp[0])))
-        return best_empowerment
-
-    def Get_Top_Metric_Over_Generations(self, selectionMetric):
-        keyfunc = lambda x: x['metrics'][selectionMetric]
+    def Get_Top_Metric_Over_Generations(self, selection_metric):
+        """Returns the top fitness value from each generation."""
+        keyfunc = lambda x: x['metrics'][selection_metric]
 
         best = []
-        for gen in self.populationOverTime:
-            best_metric = sorted(self.populationOverTime[gen], key=keyfunc, reverse=True)
+        for gen, pop in self.populationOverTime.items():
+            best_metric = sorted(pop, key=keyfunc, reverse=True)
             best.append((gen, keyfunc(best_metric[0])))
         return best
 
     def Get_Population_Data(self):
+        """Returns the population data."""
         return self.populationOverTime
 
     def Plot_Pareto_Front_Size(self):
+        """Plots the pareto front size over time."""
         plt.figure(self.fignum)
         self.fignum += 1
 

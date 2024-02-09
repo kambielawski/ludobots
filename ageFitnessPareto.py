@@ -33,11 +33,9 @@ class AgeFitnessPareto():
 
     def __del__(self):
         pass
-    
-    '''
-    Main Evolve loop for a single run
-    '''
+
     def Evolve(self):
+        """Main loop for evolution of the population. Runs for nGenerations."""
         while self.currentGen < self.nGenerations:
             print('===== Generation ' + str(self.currentGen) + ' =====')
             self.Evolve_One_Generation()
@@ -47,19 +45,15 @@ class AgeFitnessPareto():
                 self.Write_Gen_Statistics()
             if self.currentGen != self.nGenerations:
                 self.Clean_Directory()
-    
-    '''
-    Initialize population randomly at generation 0
-    '''
+
     def Initialize_Population(self):
+        """Initialize the population with random solutions."""
         for _ in range(self.targetPopSize):
             rand_id = self.Get_Available_Id()
             self.population[rand_id] = Solution(rand_id, (0, rand_id), constants=self.robot_constants, dir=self.dir)
 
-    '''
-    Single generation process
-    '''
     def Evolve_One_Generation(self):
+        """Run one generation of the evolutionary process."""
         # 1. Reproduce
         print(f'CURRENT GEN: {self.currentGen}')
         if self.currentGen == 0:
@@ -81,17 +75,14 @@ class AgeFitnessPareto():
         self.Run_Gen_Statistics(self.currentGen, pf)
         self.currentGen += 1
 
-    '''
-    Breed parents, mutate, and add a random individual
-    '''
     def Extend_Population(self, genNumber):
-        # 1. Breed
-        # - do tournament selection |pop| times 
+        """Extend the population by breeding, mutating, and adding a random individual."""
+        # 1. Breed and mutate (using tournament selection to choose parents)
         new_solutions = {}
         for _ in range(self.targetPopSize):
             parent = self.Tournament_Select()
             child = copy.deepcopy(self.population[parent])
-            # - create mutated children from the tournament winners
+            # Create mutated children from the tournament winners
             child.Mutate()
             rand_id = self.Get_Available_Id()
             child.Set_ID(rand_id)
@@ -106,10 +97,8 @@ class AgeFitnessPareto():
         rand_id = self.Get_Available_Id()
         self.population[rand_id] = Solution(rand_id, (genNumber, rand_id), self.robot_constants, dir=self.dir)
 
-    '''
-    Tournament selection to decide which individuals reproduce
-    '''
     def Tournament_Select(self):
+        """Select a solution from the population using tournament selection."""
         p1 = np.random.choice(list(self.population.keys()))
         p2 = np.random.choice(list(self.population.keys()))
         while p2 == p1:
@@ -121,10 +110,8 @@ class AgeFitnessPareto():
         else:
             return p2
 
-    '''
-    Remove dominated individuals until target population size is reached
-    '''
     def Reduce_Population(self):
+        """Remove dominated individuals until target population size is reached."""
         pf_size = len(self.Pareto_Front())
         if pf_size >= self.targetPopSize:
             self.targetPopSize = pf_size
@@ -140,13 +127,12 @@ class AgeFitnessPareto():
                 self.population.pop(i1)
 
     def Increment_Ages(self):
-        for solnId in self.population:
-            self.population[solnId].Increment_Age()
+        """Increment the age of each solution in the population."""
+        for _, soln in self.population.items():
+            soln.Increment_Age()
 
-    '''
-    Parallel execution for each individual's physics simulation
-    '''
     def Run_Solutions(self):
+        """Run the physics simulations for each solution in the population."""
         def Run_One_Solution_Async(solnId, sim_number):
             return self.population[solnId].Run_Simulation(sim_number=sim_number)
 
@@ -172,10 +158,8 @@ class AgeFitnessPareto():
             print(tb)
             os.system(f'echo {err} >> {self.dir}/error_log.txt')
 
-    '''
-    Returns IDs of the solutions that are Pareto optimal
-    '''
     def Pareto_Front(self):
+        """Returns the Pareto Front solutions for the current generation."""
         paretoFront = []
         for i in self.population:
             iIsDominated = False
@@ -188,18 +172,16 @@ class AgeFitnessPareto():
         return paretoFront
 
     def Dominates(self, i, j):
-        '''
-        Returns True if solution i dominates solution j (else False)
-        '''
+        """Returns True if solution i dominates solution j (else False)"""
         return self.population[i].Dominates_Other(self.population[j])
 
     def Run_Gen_Statistics(self, genNumber, pf):
-        '''
+        """
         Sends data for bookkeeping in RunHistory class
 
         genNumber is an int representing which generation the data is from
         pf is a dict of the Pareto Front solutions for the generation
-        '''
+        """
         pfData = [{
             'id': self.population[s].Get_ID(),
             'age': self.population[s].Get_Age(),
@@ -230,18 +212,18 @@ class AgeFitnessPareto():
         pop_data = self.population
         max_emp_id = -1
         max_emp = -1
-        for id in pop_data:
-            emp = pop_data[id].selection_metrics['empowerment']
+        for idx, soln in pop_data.items():
+            emp = soln.selection_metrics['empowerment']
             if emp > max_emp:
-                max_emp_id = id
+                max_emp_id = idx
                 max_emp = emp
         # Save highest empowerment
         os.system(OS_MV + f' ./brain_{max_emp_id}.nndf best_robots/empowered/brain_{max_emp_id}.nndf')
 
     def Save_Pop(self):
         os.system(f'mkdir {self.dir}/gen_{self.currentGen}')
-        for id in self.population:
-            os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/gen_{self.currentGen}/brain_{id}.nndf')
+        for soln_id in self.population:
+            os.system(OS_MV + f' {self.dir}/brain_{id}.nndf {self.dir}/gen_{self.currentGen}/brain_{soln_id}.nndf')
 
     def Save_Pareto_Front(self, pf):
         # Remove current pareto front files
