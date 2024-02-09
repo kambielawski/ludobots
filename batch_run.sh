@@ -15,4 +15,4 @@ cd /gpfs1/home/k/t/ktbielaw/projects/ludobots
 
 source /gpfs1/home/k/t/ktbielaw/anaconda3/bin/activate pyrosim
 
-python3 run_exp.py --exp $3 --vacc
+python3 run_exp.py --exp $1 --vacc
