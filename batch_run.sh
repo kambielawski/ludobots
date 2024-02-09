@@ -4,10 +4,10 @@
 #SBATCH --nodes=1
 # #SBATCH --ncpu=100
 #SBATCH --ntasks=100
-#SBATCH --time=30:00:00
+#SBATCH --time=06:00:00
 #SBATCH --mem-per-cpu=2G
 #SBATCH --job-name=experiment_test_1
-#SBATCH --output=%x_%j.out
+#SBATCH --output=./outfiles/%x_%j.out
 
 set -x 
 
