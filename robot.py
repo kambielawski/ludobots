@@ -10,7 +10,7 @@ from pyinform.dist import Dist
 from sensor import Sensor
 from motor import Motor
 
-from info_funcs import compute_joint_entropy, compute_joint_counts
+from info_funcs import compute_joint_entropy, compute_entropy
 
 #TODO: Migrate these to a config file
 TIMESTEPS = 1000
@@ -66,7 +66,8 @@ class Robot:
         """Create Sensor object for each link & store in dictionary."""
         self.sensors = dict()
         for linkName in pyrosim.linkNamesToIndices:
-            if linkName != 'Torso': self.sensors[linkName] = Sensor(linkName, TIMESTEPS)
+            if linkName in self.nn.sensor_links:
+                self.sensors[linkName] = Sensor(linkName, TIMESTEPS)
 
     def Prepare_To_Act(self):
         """Create Motor object for each joint."""
@@ -89,8 +90,8 @@ class Robot:
 
         # Sense
         sensor_vector = []
-        for _, sensor in self.sensors.items():
-            sensor_vector.append(sensor.Get_Value(timestep))
+        for sensor in self.sensors:
+            sensor_vector.append(self.sensors[sensor].Get_Value(timestep))
         self.sensorVals.append(tuple([1 if s>0 else 0 for s in sensor_vector]))
 
     def Think(self):
@@ -166,14 +167,16 @@ class Robot:
         sensor_states = [int(''.join([str(b) for b in S]), base=2) for S in self.sensorVals[((timestep+1)-self.empowermentWindowSize):timestep+1]]
         
         # Create distribution objects
-        action_dist = Dist(action_states)
-        sensor_dist = Dist(sensor_states)
-        joint_dist = Dist(compute_joint_counts(action_states, sensor_states))
+        # action_dist = Dist(action_states)
+        # sensor_dist = Dist(sensor_states)
 
         # Compute entropy components
-        entropy_actions = pyinform.shannon.entropy(action_dist)
-        entropy_sensors = pyinform.shannon.entropy(sensor_dist)
-        entropy_joint_AS = pyinform.shannon.entropy(joint_dist)
+        # entropy_actions = pyinform.shannon.entropy(action_dist)
+        # entropy_sensors = pyinform.shannon.entropy(sensor_dist)
+        entropy_actions = compute_entropy(action_states)
+        entropy_sensors = compute_entropy(sensor_states)
+        entropy_joint_AS = compute_joint_entropy(action_states, sensor_states)
+        
         entropy_A_cond_S = entropy_joint_AS - entropy_sensors
         entropy_S_cond_A = entropy_joint_AS - entropy_actions
         empowerment = entropy_joint_AS - entropy_A_cond_S - entropy_S_cond_A
@@ -242,9 +245,5 @@ class Robot:
         empowerment = np.mean(self.empowerment_values)
         empowerment_joint_normalized = np.mean(self.empowerment_joint_normalized_values)
 
-        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} \
-                {str(second_half_displacement)} {str(random_num)} {str(box_displacement)} \
-                {str(first_half_box_displacement)} {str(second_half_box_displacement)} \
-                {str(entropy_actions)} {str(entropy_sensors)} {str(entropy_joint_AS)} \
-                {str(entropy_AcondS)} {str(entropy_ScondA)} {str(empowerment_joint_normalized)}')
+        print(f'({str(displacement)} {str(empowerment)} {str(first_half_displacement)} {str(second_half_displacement)} {str(random_num)} {str(box_displacement)} {str(first_half_box_displacement)} {str(second_half_box_displacement)} {str(entropy_actions)} {str(entropy_sensors)} {str(entropy_joint_AS)} {str(entropy_AcondS)} {str(entropy_ScondA)} {str(empowerment_joint_normalized)})')
 

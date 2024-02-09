@@ -10,6 +10,8 @@ class NEURAL_NETWORK:
 
         self.synapses = {}
 
+        self.sensor_links = []
+
         f = open(nndfFileName,"r")
 
         for line in f.readlines():
@@ -39,6 +41,10 @@ class NEURAL_NETWORK:
 
     def Get_Value_Of(self, neuronName):
         return self.neurons[neuronName].Get_Value()
+    
+    def Is_Sensor_Link(self, linkName):
+        if linkName in self.sensor_links:
+            return True
 
     def Update(self):
         for n in self.neurons:
@@ -55,6 +61,9 @@ class NEURAL_NETWORK:
         neuron = NEURON(line)
 
         self.neurons[ neuron.Get_Name() ] = neuron
+
+        if neuron.Is_Sensor_Neuron():
+            self.sensor_links.append( neuron.Get_Link_Name() )
 
     def Add_Synapse_According_To(self,line):
 
