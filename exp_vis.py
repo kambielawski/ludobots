@@ -34,28 +34,28 @@ class DataManager():
     def __init__(self, experiment_rootdir='./experiments'):
         self.experiment_rootdir = experiment_rootdir
         self.experiment_directories = sorted([d for d in os.listdir(experiment_rootdir) if os.path.isdir(f'{experiment_rootdir}/{d}')])
-        self.evo_runs_cache = {}
+        self.trials_cache = {}
 
     def Get_Experiment_Directories(self):
         """Return a list of all experiment directories in the root directory."""
         return self.experiment_directories
 
-    def get_evo_runs(self, dir):
-        """Return the evo_runs object from the pickled file in the experiment directory."""
-        if dir not in self.evo_runs_cache: # Cache evo_runs object if it hasn't been already
-            with open(f'./experiments/{dir}/evo_runs.pickle', 'rb') as pkl:
-                self.evo_runs_cache[dir] = pickle.load(pkl)
+    def Get_Trials(self, dir):
+        """Create a trials dictionary from the pickled files in the experiment directory."""
+        if dir not in self.trials_cache: # Cache trials object if it hasn't been already
+            self.trials_cache[dir] = {}
+            for trial in os.listdir(f'./experiments/{dir}'):
+                if trial.startswith('trial'):
+                    with open(f'./experiments/{dir}/{trial}/{trial}.pkl', 'rb') as pkl:
+                        self.trials_cache[dir][trial] = pickle.load(pkl)
         
-        return self.evo_runs_cache[dir]
+        return self.trials_cache[dir]
 
     def Get_Experiment_Metrics(self, dir):
-        """Return the selection metrics from the evo_runs object in the experiment directory."""
-        evo_runs = self.get_evo_runs(dir)
-
-        k = list(evo_runs.keys())[0]
-        # evo_runs[k][0] <--- AFPO object
-        exp_population = evo_runs[k][0].population
-        # exp_population[0] <--- Solution object 
+        """Return the selection metrics of an experiment."""
+        trials = self.Get_Trials(dir)
+        k = list(trials.keys())[0]
+        exp_population = trials[k].afpo.population
         for solution in exp_population:
             if exp_population[solution].selection_metrics:
                 all_selection_metrics = exp_population[solution].selection_metrics
@@ -66,29 +66,23 @@ class DataManager():
         return all_selection_metrics
 
     def Get_Experiment_Constants(self, dir):
-        """Return the robot constants from the evo_runs object in the experiment directory."""
-        with open(f'./experiments/{dir}/evo_runs.pickle', 'rb') as pkl:
-            evo_runs = pickle.load(pkl)
-        k = list(evo_runs.keys())[0]
-        robot_constants = evo_runs[k][0].robot_constants
-
-        return robot_constants
+        """Return the robot constants of an experiment."""
+        with open(f'./experiments/{dir}/exp_params.txt', 'r') as f:
+            return eval(f.read())
 
     def Get_Experiment_Selection_Metrics(self, dir):
-        """Return the selection metrics from the evo_runs object in the experiment directory."""
-        with open(f'./experiments/{dir}/evo_runs.pickle', 'rb') as pkl:
-            evo_runs = pickle.load(pkl)
-        k = list(evo_runs.keys())[0]
-        selection_metrics = evo_runs[k][0].selection_metrics.keys()
-
+        """Return the selection metrics of an experiment."""
+        trials = self.Get_Trials(dir)
+        k = list(trials.keys())[0]
+        selection_metrics = trials[k].afpo.selection_metrics.keys()
         return selection_metrics
 
-    def getMetric95CI(self, runs, metric):
+    def getMetric95CI(self, trials, metric):
         """Return the 95% confidence interval for the top metric over generations."""
         best = []
 
-        for afpo in runs:
-            best_over_generations = runs[afpo].history.Get_Top_Metric_Over_Generations(metric)
+        for _, trial in trials.items():
+            best_over_generations = trial.afpo.history.Get_Top_Metric_Over_Generations(metric)
             best.append(best_over_generations)
 
         grouped_by_generation = list(zip(*best))
@@ -99,40 +93,40 @@ class DataManager():
 
     def Get_Top_Robot(self, dir, metric):
         """Return the brain file, body file, and world file for the top robot in the experiment directory."""
-        evo_runs = self.get_evo_runs(dir)
-        evo_runs = evo_runs[list(evo_runs.keys())[0]] 
-        top_robots = [(evo_runs[exp_id].Get_Best_Id(metric), exp_id) for exp_id, afpo in enumerate(evo_runs)]
-        ((max_metric, max_solution_id), max_exp_id) = max(top_robots)
+        trials = self.Get_Trials(dir)
+        # trial = trials[list(trials.keys())[0]]
+        top_robots = [(trial.afpo.Get_Best_Id(metric), trial_id) for trial_id, trial in trials.items()]
+        ((max_metric, max_solution_id), max_trial_id) = max(top_robots)
         
-        evo_runs[max_exp_id].population[max_solution_id].Regenerate_Brain_File(dir='.')
+        trials[max_trial_id].afpo.population[max_solution_id].Regenerate_Brain_File(dir='.')
         brain_file = f'./brain_{max_solution_id}.nndf'
 
-        if 'task_environment' not in evo_runs[max_exp_id].robot_constants:
+        if 'task_environment' not in trials[max_trial_id].afpo.robot_constants:
             if 'boxdisplacement' in dir:
-                evo_runs[max_exp_id].robot_constants['task_environment'] = './task_environments/box_world.sdf'
+                trials[max_trial_id].afpo.robot_constants['task_environment'] = './task_environments/box_world.sdf'
             else:
-                evo_runs[max_exp_id].robot_constants['task_environment'] = './task_environments/world.sdf'
+                trials[max_trial_id].afpo.robot_constants['task_environment'] = './task_environments/world.sdf'
 
-        morphology = evo_runs[max_exp_id].robot_constants['morphology']
+        morphology = trials[max_trial_id].afpo.robot_constants['morphology']
         body_file = f'./robots/body_{morphology}.urdf'
 
-        world_file = evo_runs[max_exp_id].robot_constants['task_environment']
+        world_file = trials[max_trial_id].afpo.robot_constants['task_environment']
         
         return brain_file, body_file, world_file
 
     def Get_Top_Robots_All_Runs(self, dir, metric):
         print(f'\n\n{dir}\n\n')
-        evo_runs = self.get_evo_runs(dir)
-        evo_runs = evo_runs[list(evo_runs.keys())[0]] 
-        top_robots = [(evo_runs[exp_id].Get_Best_Id(metric), exp_id) for exp_id, afpo in enumerate(evo_runs)]
-        for (_, max_id), exp_id in top_robots: # Ensure the brain file exists
-            evo_runs[exp_id].population[max_id].Regenerate_Brain_File()
+        trials = self.Get_Trials(dir)
+        top_robots = [(trial.afpo.Get_Best_Id(metric), trial_id) for trial_id, trial in trials.items()]
 
-        top_robots = [(f'./experiments/{dir}/brain_{max_soln_id}.nndf', 
-                        evo_runs[max_exp_id].robot_constants['morphology'], 
+        # Ensure the brain file exists
+        for (_, max_id), trial_id in top_robots:
+            trials[trial_id].afpo.population[max_id].Regenerate_Brain_File()
+
+        top_robots = [(f'./experiments/{dir}/brain_{max_soln_id}.nndf',
+                        trials[trial_id].afpo.robot_constants['morphology'],
                         './task_environments/box_world.sdf')
-                        # evo_runs[max_exp_id].robot_constants['task_environment']) 
-                        for ((_, max_soln_id), max_exp_id) in top_robots]
+                        for ((_, max_soln_id), trial_id) in top_robots]
 
         return top_robots
 
@@ -178,7 +172,7 @@ class MainWindow(QMainWindow):
         self.metricDropdownWidget.currentIndexChanged.connect(self.On_Metric_Selection_Update)
         # Experiment Selector widget
         self.experiment_dropdown_widget = QComboBox(self)
-        self.experiment_dropdown_widget.currentIndexChanged.connect(self.on_experiment_selection_update)
+        self.experiment_dropdown_widget.currentIndexChanged.connect(self.On_Experiment_Selection_Update)
         # Checklist tree
         self.tree = QTreeWidget()
         self.tree.setColumnCount(1)
@@ -272,6 +266,9 @@ class MainWindow(QMainWindow):
         self.currentlySelectedMetric = self.metricDropdownWidget.itemText(item_idx)
         self.Plot()
 
+    def On_Experiment_Selection_Update(self, new_id):
+        pass
+
     def Plot(self):
         """Plot the currently selected metric over generations."""
         self.figure1.clear() # Clear the previous plot
@@ -282,20 +279,15 @@ class MainWindow(QMainWindow):
 
     def plotMetric95CI(self, experiment_dirs, metric):
         """Plot the 95% confidence interval for the top metric over generations."""
-        # Load each evo_runs object from pickled file in experiment directory
-        loaded_data = []
+        loaded_data = {}
         for exp_dir in experiment_dirs:
-            print(exp_dir)
-            with open(f'./experiments/{exp_dir}/evo_runs.pickle', 'rb') as pickleFile:
-                evo_runs = pickle.load(pickleFile)
-                loaded_data.append(evo_runs)
+            loaded_data[exp_dir] = self.data_manager.Get_Trials(exp_dir)
 
         ax1 = self.figure1.add_subplot(111)
         # Plot each line from each loaded data
-        for i, evo_runs in enumerate(loaded_data):
-            exp_key = list(loaded_data[i].keys())[0]
-            plot_label = '-'.join(self.data_manager.Get_Experiment_Metrics(experiment_dirs[i]))
-            t1_avg_best, t1_conf_int = self.data_manager.getMetric95CI(evo_runs[exp_key], metric)
+        for i, (exp_dir, trials) in enumerate(loaded_data.items()):
+            plot_label = '-'.join(self.data_manager.Get_Experiment_Metrics(exp_dir))
+            t1_avg_best, t1_conf_int = self.data_manager.getMetric95CI(trials, metric)
             # Plotting
             ax1.plot(range(len(t1_avg_best)), t1_avg_best, label=plot_label, color=COLORS[i])
             ax1.fill_between(range(len(t1_avg_best)), t1_avg_best-t1_conf_int, t1_avg_best+t1_conf_int, color=COLORS[i], alpha=0.3)
@@ -311,8 +303,6 @@ class MainWindow(QMainWindow):
         ax1.set_xlabel('Generation')
         ax1.set_ylabel(f'{metric} (95% CI)')
         ax1.legend()
-        # plt.savefig(f'{args.dir}/plots/95CI_gen{len(t1_avg_best)}_fit_{time.time()}.png')
-        # ax1.show()
 
     def Save_Plot_Button_Onpress(self):
         """Save the current plot to a file."""
